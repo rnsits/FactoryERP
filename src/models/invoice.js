@@ -1,0 +1,145 @@
+'use strict';
+const {
+  Model
+} = require('sequelize');
+module.exports = (sequelize, DataTypes) => {
+  class Invoice extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+      Invoice.belongsTo(models.Customers, {
+        foreignKey: "customerId",
+        as: "customer"
+      });
+
+      Invoice.hasMany(models.Invoice_Item, {
+        foreignKey: "invoice_item_id",
+        "as": "invoice_item"
+      });
+
+      Invoice.hasMany(models.Customer_Payment, {
+        foreignKey: "invoiceId",
+        as: "customer_payments"
+      })
+    }
+  }
+  Invoice.init({
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER
+    },
+    invoice_id:{
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
+    invoice_item_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Invoice_Item',
+        key: 'id'
+      }
+    },
+    customer_id: {
+      allowNull: false,
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Customers',
+        key: 'id'
+      }
+    },
+    invoice_date: {
+      allowNull: false,
+      type: DataTypes.DATE
+    },
+    due_date: {
+      allowNull: true,
+      type: DataTypes.DATE
+    },
+    due_amount: {
+      allowNull: true,
+      type: DataTypes.INTEGER
+    },
+    payment_status: {
+      allowNull: false,
+      type: DataTypes.ENUM("paid", "unpaid", "partial paid")
+    },
+    payment_method: {
+      allowNull: false,
+      type: DataTypes.ENUM("cash", "digital-payment")
+    },
+    total_amount: {
+      allowNull: false,
+      type: DataTypes.INTEGER
+    },
+    pincode: {
+      allowNull: false,
+      type: DataTypes.STRING,
+      validate: {
+        len: {
+          args: [6 ,6],
+          msg: "pincode must be 6 characters long."
+        }
+      }
+    },
+    address: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: {
+        len: {
+          args: [10, 255],
+          msg: "address must be 10-255 characters long."
+        }
+      }
+    },
+    mobile: {
+      allowNull: true,
+      type: DataTypes.STRING,
+      validate: {
+        len: {
+          args: [10,10],
+          msg: "mobile must be 10 characters long."
+        }
+      }
+    },
+    customer_payment_image: {
+      allowNull: true,
+      type: DataTypes.BLOB,
+    },
+  }, {
+    sequelize,
+    modelName: 'Invoice',
+    timestamps: true,
+    hooks: {
+      beforeCreate: async (invoice) => {
+        const year = new Date().getFullYear();
+        const month = new Date().getMonth();
+        const day = new Date().getDate();
+        const lastInvoice = await Invoice.findOne({
+          order: [['createdAt', 'DESC']],
+        });
+
+        // Extract the last increment from the last custom ID
+        let lastIncrement = 0;
+        if (lastInvoice && lastInvoice.invoice_id) {
+          const lastIncrementString = lastInvoice.invoice_id.split('-')[1];
+          lastIncrement = parseInt(lastIncrementString, 10);
+        }
+
+        // Increment the last value by 1 and pad with 0s to maintain 3 digits
+        const newIncrement = (lastIncrement + 1).toString().padStart(3, '0');
+
+        // Set the new custom ID: "2024-00-00-001-Inv"
+        invoice.invoice_id = `${year}-${month}-${date}-${newIncrement}-Inv`;
+      },
+    },
+  });
+  return Invoice;
+};
