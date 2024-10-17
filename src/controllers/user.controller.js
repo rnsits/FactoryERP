@@ -6,15 +6,6 @@ const AppError = require("../utils/errors/app.error");
 async function addUser(req, res) {
     try {
         const { username, password, pin, email, phone, role, auth_method } = req.body;
-        if (auth_method === 'username_password' && !password) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse= "Password required");
-        } else if (auth_method === 'pin' && !pin) {
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse.message = "Pin Required");
-        }   
         const user = await UserService.createUser({
             username,
             password,
@@ -37,7 +28,7 @@ async function addUser(req, res) {
 
 async function getUser(req,res){
     try{
-        const user = await UserService.getUser();
+        const user = await UserService.getUser(req.params.userId);
         SuccessResponse.message = "Successfully completed the request";
         SuccessResponse.data = user;
         return res
@@ -55,7 +46,7 @@ async function getUser(req,res){
 
 async function getAllUsers(req, res){
     try{
-        const users = await UserService.getAllUsers(); 
+        const users = await UserService.getAllUser(); 
         SuccessResponse.message = "Successfully completed the request";
         SuccessResponse.data = users;
         return res

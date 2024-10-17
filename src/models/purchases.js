@@ -12,11 +12,11 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Purchases.belongsTo(models.Vendors, {
-        foreignKey: 'vendorId',
+        foreignKey: 'vendor_id',
         as: 'vendor', // This will be used to fetch the vendor of the purchase
       });
       Purchases.belongsTo(models.Product,{
-        foreignKey: 'productId',
+        foreignKey: 'product_id',
         as: 'product',
       })
     }

@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Vendors.hasMany(models.Purchases, {
-        foreignKey: 'vendorId',
+        foreignKey: 'vendor_id',
         as: 'purchases',
       });
     }
@@ -64,7 +64,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [6, 6],
-          msg: "Mobile Number must be 10 characters long."
+          msg: "Pincode must be 10 characters long."
         }
       }
     },

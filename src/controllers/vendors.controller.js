@@ -1,8 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
-const { VendorsService } = require("../services");
+const { VendorService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
-const AppError = require("../utils/errors/app.error");
-const vendors = require("../models/vendors");
 
 async function addVendor(req, res) {
     try {
@@ -29,15 +27,15 @@ async function addVendor(req, res) {
 
 async function getVendor(req,res){
     try{
-        const vendor = await VendorService.getVendor();
+        const vendor = await VendorService.getVendor(req.params.vendorId);
         SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = user;
+        SuccessResponse.data = vendor;
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
     } catch (error) {
         console.log(error);
-        ErrorResponse.message = "Something went wrong while getting User";
+        ErrorResponse.message = "Something went wrong while getting Vendor";
         ErrorResponse.error = error;
         return res
             .status(StatusCodes.INTERNAL_SERVER_ERROR)

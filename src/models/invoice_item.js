@@ -29,6 +29,14 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
+    invoice_id: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     product_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -51,6 +59,30 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    total_price: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 0
+    },
+    gst_amount: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    sgst_amount: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    igst_amount: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    item_image: {
+      type: DataTypes.BLOB,
+      allowNull: true,
+    }
   }, {
     sequelize,
     modelName: 'Invoice_Item',

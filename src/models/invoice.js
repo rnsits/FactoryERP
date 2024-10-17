@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Invoice.belongsTo(models.Customers, {
-        foreignKey: "customerId",
+        foreignKey: "customer_id",
         as: "customer"
       });
 
@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       Invoice.hasMany(models.Customer_Payment, {
-        foreignKey: "invoiceId",
+        foreignKey: "invoice_id",
         as: "customer_payments"
       })
     }
@@ -37,7 +37,8 @@ module.exports = (sequelize, DataTypes) => {
     invoice_id:{
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true
+      unique: true,
+      defaultValue: ""
     },
     invoice_item_id: {
       type: DataTypes.INTEGER,
@@ -113,6 +114,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       type: DataTypes.BLOB,
     },
+    total_tax: {
+      type: DataTypes.FLOAT,
+      allowNull: false,  // Final total including tax
+      defaultValue: 0
+    },
+    item_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    }
   }, {
     sequelize,
     modelName: 'Invoice',
@@ -120,8 +131,8 @@ module.exports = (sequelize, DataTypes) => {
     hooks: {
       beforeCreate: async (invoice) => {
         const year = new Date().getFullYear();
-        const month = new Date().getMonth();
-        const day = new Date().getDate();
+        const month = (new Date().getMonth() + 1).toString().padStart(2, '0');
+        const day = new Date().getDate().toString().padStart(2, '0');
         const lastInvoice = await Invoice.findOne({
           order: [['createdAt', 'DESC']],
         });
@@ -137,7 +148,7 @@ module.exports = (sequelize, DataTypes) => {
         const newIncrement = (lastIncrement + 1).toString().padStart(3, '0');
 
         // Set the new custom ID: "2024-00-00-001-Inv"
-        invoice.invoice_id = `${year}-${month}-${date}-${newIncrement}-Inv`;
+        invoice.invoice_id = `${year}-${month}-${day}-${newIncrement}-Inv`;
       },
     },
   });

@@ -1,13 +1,14 @@
 // index.js or app.js (your main application file)
 const express = require('express');
 const app = express();
-const authRoutes = require('./src/routes/auth.routes'); // Adjust the path as necessary
+// const authRoutes = require('./src/routes/v1/auth.routes'); // Adjust the path as necessary
+const apiRoutes = require('./src/routes');
 
 // Middleware to parse JSON requests
 app.use(express.json());
 
 // Use the auth routes
-app.use('/auth', authRoutes);
+app.use('/api', apiRoutes);
 
 // Error handling middleware (optional)
 app.use((err, req, res, next) => {

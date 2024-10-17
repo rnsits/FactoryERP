@@ -29,7 +29,7 @@ async function createUser(data) {
 
 async function getUser(data) {
     try {
-        const user = await userRepository.getUser(data);
+        const user = await userRepository.get(data);
         return user;
     } catch(error) {
         console.log(error);
@@ -53,7 +53,7 @@ async function getUser(data) {
           );
         }
         throw new AppError(
-          "Cannot get Ticket object",
+          "Cannot get User for associated value.",
           StatusCodes.INTERNAL_SERVER_ERROR
         );
     }
@@ -61,7 +61,7 @@ async function getUser(data) {
 
 async function getAllUser() {
     try {
-        const users = await userRepository.findAll();
+        const users = await userRepository.getAll();
         return users;
     } catch(error) {
         console.log(error);
@@ -85,7 +85,7 @@ async function getAllUser() {
           );
         }
         throw new AppError(
-          "Cannot get Ticket object",
+          "Cannot get user.",
           StatusCodes.INTERNAL_SERVER_ERROR
         );
     }

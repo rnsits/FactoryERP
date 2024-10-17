@@ -1,12 +1,10 @@
 const { StatusCodes } = require("http-status-codes");
 const { PurchaseService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
-const AppError = require("../utils/errors/app.error");
-
 
 async function addPurchase(req, res) {
     try {
-        const { product_id, quantity, quantity_type, total_cost, payment_date, payment_status, payment_due_date,  } = req.body;
+        const { product_id, quantity, quantity_type, total_cost, payment_date, payment_status, payment_due_date, vendor_id, invoice_Bill } = req.body;
        
         const purchase = await PurchaseService.createPurchase({
             product_id,
@@ -15,7 +13,9 @@ async function addPurchase(req, res) {
             total_cost,
             payment_date,
             payment_status,
-            payment_due_date
+            payment_due_date,
+            vendor_id,
+            invoice_Bill
         });
         SuccessResponse.message = "Purchase added successfully";
         SuccessResponse.data = purchase;
@@ -30,7 +30,7 @@ async function addPurchase(req, res) {
 
 async function getPurchase(req,res){
     try{
-        const purchase = await PurchaseService.getPurchase();
+        const purchase = await PurchaseService.getPurchase(req.params.purchaseId);
         SuccessResponse.message = "Successfully completed the request";
         SuccessResponse.data = purchase;
         return res

@@ -88,6 +88,16 @@ module.exports = {
         allowNull: true,
         type: Sequelize.BLOB,
       },
+      total_tax: {
+        allowNull: false,
+        type: Sequelize.FLOAT,
+        defaultValue: 0,
+      },
+      item_count: {
+        allowNull: false,
+        defaultValue: 0,
+        type: Sequelize.INTEGER
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
