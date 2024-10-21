@@ -30,23 +30,10 @@ function validateBodyRequest(req, res, next) {
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
-    if(!req.body.invoice_item_id){
-        ErrorResponse.message = "Something went wrong while creating customers.";
-        ErrorResponse.error = new AppError(["Invoice Item Id missing in the incoming request"],StatusCodes.BAD_REQUEST);
-        return res 
-               .status(StatusCodes.BAD_REQUEST)
-               .json(ErrorResponse)
-    }
+   
     if(req.body.due_date && !validateDateFormat(req.body.due_date)){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Due Date is invalid."]);
-        return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse)
-    }
-    if(!validateDateFormat(req.body.invoice_date)){
-        ErrorResponse.message = "Something went wrong while creating Invoice.";
-        ErrorResponse.error = new AppError(["Invoice Date is invalid."]);
         return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
@@ -78,13 +65,6 @@ function validateBodyRequest(req, res, next) {
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse);
-    }
-    if(!req.body.customer_payment_image){
-        ErrorResponse.message = "Something went wrong while creating Invoice.";
-        ErrorResponse.error = new AppError(["Customer Payment Image missing in the incoming request."], StatusCodes.BAD_REQUEST);
-        return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse);
     }
     const validStatusTypes = ["paid", "unpaid", "partial-payment"];
     if(!req.body.payment_status || !validStatusTypes.includes(req.body.payment_status)){

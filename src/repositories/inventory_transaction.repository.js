@@ -1,17 +1,17 @@
 const CrudRepository = require("./crud.repository");
-const { Inventory, sequelize } = require("../models");
+const { InventoryTransaction } = require("../models")
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { QueryTypes } = require("sequelize");
 const { query } = require("express");
 
-class InventoryRepository extends CrudRepository {
+class InventoryTransactionRepository extends CrudRepository {
     constructor() {
-      super(Inventory);
+      super(InventoryTransaction);
     }
 
 
 
 }
 
-module.exports = InventoryRepository;
+module.exports = InventoryTransactionRepository;

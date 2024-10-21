@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const ExpenseRoutes = require('./expenses.route');
-const InventoryRoutes = require('./inventory.route');
 const ProductRouter = require('./product.route');
 const CategoryRouter = require('./category.route');
 const CustomerRoutes = require('./customers.route');
@@ -21,7 +20,6 @@ router.use('/customer_payments', CustomerPaymentRoutes);
 router.use('/expenses', ExpenseRoutes);
 router.use('/invoices', InvoiceRouter);
 router.use('/invoiceitems', Invoice_ItemRouter);
-router.use('/inventory', InventoryRoutes);
 router.use('/products', ProductRouter);
 router.use('/purchases', PurchaseRouter);
 router.use('/users', UserRouter);

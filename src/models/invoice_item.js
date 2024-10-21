@@ -12,12 +12,12 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Invoice_Item.belongsTo(models.Invoice, {
-        foreignKey: 'invoice_item_id',
+        foreignKey: 'id',
         as: 'invoice',
       });
 
       Invoice_Item.belongsTo(models.Product, {
-        foreignKey: 'productId',
+        foreignKey: 'id',
         as: 'product',
       })
     }
@@ -29,17 +29,13 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
-    invoice_id: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     product_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'Product',
         key: 'id'
@@ -59,22 +55,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    total_price: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      defaultValue: 0
-    },
-    gst_amount: {
+    cgst_rate: {
       type: DataTypes.FLOAT,
       allowNull: true,
       defaultValue: 0
     },
-    sgst_amount: {
+    sgst_rate: {
       type: DataTypes.FLOAT,
       allowNull: true,
       defaultValue: 0
     },
-    igst_amount: {
+    igst_rate: {
       type: DataTypes.FLOAT,
       allowNull: true,
       defaultValue: 0

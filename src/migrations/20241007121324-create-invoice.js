@@ -14,14 +14,6 @@ module.exports = {
         allowNull: false,
         unique: true
       },
-      invoice_item_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'Invoice_Items',
-          key: 'id'
-        } 
-      },
       customer_id: {
         allowNull: false,
         type: Sequelize.INTEGER,
@@ -29,10 +21,6 @@ module.exports = {
           model: 'Customers',
           key: 'id'
         }
-      },
-      invoice_date: {
-        allowNull: false,
-        type: Sequelize.DATE
       },
       due_date: {
         allowNull: true,
@@ -97,6 +85,11 @@ module.exports = {
         allowNull: false,
         defaultValue: 0,
         type: Sequelize.INTEGER
+      },
+      items: {
+        allowNull: false,
+        type: Sequelize.JSON,
+        defaultValue: []
       },
       createdAt: {
         allowNull: false,

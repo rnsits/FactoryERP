@@ -23,16 +23,17 @@ function validateGetRequest(req,res,next){
 function validateBodyRequest(req, res, next){
 
     // Validate product id to be either "audio" or "text"
-    if(!req.body.product_id){
-        ErrorResponse.message = "Something went wrong while getting invoice item";
-        ErrorResponse.error = new AppError(["Product Id not found on the incoming request"],StatusCodes.BAD_REQUEST)
+    const productId = req.body.product_id;
+    if(isNaN(productId) && parseInt(productId)){
+        ErrorResponse.message = "Something went wrong while creating invoice item";
+        ErrorResponse.error = new AppError(["Product Id must be an integer incoming request"],StatusCodes.BAD_REQUEST)
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
 
     if(!req.body.quantity){
-        ErrorResponse.message = "Something went wrong while getting Invoice Item";
+        ErrorResponse.message = "Something went wrong while creating Invoice Item";
         ErrorResponse.error = new AppError(["Quantity not found on the incoming request"],StatusCodes.BAD_REQUEST)
         return res 
                .status(StatusCodes.BAD_REQUEST)
@@ -47,12 +48,35 @@ function validateBodyRequest(req, res, next){
     }
 
     if(!req.body.unit_price){
-        ErrorResponse.message = "Something went wrong while getting invoice item";
+        ErrorResponse.message = "Something went wrong while creating invoice item";
         ErrorResponse.error = new AppError(["Unit Price not found on the incoming request"],StatusCodes.BAD_REQUEST)
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
+
+    // since igst cgst and sgst will be calculated when invoice is to be generated therefore need to use likewise
+    if(!req.body.cgst_rate || !req.body.igst_rate || !req.body.sgst_rate) {
+        ErrorResponse.message = "Something went wrong while creating invoice item.";
+        ErrorResponse.error = new AppError(["Either CGST/IGST/SGST missing in the incoming request."],StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse);
+    }
+    // if((!req.body.cgst_rate && req.body.sgst_rate) || (!req.body.sgst_rate && req.body.cgst_rate)) {
+    //     ErrorResponse.message = "Something went wrong while creating invoice item";
+    //     ErrorResponse.error = new AppError(["Either SGST or CGST missing in the incoming request"],StatusCodes.BAD_REQUEST)
+    //     return res 
+    //            .status(StatusCodes.BAD_REQUEST)
+    //            .json(ErrorResponse)
+    // }
+    // if(!req.body.igst_rate && !req.body.cgst_rate && !req.body.sgst_rate) {
+    //     ErrorResponse.message = "Something went wrong while creating invoice item";
+    //     ErrorResponse.error = new AppError(["Either IGST missing in the incoming request"],StatusCodes.BAD_REQUEST)
+    //     return res 
+    //            .status(StatusCodes.BAD_REQUEST)
+    //            .json(ErrorResponse)
+    // }
 
     next();
 };

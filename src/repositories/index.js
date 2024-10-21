@@ -3,7 +3,7 @@ module.exports = {
     Customer_PaymentRepository: require('./customer_payment.repository'),
     CustomersRepository: require('./customers.repository'),
     ExpensesRepository: require('./expenses.repository'),
-    InventoryRepository: require('./inventory.repository'),
+    InventoryTransactionRepository: require('./inventory_transaction.repository'),
     InvoiceRepository: require('./invoice.repository'),
     Invoice_ItemRepository: require('./invoice_item.repository'),
     ProductRepository: require('./product.repository'),

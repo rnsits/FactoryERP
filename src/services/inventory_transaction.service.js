@@ -1,14 +1,13 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
-const { Invoice_ItemRepository } = require("../repositories");
+const { InventoryTransactionRepository } = require("../repositories");
 
-const invoiceItemRepository = new Invoice_ItemRepository();
+const inventoryTransactionRepository = new InventoryTransactionRepository();
 
-
-async function createInvoice_Item(data) {
+async function createInventoryTransaction(data) {
     try{
-        const invoice_item = await invoiceItemRepository.create(data);
-        return invoice_item;
+        const inventory = await inventoryTransactionRepository.create(data);
+        return inventory;
       }catch(error){
         console.log(error);
       if (
@@ -22,16 +21,16 @@ async function createInvoice_Item(data) {
         throw new AppError(explanation, StatusCodes.BAD_REQUEST);
       }
       throw new AppError(
-        "Cannot create a new Invoice_Item.",
+        "Cannot create a Inventory Data.",
         StatusCodes.INTERNAL_SERVER_ERROR
       );
     }
 }
 
-async function getInvoiceItem(data) {
+async function getInventoryTransaction(data) {
     try {
-        const invoice = await invoiceItemRepository.get(data);
-        return invoice;
+        const inventory = await inventoryTransactionRepository.get(data);
+        return inventory;
     } catch(error) {
         console.log(error);
         if(
@@ -60,10 +59,10 @@ async function getInvoiceItem(data) {
     }
 }
 
-async function getAllInvoiceItems() {
+async function getAllInventoryTransactions() {
     try {
-        const invoices = await invoiceItemRepository.getAll();
-        return invoices;
+        const inventoryData = await inventoryTransactionRepository.getAll();
+        return inventoryData;
     } catch(error) {
         console.log(error);
         if(
@@ -86,54 +85,16 @@ async function getAllInvoiceItems() {
           );
         }
         throw new AppError(
-          "Cannot get Invoice Items",
+          "Cannot get Inventory Transaction Data.",
           StatusCodes.INTERNAL_SERVER_ERROR
         );
     }
 }
 
-async function addInvoiceItems(items, postOffice, invoiceId) {
-  let totalInvoiceAmount = 0;
-  const invoiceItems = [];
-
-  for (const item of items) {
-      const { item_name, quantity, unit_price } = item;
-      const total_price = quantity * unit_price;
-
-      let cgst_amount = 0, sgst_amount = 0, igst_amount = 0;
-
-      // Calculate taxes based on the state
-      if (postOffice && postOffice.State === "Rajasthan") {
-          cgst_amount = 0.09 * total_price;
-          sgst_amount = 0.09 * total_price;
-          totalInvoiceAmount += total_price + cgst_amount + sgst_amount;
-      } else {
-          igst_amount = 0.18 * total_price;
-          totalInvoiceAmount += total_price + igst_amount;
-      }
-
-      // Create each item associated with the invoice
-      const invoiceItem = await invoiceItemRepository.create({
-          invoice_id: invoiceId,
-          item_name,
-          quantity,
-          unit_price,
-          total_price,
-          cgst_amount,
-          sgst_amount,
-          igst_amount,
-      });
-
-      invoiceItems.push(invoiceItem);
-  }
-
-  return invoiceItems;
-}
-
-async function updateInvoiceItem(itemId,data){
+async function updateInventoryTransaction(inventoryTransactionId,data){
     try {
-      const invoiceItem = await invoiceItemRepository.update(itemId,data);
-      return invoiceItem;
+      const inventory = await inventoryTransactionRepository.update(inventoryTransactionId,data);
+      return inventory;
     } catch(error) {
       console.log(error);
       if(
@@ -156,18 +117,49 @@ async function updateInvoiceItem(itemId,data){
         );
       }
       throw new AppError(
-        "Cannot get Invoice Items",
+        "Cannot get Inventory Transactions Data",
         StatusCodes.INTERNAL_SERVER_ERROR
       );
   }
 
 }
 
+async function deleteInventoryTransaction(inventoryTransactionId) {
+    try {
+        const inventory = await inventoryTransactionRepository.destroy(inventoryTransactionId);
+    }catch(error) {
+        console.log(error);
+        if(
+            error.name == "SequelizeValidationError" ||
+            error.name == "SequelizeUniqueConstraintError"
+        ) {
+          let explanation = [];
+          error.errors.forEach((err) => {
+            explanation.push(err.message);
+          });
+          throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+        } else if (
+          error.name === "SequelizeDatabaseError" &&
+          error.original &&
+          error.original.routine === "enum_in"
+        ) {
+          throw new AppError(
+            "Invalid value for associate_with field.",
+            StatusCodes.BAD_REQUEST
+          );
+        }
+        throw new AppError(
+          "Cannot get Inventory Transactions Data",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+    }
+}
+
 
 module.exports = {
-    createInvoice_Item,
-    getInvoiceItem,
-    getAllInvoiceItems,
-    addInvoiceItems,
-    updateInvoiceItem
+    createInventoryTransaction,
+    getInventoryTransaction,
+    getAllInventoryTransactions,
+    updateInventoryTransaction,
+    deleteInventoryTransaction
 }

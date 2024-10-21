@@ -16,12 +16,6 @@ module.exports = (sequelize, DataTypes) => {
         as: 'category',
       });
 
-      // Each Product has many Inventories
-      Product.belongsTo(models.Inventory, {
-        foreignKey: 'inventory_id',
-        as: 'inventory',
-      });
-
       // Each Product can have many Purchases
       Product.hasMany(models.Purchases, {
         foreignKey: 'product_id',
@@ -32,6 +26,12 @@ module.exports = (sequelize, DataTypes) => {
       Product.hasMany(models.Invoice_Item, {
         foreignKey: 'product_id',
         as: 'invoiceItems',
+      });
+
+      // Each Product can be part of many InventoryTransactions
+      Product.hasMany(models.InventoryTransaction, {
+        foreignKey: 'product_id',
+        as: 'transactions'
       });
     }
   }
@@ -81,13 +81,6 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       references: {
         model: 'Category',
-        key: 'id'
-      }
-    },
-    inventory_id: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Inventory',
         key: 'id'
       }
     },

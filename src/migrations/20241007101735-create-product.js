@@ -51,13 +51,6 @@ module.exports = {
         //   key: 'id'
         // },
       },
-      inventory_id: {
-        type: Sequelize.INTEGER,
-        // references: {
-        //   model: 'Inventory',
-        //   key: 'id'
-        // }
-      },
       quantity_type: {
         type: Sequelize.ENUM(
           'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube'

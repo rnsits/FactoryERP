@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       Invoice.hasMany(models.Invoice_Item, {
-        foreignKey: "invoice_item_id",
+        foreignKey: "id",
         "as": "invoice_item"
       });
 
@@ -40,14 +40,6 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
       defaultValue: ""
     },
-    invoice_item_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Invoice_Item',
-        key: 'id'
-      }
-    },
     customer_id: {
       allowNull: false,
       type: DataTypes.INTEGER,
@@ -55,10 +47,6 @@ module.exports = (sequelize, DataTypes) => {
         model: 'Customers',
         key: 'id'
       }
-    },
-    invoice_date: {
-      allowNull: false,
-      type: DataTypes.DATE
     },
     due_date: {
       allowNull: true,
@@ -77,8 +65,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM("cash", "digital-payment")
     },
     total_amount: {
-      allowNull: false,
-      type: DataTypes.INTEGER
+      allowNull: true,
+      type: DataTypes.FLOAT,
+      defaultValue: 0
     },
     pincode: {
       allowNull: false,
@@ -123,6 +112,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0
+    },
+    items: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: []
     }
   }, {
     sequelize,
@@ -140,15 +134,20 @@ module.exports = (sequelize, DataTypes) => {
         // Extract the last increment from the last custom ID
         let lastIncrement = 0;
         if (lastInvoice && lastInvoice.invoice_id) {
-          const lastIncrementString = lastInvoice.invoice_id.split('-')[1];
-          lastIncrement = parseInt(lastIncrementString, 10);
+          const incrementMatch = lastInvoice.invoice_id.match(/(\d{3})Inv$/);
+          if(incrementMatch) {
+            lastIncrement = parseInt(incrementMatch[1], 10); // Get the numeric part
+          }
+          // const lastIncrementString = lastInvoice.invoice_id.split('')[11];
+          
+          
         }
 
         // Increment the last value by 1 and pad with 0s to maintain 3 digits
         const newIncrement = (lastIncrement + 1).toString().padStart(3, '0');
 
         // Set the new custom ID: "2024-00-00-001-Inv"
-        invoice.invoice_id = `${year}-${month}-${day}-${newIncrement}-Inv`;
+        invoice.invoice_id = `${year}${month}${day}${newIncrement}Inv`;
       },
     },
   });

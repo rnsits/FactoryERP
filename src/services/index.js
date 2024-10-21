@@ -3,7 +3,7 @@ module.exports = {
     CustomerService: require('./customers.service'),
     Customer_PaymentService: require('./customer_payment.service'),
     ExpensesService: require('./expenses.service'),
-    InventoryService: require('./inventory.service'),
+    InventoryTransactionService: require('./inventory_transaction.service'),
     Invoice_ItemService: require('./invoice_item.service'),
     InvoiceService: require('./invoice.service'),
     ProductService: require('./product.service'),

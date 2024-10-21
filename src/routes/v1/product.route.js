@@ -13,6 +13,12 @@ ProductRouter.post('/', ProductMiddleware.validateBodyRequest,ProductController.
  */
 ProductRouter.get('/:productId', ProductMiddleware.validateGetRequest,ProductController.getProduct);
 
+ProductRouter.patch('/:productId/reduce', ProductMiddleware.validateReduce, ProductController.reduceProduct);
+
+ProductRouter.patch('/:productId/update', ProductMiddleware.validateBodyUpdate, ProductController.updateProductByQuantity);
+
+
+
 /**
  * /api/v1/auth/Products/  GET
  */

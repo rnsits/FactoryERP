@@ -24,6 +24,7 @@ class CrudRepository{
 
     async get(data) {
         const response = await this.model.findByPk(data);
+        return response||null;
             if(!response || response==null){
                 throw new AppError('No resource found related to the corresponding details',StatusCodes.NOT_FOUND)
             }
@@ -32,6 +33,7 @@ class CrudRepository{
 
     async getOne(data) {
         const response = await this.model.findOne(data);
+        return response||null;
         if(!response || response==null) {
             throw new AppError('No resource found related to the corresponding details',StatusCodes.NOT_);
         }
