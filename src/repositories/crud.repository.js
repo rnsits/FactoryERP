@@ -1,5 +1,8 @@
+const { where } = require("sequelize");
 const AppError = require("../utils/errors/app.error");
-const {StatusCodes} = require("http-status-codes")
+const {StatusCodes} = require("http-status-codes");
+const { Op } = require('sequelize');
+
 class CrudRepository{
     constructor(model){
         this.model=model;
@@ -44,6 +47,55 @@ class CrudRepository{
     async getAll(){
             const response = await this.model.findAll()
             return response;
+    }
+
+    async getPendingInvoices(){
+        const response = await this.model.findAll({
+            where: {
+                payment_status: "unpaid" || "partial-payment"
+            }
+        })
+        return response || null;
+    }
+
+    async findAll(date){
+        // Get date at midnight
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        // Get date at midnight
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        const response = await this.model.findAll({
+            where:{
+                createdAt: {
+                    [Op.gte]: startOfDay,
+                    [Op.lt]: endOfDay
+                }
+            },
+            order: [['createdAt', 'DESC']] 
+        })
+        return response || null;
+    }
+
+    async findToday(){
+        // Get today's date at midnight
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        // Get tomorrow's date at midnight
+        const endOfDay = new Date();
+        endOfDay.setHours(24, 0, 0, 0);
+        const response = await this.model.findAll({
+            where: {
+                createdAt: {
+                    [Op.gte]: startOfDay,
+                    [Op.lt]: endOfDay
+                }
+            },
+            order: [['createdAt', 'DESC']]
+        })
+        return response || null;
     }
 
     async update(id,data){

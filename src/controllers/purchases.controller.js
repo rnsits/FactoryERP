@@ -1,7 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const { PurchaseService, ProductService, InventoryTransactionService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
-const currentTime = new Date().toLocaleString(); 
 
 
 // For existing product the needed body elements please create form matching this.
@@ -25,14 +24,13 @@ const currentTime = new Date().toLocaleString();
 async function addPurchase(req, res) {
     try {
         const { name, product_id,description,description_type, category_id, quantity, product_cost, quantity_type, total_cost, payment_date, payment_status, payment_due_date, vendor_id, invoice_Bill } = req.body;
-        
+        const currentTime = new Date().toLocaleString(); 
         const product = await ProductService.getProductByNameAndCategory(name, category_id);
         
         let updatedProduct, newStock, updatedInventory, purchase;
         if(product) {
             newStock = product.stock + quantity;    
             updatedProduct = await ProductService.updateProduct(product_id, newStock);
-            // console.log("before updated inventory", updatedProduct);
 
             updatedInventory = await InventoryTransactionService.createInventoryTransaction({
                 product_id: product.id,
@@ -42,7 +40,7 @@ async function addPurchase(req, res) {
                 description: `${product.name} was added quantity ${quantity}, total quantity ${newStock} on ${currentTime}.`,
                 description_type: 'text'
             })
-            // console.log("updated inventory", updatedInventory);
+
             updatedCost = product.product_cost * quantity;
             purchase = await PurchaseService.createPurchase({
                 product_id: product.id,
@@ -75,7 +73,7 @@ async function addPurchase(req, res) {
                 description,         // Product description
                 description_type,    // Type of the description (text, audio, etc.)
                 // audio_path,          // Path to an audio file (if applicable)
-                quantity_type,       // The type of the quantity (e.g., kg, liters)
+                quantity_type,       // The type of the quantity (e.g., kg, l, m, pcs)
                 stock: quantity,     // Initial stock (from quantity in request)
                 product_cost,        // Cost of the product per unit
                 product_image: invoice_Bill        // Include the product image if required (if it's missing, ensure it is passed)
@@ -152,9 +150,49 @@ async function getAllPurchases(req, res){
     }
 }
 
+async function getTodayPurchases(req, res){
+    try{  
+        const purchases = await PurchaseService.getTodayPurchases(); 
+        SuccessResponse.message = "Successfully completed the request";
+        SuccessResponse.data = purchases;
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse)
+    }catch(error) {
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while getting Purchases";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse)
+    }
+}
+
+async function getPurchasesByDate(req, res){
+    try{
+        const date = new Date(req.body.date);
+        console.log("Controller date", date);       
+        const purchases = await PurchaseService.getPurchasesByDate(date); 
+        SuccessResponse.message = "Successfully completed the request";
+        SuccessResponse.data = purchases;
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse)
+    }catch(error) {
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while getting Purchases";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse)
+    }
+}
+
 
 module.exports = {
     addPurchase,
     getPurchase,
-    getAllPurchases
+    getAllPurchases,
+    getTodayPurchases,
+    getPurchasesByDate
 }

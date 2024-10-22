@@ -4,17 +4,19 @@ const { ExpensesMiddleware } = require("../../middlewares");
 const ExpenseRoutes = express.Router();
 
 /**
- * /api/v1/auth/Expense   POST
+ * /api/v1/auth/expenses   POST
  */
 ExpenseRoutes.post('/', ExpensesMiddleware.validateBodyRequest, ExpensesController.addExpense);
+ExpenseRoutes.post('/expDat', ExpensesController.getExpensesByDate);
 
 /**
- * /api/v1/auth/Expense/:expenseId   GET
+ * /api/v1/auth/expenses/:expenseId   GET
  */
+ExpenseRoutes.get('/today', ExpensesController.getTodayExpenses);
 ExpenseRoutes.get('/:expenseId', ExpensesMiddleware.validateGetRequest, ExpensesController.getExpense);
 
 /**
- * /api/v1/auth/Expenses/  GET
+ * /api/v1/auth/expenses/  GET
  */
 ExpenseRoutes.get('/', ExpensesController.getAllExpenses);
 

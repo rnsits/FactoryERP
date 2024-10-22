@@ -1,7 +1,6 @@
 //middlewares
 const { StatusCodes } = require("http-status-codes");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
-const AppError = require("../utils/errors/app.error");
 const serverConfig = require("../config");
 
 // const authenticate = async (req, res, next) => {
@@ -22,7 +21,6 @@ const { verifyToken } = require("../utils/common/auth");
 const authenticate = async (req, res, next) => {
   const token = req.header('Authorization');
   if (!token) {
-    // return res.status(401).send({ error: 'Unauthorized' });
     return res.status(StatusCodes.UNAUTHORIZED).json({
         message: "No token provided"
     });

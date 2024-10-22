@@ -1,7 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const { InvoiceService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
-const { getPostOffice, findStateByPincode } = require('../../src/utils/common/pincodehelper');
+const { findStateByPincode } = require('../../src/utils/common/pincodehelper');
 const { Invoice_ItemService } = require('../services');
 const AppError = require("../utils/errors/app.error");
 
@@ -126,9 +126,47 @@ async function getAllInvoices(req, res){
     }
 }
 
+async function getPendingInvoices(req,res){
+    try{
+        const invoices = await InvoiceService.getPendingInvoices();
+        SuccessResponse.message = "Successfully completed the request";
+        SuccessResponse.data = invoices;
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse) 
+    } catch (error) {
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while getting Invoice.";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse)
+    }
+}
+
+async function getTodayInvoices(req, res){
+    try{    
+        const invoices = await InvoiceService.getTodayInvoices(); 
+        SuccessResponse.message = "Successfully completed the request";
+        SuccessResponse.data = invoices;
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse)
+    }catch(error) {
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while getting Invoices.";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse)
+    }
+}
+
 
 module.exports = {
  addInvoice,
  getInvoice,
- getAllInvoices   
+ getAllInvoices,
+ getPendingInvoices,
+ getTodayInvoices
 }

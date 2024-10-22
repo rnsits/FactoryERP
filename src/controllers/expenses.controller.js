@@ -65,9 +65,50 @@ async function getAllExpenses(req, res){
     }
 }
 
+async function getTodayExpenses(req, res){
+    try{  
+        const expenses = await ExpensesService.getTodayExpenses(); 
+        SuccessResponse.message = "Successfully completed the request";
+        SuccessResponse.data = expenses;
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse)
+    }catch(error) {
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while getting Expenses.";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse)
+    }
+}
+
+async function getExpensesByDate(req, res){
+    try{
+        const date = new Date(req.body.date);
+        console.log("Controller date", date);
+        
+        const purchases = await ExpensesService.getExpensesByDate(date); 
+        SuccessResponse.message = "Successfully completed the request";
+        SuccessResponse.data = purchases;
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse)
+    }catch(error) {
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while getting Expenses.";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse)
+    }
+}
+
 
 module.exports = {
     addExpense,
     getExpense,
-    getAllExpenses
+    getAllExpenses,
+    getTodayExpenses,
+    getExpensesByDate
 }

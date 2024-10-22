@@ -22,25 +22,18 @@ function validateGetRequest(req,res,next){
     next();
 }
 
+function validateDateBody(req, res, next){
+    if(!req.body.date || isNaN(req.body.date)) {
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Date not found in the incoming request."], StatusCodes.BAD_REQUEST)
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
+    next();
+}
+
 function validateBodyRequest(req, res, next){
-
-    // vendor_id,invoice_Bill
-    // Validate product id to be either "audio" or "text"
-    // if(!req.body.total_cost){
-    //     ErrorResponse.message = "Something went wrong while creating expense.";
-    //     ErrorResponse.error = new AppError(["Total Cost not found on the incoming request"],StatusCodes.BAD_REQUEST)
-    //     return res 
-    //            .status(StatusCodes.BAD_REQUEST)
-    //            .json(ErrorResponse)
-    // }
-
-    // if(!req.body.product_id){
-    //     ErrorResponse.message = "Something went wrong while creating expense.";
-    //     ErrorResponse.error = new AppError(["Product ID not found on the incoming request"],StatusCodes.BAD_REQUEST)
-    //     return res 
-    //            .status(StatusCodes.BAD_REQUEST)
-    //            .json(ErrorResponse)
-    // }
 
     if(!req.body.vendor_id){
         ErrorResponse.message = "Something went wrong while creating expense.";
@@ -112,7 +105,8 @@ function validateBodyRequest(req, res, next){
 
 module.exports = {
     validateBodyRequest,
-    validateGetRequest
+    validateGetRequest,
+    validateDateBody
 }
 
 
