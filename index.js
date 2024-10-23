@@ -16,6 +16,7 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something went wrong!');
 });
 
+
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
