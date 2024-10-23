@@ -20,7 +20,7 @@ const data = {
     password: process.env.PRODUCTION_PASSWORD,
     database: process.env.PRODUCTION_DATABASE,
     host: process.env.PRODUCTION_HOST,
-    dialect: 'postgres',
+    dialect: 'mysql',
   }
 }
 
