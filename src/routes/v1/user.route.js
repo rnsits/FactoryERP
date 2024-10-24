@@ -14,6 +14,8 @@ UserRouter.post('/', UserMiddleware.validateBodyRequest, UserController.addUser)
  */
 UserRouter.get('/:userId', UserMiddleware.validateGetRequest, UserController.getUser);
 
+UserRouter.patch('/:userId/bal', UserMiddleware.validatePatchBody, UserController.updateUserBalance);
+
 /**
  * /api/v1/auth/Users/  GET
  */

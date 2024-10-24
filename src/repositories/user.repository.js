@@ -9,7 +9,13 @@ class UserRepository extends CrudRepository {
     constructor() {
       super(User);
     }
-    
+
+    async updateUserBalance(user_id, amount) {
+      const user = await User.findByPk(user_id);
+      user.current_balance = user.current_balance + amount;
+      await user.save();
+      return user;
+    } 
 
 }
 

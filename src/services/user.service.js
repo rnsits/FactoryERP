@@ -91,9 +91,9 @@ async function getAllUser() {
     }
 }
 
-async function updateUserBalance(userId, currentBalance){
+async function updateUserBalance(userId, amount){
   try {
-    const user = await userRepository.update(userId, currentBalance);
+    const user = await userRepository.updateUserBalance(userId, amount);
     return user;
   } catch (error) {
     console.log(error);
