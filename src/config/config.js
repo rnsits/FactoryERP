@@ -16,7 +16,7 @@ const data = {
     dialect: 'mysql'
   },
   production: { 
-    "url":"mysql://root:g6kehndcf8GEUwqsv5FrN@98.70.13.173:3004/FactoryERP",
+    "url":"mysql://factory:g6kehndcf8GEUwqsv5FrN@98.70.13.173:3004/FactoryERP",
     username: process.env.PRODUCTION_USERNAME,
     password: process.env.PRODUCTION_PASSWORD,
     database: process.env.PRODUCTION_DATABASE,
