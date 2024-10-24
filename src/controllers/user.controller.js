@@ -62,9 +62,29 @@ async function getAllUsers(req, res){
     }
 }
 
+async function updateUserBalance(req, res){
+    try{
+        // const userId = req.user;
+        const user = await UserService.updateUserBalance(req.params.userId, req.body.amount);
+        SuccessResponse.message = "Successfully updated the User";
+        SuccessResponse.data = user;
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse)
+    }catch(error) {
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while updating User.";
+        ErrorResponse.error = error;
+        return res 
+                .status(StatusCodes.INTERNAL_SERVER_ERROR)
+                .json(ErrorResponse)
+    }
+}
+
 
 module.exports = {
     addUser,
     getUser,
-    getAllUsers
+    getAllUsers,
+    updateUserBalance
 }

@@ -1,4 +1,5 @@
 module.exports = {
+    BalanceTransactionService: require('./balance_transaction.service'),
     CategoryService: require('./category.service'),
     CustomerService: require('./customers.service'),
     Customer_PaymentService: require('./customer_payment.service'),

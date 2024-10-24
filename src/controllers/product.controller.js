@@ -62,7 +62,7 @@ async function getProducts(req, res) {
     try {
         const products = await ProductService.getAllProducts();
         SuccessResponse.message = "Products retrieved successfully.";
-        SuccessResponse.data = products;
+        SuccessResponse.data = {products};
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
         ErrorResponse.message = "Failed to fetch products.";
@@ -157,11 +157,25 @@ async function updateProductByQuantity(req, res) {
     }
 }
 
+async function getProductCount(req, res){
+    try {
+        const productCount = await ProductService.getProductCount();
+        SuccessResponse.message = "Product count fetched successfully.";
+        SuccessResponse.data = {productCount};
+        return res.status(StatusCodes.OK).json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.message = "Failed to fetch product count.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
 
 module.exports = {
     addProduct,
     getProducts,
     getProduct,
     reduceProduct,
-    updateProductByQuantity
+    updateProductByQuantity,
+    getProductCount
 }

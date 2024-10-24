@@ -1,5 +1,6 @@
 module.exports = {
     AuthController: require('../controllers/auth.controller'),
+    BalanceTransactionController: require('../controllers/balance_transaction.controller'),
     CategoryController: require('../controllers/category.controller'),
     CustomerController: require('../controllers/customers.controller'),
     CustomerPaymentController: require('./customer_payment.controller'),

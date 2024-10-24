@@ -91,8 +91,41 @@ async function getAllUser() {
     }
 }
 
+async function updateUserBalance(userId, currentBalance){
+  try {
+    const user = await userRepository.update(userId, currentBalance);
+    return user;
+  } catch (error) {
+    console.log(error);
+        if(
+            error.name == "SequelizeValidationError" ||
+            error.name == "SequelizeUniqueConstraintError"
+        ) {
+          let explanation = [];
+          error.errors.forEach((err) => {
+            explanation.push(err.message);
+          });
+          throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+        } else if (
+          error.name === "SequelizeDatabaseError" &&
+          error.original &&
+          error.original.routine === "enum_in"
+        ) {
+          throw new AppError(
+            "Invalid value for associate_with field.",
+            StatusCodes.BAD_REQUEST
+          );
+        }
+        throw new AppError(
+          "Cannot update user.",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+  }
+}
+
 module.exports = {
     createUser,
     getUser,
-    getAllUser
+    getAllUser,
+    updateUserBalance
 }

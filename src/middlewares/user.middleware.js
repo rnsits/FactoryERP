@@ -1,9 +1,6 @@
 const {StatusCodes} = require('http-status-codes');
 const {ErrorResponse} = require('../utils/common');
 const AppError = require('../utils/errors/app.error');
-const { message } = require('../utils/common/error.response');
-
-
 
 
 function validateGetRequest(req,res,next){

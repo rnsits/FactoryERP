@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const BalanTranRouter = require('./balance_transaction.route');
 const ExpenseRoutes = require('./expenses.route');
 const ProductRouter = require('./product.route');
 const CategoryRouter = require('./category.route');
@@ -24,5 +25,6 @@ router.use('/products', ProductRouter);
 router.use('/purchases', PurchaseRouter);
 router.use('/users', UserRouter);
 router.use('/vendors', VendorRouter);
+router.use('/balantran', BalanTranRouter);
 
 module.exports = router;

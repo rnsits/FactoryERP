@@ -3,7 +3,7 @@ require('dotenv').config();
 const data = {
   development: {
     username: process.env.DEV_DB_USERNAME || 'root',
-    password: process.env.DEV_DB_PASSWORD || "Kleio321@",
+    password: process.env.DEV_DB_PASSWORD,
     database: process.env.DEV_DB_NAME || "FactoryERP",
     host: process.env.DEV_DB_HOST || '127.0.0.1',
     dialect: "mysql"
@@ -15,13 +15,16 @@ const data = {
     host: process.env.TEST_DB_HOST || '127.0.0.1',
     dialect: 'mysql'
   },
-  production: {
+  production: { 
+    "url":"mysql://root:g6kehndcf8GEUwqsv5FrN@98.70.13.173:3004/FactoryERP",
     username: process.env.PRODUCTION_USERNAME,
     password: process.env.PRODUCTION_PASSWORD,
     database: process.env.PRODUCTION_DATABASE,
     host: process.env.PRODUCTION_HOST,
-    dialect: 'postgres',
+    port: process.env.PRODUCTION_PORT,
+    dialect: 'mysql',
   }
 }
 
 module.exports = data;
+

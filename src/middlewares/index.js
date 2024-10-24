@@ -1,5 +1,6 @@
 module.exports = {
     AuthMiddleware: require('../middlewares/auth.middleware'),
+    BalanceTransactionMiddleware: require('../middlewares/balance_transaction.middleware'),
     CustomerMiddleware: require('../middlewares/customers.middleware'),
     CategoryMiddleware: require('../middlewares/category.middleware'),
     ProductMiddleware: require('../middlewares/product.middleware'),

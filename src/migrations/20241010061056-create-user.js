@@ -63,6 +63,11 @@ module.exports = {
         allowNull: false,
         defaultValue: "username_password"
       },
+      current_balance: {
+        allowNull: false,
+        type: Sequelize.DECIMAL(10, 2),
+        defaultValue: 0
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

@@ -198,6 +198,19 @@ async function getProductByNameAndCategory(name, category_id) {
  }
 }
 
+async function getProductCount(){
+  try {
+    const products = await productRepository.getAll();
+    return products.length;
+  } catch (error) {
+    console.log(error);
+    throw new AppError(
+      "Failed to retrieve product count.",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
 
 
 module.exports = {
@@ -206,5 +219,6 @@ module.exports = {
     getAllProducts,
     updateProduct,
     reduceProductByQuantity,
-    getProductByNameAndCategory
+    getProductByNameAndCategory,
+    getProductCount
 }

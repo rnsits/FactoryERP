@@ -1,4 +1,5 @@
 module.exports = {
+    BalanceTransactionRepository: require('./balance_transaction.repository'),
     CategoryRepository: require('./category.repository'),
     Customer_PaymentRepository: require('./customer_payment.repository'),
     CustomersRepository: require('./customers.repository'),

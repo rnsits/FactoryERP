@@ -1,5 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const { PurchaseService, ProductService, InventoryTransactionService } = require("../services");
+const { PurchaseService, ProductService, InventoryTransactionService, BalanceTransactionService, UserService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
 
 
@@ -23,11 +23,12 @@ const { ErrorResponse, SuccessResponse } = require("../utils/common");
 
 async function addPurchase(req, res) {
     try {
+        // const user = req.user;
         const { name, product_id,description,description_type, category_id, quantity, product_cost, quantity_type, total_cost, payment_date, payment_status, payment_due_date, vendor_id, invoice_Bill } = req.body;
         const currentTime = new Date().toLocaleString(); 
         const product = await ProductService.getProductByNameAndCategory(name, category_id);
         
-        let updatedProduct, newStock, updatedInventory, purchase;
+        let updatedProduct, newStock, updatedInventory, purchase, balance_trans;
         if(product) {
             newStock = product.stock + quantity;    
             updatedProduct = await ProductService.updateProduct(product_id, newStock);
@@ -53,6 +54,19 @@ async function addPurchase(req, res) {
                 vendor_id,
                 invoice_Bill
             });
+            
+            balance_trans = await BalanceTransactionService.createBalanceTransactions({
+                user_id: user.id,
+                transaction_type: "expense",
+                amount: updatedCost,
+                source: "purchase",
+                previous_balance: user.currentBalance,
+                new_balance: user.currentBalance - updatedCost
+            });
+
+            user_data = await UserService.getUser(user.id);
+            const currentBalance = user.currentBalance - updatedCost;
+            update_user = await UserService.updateUserBalance(user.id, currentBalance);
             
         } else {
             // updatedProduct = await ProductService.createProduct({
@@ -101,6 +115,19 @@ async function addPurchase(req, res) {
                 vendor_id,
                 invoice_Bill
             });
+
+            balance_trans = await BalanceTransactionService.createBalanceTransactions({
+                user_id: user.id,
+                transaction_type: "expense",
+                amount: updatedCost,
+                source: "purchase",
+                previous_balance: user.currentBalance,
+                new_balance: user.currentBalance - updatedCost
+            });
+
+            user_data = await UserService.getUser(user.id);
+            const currentBalance = user.currentBalance - updatedCost;
+            update_user = await UserService.updateUserBalance(user.id, currentBalance);
         }
 
         SuccessResponse.message = "Purchase added successfully";

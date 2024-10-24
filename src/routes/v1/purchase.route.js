@@ -2,6 +2,7 @@ const express = require("express");
 const { PurchaseController } = require("../../controllers");
 const { PurchasesMiddleware } = require("../../middlewares");
 const PurchaseRouter = express.Router();
+const authenticate = require('../../middlewares/auth.middleware');
 
 /**
  * /api/v1/auth/purchases   POST

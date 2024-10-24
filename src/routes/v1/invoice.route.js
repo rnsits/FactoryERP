@@ -1,6 +1,7 @@
 const express = require("express");
 const { InvoiceController } = require("../../controllers");
 const { InvoiceMiddleware } = require("../../middlewares");
+const authenticate = require('../../middlewares/auth.middleware');
 const InvoiceRouter = express.Router();
 
 

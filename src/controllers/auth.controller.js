@@ -81,39 +81,6 @@ async function loginWithPin(req, res) {
     }
 }
 
-// async function logout(req, res) {
-//     try {
-//         req.session.destroy();
-//         res.status(StatusCodes.OK).json({ message: 'Logged out successfully' });
-//     } catch (error) {
-//         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-//             message: "Logout failed",
-//             error: error.message
-//         });
-//     }
-   
-// }
-
-// async function logout(req, res) {
-//     try {
-//       const { user } = req.session;
-  
-//       // Clear the refresh token in the database
-//       if (user) {
-//         const dbUser = await User.findByPk(user.id);
-//         dbUser.refreshToken = null;
-//         await dbUser.save();
-//       }
-  
-//       req.session.destroy();
-//       return res.status(StatusCodes.OK).json({ message: 'Logged out successfully' });
-//     } catch (error) {
-//       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-//         message: "Logout failed",
-//         error: error.message
-//       });
-//     }
-//   }
 async function logout(req, res) {
     try {
       // Extract the token from the Authorization header

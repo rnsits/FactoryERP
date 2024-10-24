@@ -79,6 +79,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
     },
+    current_balance: {
+      allowNull: false,
+      type: DataTypes.DECIMAL,
+      defaultValue: 0
+    },
   }, {
     sequelize,
     modelName: 'User',
