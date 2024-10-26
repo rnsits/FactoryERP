@@ -1,6 +1,9 @@
 // index.js or app.js (your main application file)
 const express = require('express');
 const app = express();
+const cors = require('cors');
+
+app.use(cors());
 // const authRoutes = require('./src/routes/v1/auth.routes'); // Adjust the path as necessary
 const apiRoutes = require('./src/routes');
 

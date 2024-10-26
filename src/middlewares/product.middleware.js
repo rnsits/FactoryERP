@@ -115,9 +115,38 @@ function validateBodyRequest(req, res, next){
     next();
 };
 
+function validatePutBodyRequest(req, res, next) {
+    const {products} = req.body;
+    if (!Array.isArray(products) || products.length === 0) {
+        ErrorResponse.message = "Something went wrong while updating products.";
+        ErrorResponse.error = new AppError(["Invalid products input"], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+      }
+      for (const product of products) {
+        if (!product.id || !product.quantity || !product.transaction_type) {
+          ErrorResponse.message = "Something went wrong while updating products.";
+          ErrorResponse.error = new AppError(["Invalid product data structure"], StatusCodes.BAD_REQUEST);
+          return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+        if (!['in', 'out'].includes(product.transaction_type)) {
+          ErrorResponse.message = "Something went wrong while updating products.";
+          ErrorResponse.error = new AppError(["Invalid transaction type"], StatusCodes.BAD_REQUEST);
+          return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+        if (product.quantity <= 0) {
+          ErrorResponse.message = "Something went wrong while updating products.";
+          ErrorResponse.error = new AppError(["Quantity must be greater than 0"], StatusCodes.BAD_REQUEST);
+          return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+      }
+
+    next();
+}
+
 module.exports = {
     validateBodyRequest,
     validateGetRequest,
     validateBodyUpdate,
-    validateReduce
+    validateReduce,
+    validatePutBodyRequest
 }

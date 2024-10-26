@@ -80,6 +80,8 @@ async function addInvoice(req, res) {
         invoice.item_count = items.length;
         await invoice.save();
 
+        
+
         SuccessResponse.message = "Invoice added successfully";
         SuccessResponse.data = { invoice };
         return res.status(StatusCodes.OK).json(SuccessResponse);

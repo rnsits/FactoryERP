@@ -10,7 +10,15 @@ class InventoryTransactionRepository extends CrudRepository {
       super(InventoryTransaction);
     }
 
-
+    async bulkCreate(transactions, options = {}) {
+      try {
+          // Using Sequelize's bulkCreate method
+          return await InventoryTransaction.bulkCreate(transactions, options);
+      } catch (error) {
+          console.error("Error in bulk creating inventory transactions:", error);
+          throw new Error("Bulk create failed");
+      }
+  }
 
 }
 

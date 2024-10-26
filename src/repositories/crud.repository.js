@@ -27,7 +27,7 @@ class CrudRepository{
 
     async get(data) {
         const response = await this.model.findByPk(data);
-        return response||null;
+        // return response||null;
             if(!response || response==null){
                 throw new AppError('No resource found related to the corresponding details',StatusCodes.NOT_FOUND)
             }
@@ -98,16 +98,17 @@ class CrudRepository{
         return response || null;
     }
 
-    async update(id,data){
+    async update(id,data, options={}){
             const response = await this.model.update(data,{
                 where:{
                     id:id
                 },
+                transaction: options.transaction
             })
-            if(!response){
+            if(response[0]===0){
                 throw new AppError('No resource found related to the corresponding details',StatusCodes.NOT_FOUND)
             }
-            return response;
+            return response;    
     }
 }
 

@@ -157,6 +157,22 @@ async function updateProductByQuantity(req, res) {
     }
 }
 
+async function validateAndUpdateProducts(req, res){
+    try{
+        const { products } = req.body;
+        // console.log("products-------------", req.body);
+        
+        const validatedProducts = await ProductService.validateAndUpdateProducts(products);
+        SuccessResponse.message = "Products updated successfully.";
+        SuccessResponse.data = validatedProducts;
+        return res.status(StatusCodes.OK).json(SuccessResponse);
+    }catch(error){
+        ErrorResponse.message = "Failed to update products.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
 async function getProductCount(req, res){
     try {
         const productCount = await ProductService.getProductCount();
@@ -177,5 +193,6 @@ module.exports = {
     getProduct,
     reduceProduct,
     updateProductByQuantity,
-    getProductCount
+    getProductCount,
+    validateAndUpdateProducts,
 }

@@ -1,6 +1,8 @@
 const { StatusCodes } = require("http-status-codes");
 const { PurchaseService, ProductService, InventoryTransactionService, BalanceTransactionService, UserService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
+const AppError = require("../utils/errors/app.error");
+const { sequelize } = require("../models");
 
 
 // For existing product the needed body elements please create form matching this.
@@ -21,125 +23,176 @@ const { ErrorResponse, SuccessResponse } = require("../utils/common");
 //     "invoice_Bill":"path.jpg"
 // }
 
+// async function addPurchase(req, res) {
+   
+//         // const user = req.user;
+//         const { name,user_id, product_id,description,description_type, category_id, quantity, product_cost, quantity_type, total_cost, payment_date, payment_status, payment_due_date, vendor_id, invoice_Bill } = req.body;
+//         const currentTime = new Date().toLocaleString(); 
+//         const product = await ProductService.getProductByNameAndCategory(name, category_id);
+//         // console.log("product",product);
+        
+//         if(!product){
+//             throw new AppError("Product not found", StatusCodes.NOT_FOUND);
+//         }
+        
+//         const transaction = await sequelize.transaction();
+//         try {
+//         const newStock = Number(product.stock) + Number(quantity);    
+//         const updateProductPromise = await ProductService.updateProduct(product_id, newStock, {transaction});
+    
+//         const upInvenTranPromise = await InventoryTransactionService.createInventoryTransaction({
+//             product_id: product.id,
+//             transaction_type: "in",
+//             quantity,
+//             quantity_type: product.quantity_type,
+//             description: `${product.name} was added quantity ${quantity}, total quantity ${newStock} on ${currentTime}.`,
+//             description_type: 'text'
+//         }, { transaction })
+
+//         const updatedCost = Number(product.product_cost) * Number(quantity);
+//         console.log("updated cost", updatedCost);
+        
+//         const createPurchasePromise = await PurchaseService.createPurchase({
+//             product_id: product.id,
+//             quantity,
+//             quantity_type,
+//             total_cost: updatedCost || total_cost,
+//             payment_date,
+//             payment_status,
+//             payment_due_date,
+//             vendor_id,
+//             invoice_Bill
+//         }, { transaction });
+            
+//         // {
+//         //     "user_id": 1,
+//         //     "transaction_type": "income",
+//         //     "amount": 10000,
+//         //     "source": "invoice",
+//         //     "previous_balance": 0,
+//         //     "new_balance": 10000
+//         // } 
+//          const user_data = await UserService.getUser(user_id);
+//         const balance_transPromise = await BalanceTransactionService.createBalanceTransactions({
+//             user_id,
+//             transaction_type: "expense",
+//             amount: updatedCost || total_cost,
+//             source: "purchase",
+//             previous_balance: user_data.currentBalance,
+//             new_balance: Number(user_data.currentBalance) - Number(updatedCost)
+//         }, { transaction });
+
+       
+//         const currentBalance = Number(user_data.currentBalance) - Number(updatedCost);
+//         const userPromise = await UserService.updateUserBalance(user_id, currentBalance, {transaction});
+
+//         const [updatedProduct, updatedInventory, purchase, balance_trans, user_dat] = await Promise.all([
+//             updateProductPromise,
+//             upInvenTranPromise,
+//             createPurchasePromise,
+//             balance_transPromise,
+//             userPromise
+//         ]);
+
+//         await transaction.commit();
+    
+//         SuccessResponse.message = "Purchase added successfully";
+//         SuccessResponse.data = {purchase, updatedProduct, updatedInventory, balance_trans,user_dat};
+//         return res.status(StatusCodes.OK).json(SuccessResponse);
+//     } catch (error) {
+//         await transaction.rollback();
+//         ErrorResponse.message = "Failed to add purchase.";
+//         ErrorResponse.error = error;
+//         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+//     }
+
+// }
+
 async function addPurchase(req, res) {
+    const { name, user_id, product_id, category_id, quantity, quantity_type, total_cost, payment_date, payment_status, payment_due_date, vendor_id, invoice_Bill } = req.body;
+    const currentTime = new Date().toLocaleString();
+
+    const transaction = await sequelize.transaction();
     try {
-        // const user = req.user;
-        const { name, product_id,description,description_type, category_id, quantity, product_cost, quantity_type, total_cost, payment_date, payment_status, payment_due_date, vendor_id, invoice_Bill } = req.body;
-        const currentTime = new Date().toLocaleString(); 
-        const product = await ProductService.getProductByNameAndCategory(name, category_id);
+        const product = await ProductService.getProductByNameAndCategory(name, category_id, { transaction });
+        if (!product) {
+            throw new AppError("Product not found", StatusCodes.NOT_FOUND);
+        }
+        const user = await UserService.getUser(user_id, { transaction });
+        console.log("users", user.current_balance);
         
-        let updatedProduct, newStock, updatedInventory, purchase, balance_trans;
-        if(product) {
-            newStock = product.stock + quantity;    
-            updatedProduct = await ProductService.updateProduct(product_id, newStock);
-
-            updatedInventory = await InventoryTransactionService.createInventoryTransaction({
-                product_id: product.id,
-                transaction_type: "in",
-                quantity,
-                quantity_type: product.quantity_type,
-                description: `${product.name} was added quantity ${quantity}, total quantity ${newStock} on ${currentTime}.`,
-                description_type: 'text'
-            })
-
-            updatedCost = product.product_cost * quantity;
-            purchase = await PurchaseService.createPurchase({
-                product_id: product.id,
-                quantity,
-                quantity_type,
-                total_cost: updatedCost || total_cost,
-                payment_date,
-                payment_status,
-                payment_due_date,
-                vendor_id,
-                invoice_Bill
-            });
-            
-            balance_trans = await BalanceTransactionService.createBalanceTransactions({
-                user_id: user.id,
-                transaction_type: "expense",
-                amount: updatedCost,
-                source: "purchase",
-                previous_balance: user.currentBalance,
-                new_balance: user.currentBalance - updatedCost
-            });
-
-            user_data = await UserService.getUser(user.id);
-            const currentBalance = user.currentBalance - updatedCost;
-            update_user = await UserService.updateUserBalance(user.id, currentBalance);
-            
-        } else {
-            // updatedProduct = await ProductService.createProduct({
-            //     name,
-            //     category_id,
-            //     description,
-            //     description_type,
-            //     audio_path,
-            //     category_id,
-            //     quantity_type,
-            //     stock: quantity,
-            //     product_cost, // feed it in body necessary
-            // });
-
-            updatedProduct = await ProductService.createProduct({
-                name,                // Name of the product
-                category_id,         // ID of the category
-                description,         // Product description
-                description_type,    // Type of the description (text, audio, etc.)
-                // audio_path,          // Path to an audio file (if applicable)
-                quantity_type,       // The type of the quantity (e.g., kg, l, m, pcs)
-                stock: quantity,     // Initial stock (from quantity in request)
-                product_cost,        // Cost of the product per unit
-                product_image: invoice_Bill        // Include the product image if required (if it's missing, ensure it is passed)
-            });
-        
-            updatedInventory = await InventoryTransactionService.createInventoryTransaction({
-                product_id: updatedProduct.id,
-                transaction_type: 'in',
-                quantity: updatedProduct.stock,  // Log the absolute value of quantity change
-                quantity_type: updatedProduct.quantity_type,
-                description: `${updatedProduct.name} added with quantity ${updatedProduct.stock} at ${currentTime}`,
-                description_type: 'text',
-                audio_path: updatedProduct.audio_path
-            });
-
-            updatedCost = updatedProduct.product_cost * updatedProduct.quantity;
-            purchase = await PurchaseService.createPurchase({
-                product_id: updatedProduct.id,
-                quantity,
-                quantity_type,
-                total_cost: updatedCost || total_cost,
-                payment_date,
-                payment_status,
-                payment_due_date,
-                vendor_id,
-                invoice_Bill
-            });
-
-            balance_trans = await BalanceTransactionService.createBalanceTransactions({
-                user_id: user.id,
-                transaction_type: "expense",
-                amount: updatedCost,
-                source: "purchase",
-                previous_balance: user.currentBalance,
-                new_balance: user.currentBalance - updatedCost
-            });
-
-            user_data = await UserService.getUser(user.id);
-            const currentBalance = user.currentBalance - updatedCost;
-            update_user = await UserService.updateUserBalance(user.id, currentBalance);
+        if(!user){
+            throw new AppError("User not found", StatusCodes.NOT_FOUND);
         }
 
+        const newStock = Number(product.stock) + Number(quantity);
+        // Convert current balance and updated cost to numbers
+        const currentBalance = Number(user.current_balance);
+        const updatedCost = Number(product.product_cost) * Number(quantity);
+        const newBalance = currentBalance - updatedCost;
+
+        console.log("User current balance:", currentBalance);
+        console.log("Updated cost:", updatedCost);
+        console.log("New balance:", newBalance);
+
+        // No await here; let Promise.all handle concurrency.
+        const updateProductPromise = ProductService.updateProduct(product_id, newStock, { transaction });
+        const upInvenTranPromise = InventoryTransactionService.createInventoryTransaction({
+            product_id: product.id,
+            transaction_type: "in",
+            quantity,
+            quantity_type: product.quantity_type,
+            description: `${product.name} was added quantity ${quantity}, total quantity ${newStock} on ${currentTime}.`,
+            description_type: 'text'
+        }, { transaction });
+
+        const createPurchasePromise = PurchaseService.createPurchase({
+            product_id: product.id,
+            quantity,
+            quantity_type,
+            total_cost: updatedCost || total_cost,
+            payment_date,
+            payment_status,
+            payment_due_date,
+            vendor_id,
+            invoice_Bill
+        }, { transaction });
+
+        const balance_transPromise = BalanceTransactionService.createBalanceTransactions({
+            user_id:user.id,
+            transaction_type: "expense",
+            amount: updatedCost || total_cost,
+            source: "purchase",
+            previous_balance: user.current_balance,
+            new_balance: newBalance
+        }, { transaction });
+
+        const userPromise = UserService.updateUserBalance(user_id, newBalance, { transaction });
+
+        // Execute all promises concurrently
+        const [updatedProduct, updatedInventory, purchase, balance_trans, updatedUser] = await Promise.all([
+            updateProductPromise,
+            upInvenTranPromise,
+            createPurchasePromise,
+            balance_transPromise,
+            userPromise
+        ]);
+
+        await transaction.commit();
+
         SuccessResponse.message = "Purchase added successfully";
-        SuccessResponse.data = {purchase, updatedProduct, updatedInventory};
+        SuccessResponse.data = { purchase, updatedProduct, updatedInventory, balance_trans, updatedUser };
         return res.status(StatusCodes.OK).json(SuccessResponse);
+
     } catch (error) {
+        await transaction.rollback();
+        console.error("Transaction failed:", error); // Improved error logging
         ErrorResponse.message = "Failed to add purchase.";
-        ErrorResponse.error = error;
+        ErrorResponse.error = error.message || error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
     }
-
 }
+
 
 async function getPurchase(req,res){
     try{

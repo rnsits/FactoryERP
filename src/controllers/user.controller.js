@@ -5,7 +5,7 @@ const AppError = require("../utils/errors/app.error");
 
 async function addUser(req, res) {
     try {
-        const { username, password, pin, email, phone, role, auth_method } = req.body;
+        const { username, password, pin, email, phone, role, auth_method, current_balance } = req.body;
         const user = await UserService.createUser({
             username,
             password,
@@ -13,7 +13,8 @@ async function addUser(req, res) {
             email,
             phone,
             role,           
-            auth_method,    
+            auth_method,
+            current_balance   
         });
         SuccessResponse.message = "User added successfully";
         SuccessResponse.data = user;

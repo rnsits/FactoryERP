@@ -50,17 +50,22 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
       validate: {
         isEmail: true,
-        msg: "Invalid Email."
       }
     },
     phone: {
       allowNull: false,
       type: DataTypes.STRING,
       validate: {
-        args: [10,15],
-        msg: "Invalid Phone Number."
+        isLength: {
+          args: { min: 10, max: 15 },
+          msg: "Phone number must be between 10 and 15 characters long."
+        },
+        is: {
+          args: /^\d+$/, // Check if the phone number contains only digits
+          msg: "Phone number must contain only digits."
+        }
       }
-    },
+    },    
     role: {
       allowNull: false,
       type: DataTypes.ENUM("admin", "user"),
@@ -81,8 +86,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     current_balance: {
       allowNull: false,
-      type: DataTypes.DECIMAL,
-      defaultValue: 0
+      type: DataTypes.DECIMAL(10,2),
+      defaultValue: 0.00
     },
   }, {
     sequelize,

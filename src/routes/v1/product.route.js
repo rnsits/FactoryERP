@@ -19,6 +19,8 @@ ProductRouter.patch('/:productId/reduce', ProductMiddleware.validateReduce, Prod
 
 ProductRouter.patch('/:productId/update', ProductMiddleware.validateBodyUpdate, ProductController.updateProductByQuantity);
 
+ProductRouter.put('/valupdate', ProductMiddleware.validatePutBodyRequest, ProductController.validateAndUpdateProducts);
+
 
 
 /**

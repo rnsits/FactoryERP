@@ -6,7 +6,8 @@ const AppError = require("../utils/errors/app.error");
 
 async function addExpense(req, res) {
     try {
-        const { total_cost,description, description_type, audio_path, payment_date, payment_status  } = req.body;
+        // const user = req.user;
+        const { user_id, total_cost,description, description_type, audio_path, payment_date, payment_status  } = req.body;
        
         const expense = await ExpensesService.createExpense({
     
@@ -18,6 +19,21 @@ async function addExpense(req, res) {
             payment_status,
             
         });
+
+        // please replace user_id with user.id when authentication has been applied.
+        user_data = await UserService.getUser(user_id);
+        const currentBalance = user.currentBalance - amount;
+        update_user = await UserService.updateUserBalance(user.id, currentBalance);
+
+        balance_trans = await BalanceTransactionService.createBalanceTransactions({
+            user_id: user.id,
+            transaction_type: "expense",
+            amount: total_cost,
+            source: "expense",
+            previous_balance: user.currentBalance,
+            new_balance: currentBalance
+        });
+
         SuccessResponse.message = "Expense added successfully";
         SuccessResponse.data = expense;
         return res.status(StatusCodes.OK).json(SuccessResponse);

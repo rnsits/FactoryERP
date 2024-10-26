@@ -106,6 +106,20 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Product',
     timestamps: true,
+    indexes: [
+      {
+        unique: false,
+        fields: ['category_id'] // Index for faster filtering by category
+      },
+      {
+        unique: false,
+        fields: ['name'] // Index for faster searches by name
+      },
+      {
+        unique: false,
+        fields: ['category_id', 'stock'] // Composite index on category and stock
+      },
+    ]
   });
   return Product;
 };
