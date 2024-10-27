@@ -1,6 +1,8 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { InvoiceRepository } = require("../repositories");
+const { Invoice } = require("../models");
+const { Op } = require("sequelize");
 
 const invoiceRepository = new InvoiceRepository();
 
@@ -60,10 +62,26 @@ async function getInvoice(data) {
     }
 }
 
-async function getAllInvoices() {
+async function getAllInvoices(limit, offset, search, fields) {
     try {
-        const invoices = await invoiceRepository.getAll();
-        return invoices;
+        // const invoices = await invoiceRepository.getAll();
+        // return invoices;
+
+        const where = {};
+        
+        if (search && fields.length > 0) {
+            where[Op.or] = fields.map(field => ({
+                [field]: { [Op.like]: `%${search}%` }
+            }));
+        }
+
+    const { count, rows } = await Invoice.findAndCountAll({
+      where,
+      limit,
+      offset,
+    });
+  return { count, rows };
+
     } catch(error) {
         console.log(error);
         if(

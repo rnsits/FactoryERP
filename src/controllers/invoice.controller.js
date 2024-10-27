@@ -112,15 +112,31 @@ async function getInvoice(req,res){
 
 async function getAllInvoices(req, res){
     try{
-        const invoices = await InvoiceService.getAllInvoices(); 
-        SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = invoices;
+        // const invoices = await InvoiceService.getAllInvoices(); 
+        // SuccessResponse.message = "Successfully completed the request";
+        // SuccessResponse.data = invoices;
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        const { count, rows } = await InvoiceService.getAllInvoices(limit, offset, search);
+
+        SuccessResponse.message = "Invoices retrieved successfully.";
+        SuccessResponse.data = {
+            products: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
         console.log(error);
-        ErrorResponse.message = "Something went wrong while getting Invoices";
+        ErrorResponse.message = "Failed to fetch Invoices";
         ErrorResponse.error = error;
         return res
             .status(StatusCodes.INTERNAL_SERVER_ERROR)

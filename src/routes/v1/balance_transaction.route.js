@@ -9,5 +9,7 @@ const BalanTranRouter = express.Router();
  */
 BalanTranRouter.post('/', BalanceTransactionMiddleware.validateBodyRequest, BalanceTransactionController.addBalanceTransactions);
 
+BalanTranRouter.get('/', BalanceTransactionController.getBalanceTransactions);
+
 
 module.exports = BalanTranRouter;

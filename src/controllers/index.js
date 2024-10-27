@@ -7,6 +7,7 @@ module.exports = {
     ExpensesController: require('../controllers/expenses.controller'),
     InvoiceController: require('../controllers/invoice.controller'),
     Invoice_ItemController: require('../controllers/invoice_item.controller'),
+    InvTransController: require('../controllers/inventory_transaction.controller'),
     ProductController: require('../controllers/product.controller'),
     PurchaseController: require('../controllers/purchases.controller'),
     UserController: require('../controllers/user.controller'),

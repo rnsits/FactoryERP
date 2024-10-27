@@ -60,9 +60,22 @@ async function getProduct(req, res) {
 
 async function getProducts(req, res) {
     try {
-        const products = await ProductService.getAllProducts();
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        const { count, rows } = await ProductService.getAllProducts(limit, offset, search);
+
         SuccessResponse.message = "Products retrieved successfully.";
-        SuccessResponse.data = {products};
+        SuccessResponse.data = {
+            products: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
         ErrorResponse.message = "Failed to fetch products.";

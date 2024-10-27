@@ -46,12 +46,29 @@ async function getInventoryTransaction(req,res){
 
 async function getAllInventoryTransactions(req, res){
     try{
-        const inventortyTransactions = await InventoryTransactionService.getAllInventoryTransactions(); 
-        SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = users;
-        return res
-            .status(StatusCodes.OK)
-            .json(SuccessResponse)
+        // const inventortyTransactions = await InventoryTransactionService.getAllInventoryTransactions(); 
+        // SuccessResponse.message = "Successfully completed the request";
+        // SuccessResponse.data = inventortyTransactions;
+        // return res
+        //     .status(StatusCodes.OK)
+        //     .json(SuccessResponse)
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        const { count, rows } = await InventoryTransactionService.getAllInventoryTransactions(limit, offset, search);
+
+        SuccessResponse.message = "Inventory Tansactions retrieved successfully.";
+        SuccessResponse.data = {
+            products: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
+        return res.status(StatusCodes.OK).json(SuccessResponse);
     }catch(error) {
         console.log(error);
         ErrorResponse.message = "Something went wrong while getting Inventory Transactions.";

@@ -42,9 +42,26 @@ async function getCustomer(req,res){
 
 async function getAllCustomers(req, res){
     try{
-        const customers = await CustomerService.getAllCustomers(); 
-        SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = customers;
+        // const customers = await CustomerService.getAllCustomers(); 
+        // SuccessResponse.message = "Successfully completed the request";
+        // SuccessResponse.data = customers;
+
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        const { count, rows } = await CustomerService.getAllCustomers(limit, offset, search);
+
+        SuccessResponse.message = "Customers retrieved successfully.";
+        SuccessResponse.data = {
+            customers: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)

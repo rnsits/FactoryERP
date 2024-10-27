@@ -1,6 +1,8 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { BalanceTransactionRepository } = require("../repositories");
+const { Balance_Transaction } = require("../models");
+const { Op } = require("sequelize");
 
 const balanceTransactionRepository = new BalanceTransactionRepository();
 
@@ -27,6 +29,32 @@ async function createBalanceTransactions(data) {
     }
 }
 
+async function getAllBalanceTransactions(limit, offset, search, fields){
+  try {
+    const where = {};
+        
+        if (search && fields.length > 0) {
+            where[Op.or] = fields.map(field => ({
+                [field]: { [Op.like]: `%${search}%` }
+            }));
+        }
+
+    const { count, rows } = await Balance_Transaction.findAndCountAll({
+      where,
+      limit,
+      offset,
+    });
+  return { count, rows };
+  } catch (error) {
+    ErrorResponse.message = "Failed to fetch Balance Transactions.";
+    ErrorResponse.error = error;
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+  }
+}
+
+
+
 module.exports = {
-    createBalanceTransactions
+    createBalanceTransactions,
+    getAllBalanceTransactions
 }

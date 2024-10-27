@@ -12,6 +12,7 @@ const Invoice_ItemRouter = require('./invoice_item.route');
 const UserRouter = require('./user.route');
 const VendorRouter = require('./vendors.route');
 const AuthRouter = require('./auth.routes');
+const InvTransRoutes = require('./inventory_transaction.route');
 
 
 router.use('/auth', AuthRouter);
@@ -19,6 +20,7 @@ router.use('/category', CategoryRouter);
 router.use('/customers', CustomerRoutes);
 router.use('/customer_payments', CustomerPaymentRoutes);
 router.use('/expenses', ExpenseRoutes);
+router.use('/inventory', InvTransRoutes);
 router.use('/invoices', InvoiceRouter);
 router.use('/invoiceitems', Invoice_ItemRouter);
 router.use('/products', ProductRouter);

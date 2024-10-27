@@ -42,9 +42,26 @@ async function getCustomerPayment(req,res){
 
 async function getAllCustomerPayments(req, res){
     try{
-        const payments = await Customer_PaymentService.getAllCustomerPayments(); 
-        SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = payments;
+        // const payments = await Customer_PaymentService.getAllCustomerPayments(); 
+        // SuccessResponse.message = "Successfully completed the request";
+        // SuccessResponse.data = payments;
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        const { count, rows } = await Customer_PaymentService.getAllCustomerPayments(limit, offset, search);
+
+        SuccessResponse.message = "Customer Payments retrieved successfully.";
+        SuccessResponse.data = {
+            payments: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
+        return res.status(StatusCodes.OK).json(SuccessResponse);
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)

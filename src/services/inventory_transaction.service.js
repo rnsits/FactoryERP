@@ -1,6 +1,8 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { InventoryTransactionRepository } = require("../repositories");
+const { InventoryTransaction } = require("../models");
+const { Op } = require("sequelize");
 
 const inventoryTransactionRepository = new InventoryTransactionRepository();
 
@@ -59,10 +61,24 @@ async function getInventoryTransaction(data) {
     }
 }
 
-async function getAllInventoryTransactions() {
+async function getAllInventoryTransactions(limit, offset, search, fields) {
     try {
-        const inventoryData = await inventoryTransactionRepository.getAll();
-        return inventoryData;
+        // const inventoryData = await inventoryTransactionRepository.getAll();
+        // return inventoryData;
+        const where = {};
+        
+        if (search && fields.length > 0) {
+            where[Op.or] = fields.map(field => ({
+                [field]: { [Op.like]: `%${search}%` }
+            }));
+        }
+
+    const { count, rows } = await InventoryTransaction.findAndCountAll({
+      where,
+      limit,
+      offset,
+    });
+  return { count, rows };
     } catch(error) {
         console.log(error);
         if(

@@ -1,6 +1,8 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { Customer_PaymentRepository } = require("../repositories");
+const { Customer_Payment } = require("../models");
+const { Op } = require("sequelize");
 
 const customer_PaymentRepository = new Customer_PaymentRepository();
 
@@ -59,10 +61,25 @@ async function getCustomerPayment(data) {
     }
 }
 
-async function getAllCustomerPayments() {
+async function getAllCustomerPayments(limit, offset, search, fields) {
     try {
-        const customer_payments = await customer_PaymentRepository.getAll();
-        return customer_payments;
+        // const customer_payments = await customer_PaymentRepository.getAll();
+        // return customer_payments;
+        const where = {};
+        
+        if (search && fields.length > 0) {
+            where[Op.or] = fields.map(field => ({
+                [field]: { [Op.like]: `%${search}%` }
+            }));
+        }
+
+    const { count, rows } = await Customer_Payment.findAndCountAll({
+      where,
+      limit,
+      offset,
+    });
+    return { count, rows };  
+        
     } catch(error) {
         console.log(error);
         if(

@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Customer_Payment.belongsTo(models.Customers, {
-        foreignKey: 'customerId',
+        foreignKey: 'customer_id',
         as: 'customer'
       });
 

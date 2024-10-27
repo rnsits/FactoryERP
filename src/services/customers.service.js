@@ -1,6 +1,8 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { CustomersRepository } = require("../repositories");
+const { Customers } = require("../models");
+const { Op } = require("sequelize");
 
 const customersRepository = new CustomersRepository();
 
@@ -60,10 +62,25 @@ async function getCustomer(data) {
     }
 }
 
-async function getAllCustomers() {
+async function getAllCustomers(limit, offset, search, fields) {
     try {
-        const customers = await customersRepository.getAll();
-        return customers;
+        // const customers = await customersRepository.getAll();
+        // return customers;
+        const where = {};
+        
+        if (search && fields.length > 0) {
+            where[Op.or] = fields.map(field => ({
+                [field]: { [Op.like]: `%${search}%` }
+            }));
+        }
+
+    const { count, rows } = await Customers.findAndCountAll({
+      where,
+      limit,
+      offset,
+    });
+  return { count, rows };
+
     } catch(error) {
         console.log(error);
         if(

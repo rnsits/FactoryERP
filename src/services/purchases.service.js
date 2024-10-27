@@ -1,6 +1,8 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { PurchasesRepository } = require("../repositories");
+const { Purchases } = require("../models");
+const { Op } = require("sequelize");
 
 const purchaseRepository = new PurchasesRepository();
 
@@ -60,10 +62,24 @@ async function getPurchase(data) {
     }
 }
 
-async function getAllPurchases() {
+async function getAllPurchases(limit, offset, search, fields) {
     try {
-        const purchases = await purchaseRepository.getAll();
-        return purchases;
+        // const purchases = await purchaseRepository.getAll();
+        // return purchases;
+
+        const where = {};
+        
+        if (search && fields.length > 0) {
+            where[Op.or] = fields.map(field => ({
+                [field]: { [Op.like]: `%${search}%` }
+            }));
+        }
+        const { count, rows } = await Purchases.findAndCountAll({
+          where,
+          limit, 
+          offset,
+        });
+        return { count, rows };
     } catch(error) {
         console.log(error);
         if(

@@ -1,6 +1,8 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { VendorsRepository } = require("../repositories");
+const { Vendors } = require("../models");
+const { Op } = require("sequelize");
 
 const vendorRepository = new VendorsRepository();
 
@@ -59,10 +61,24 @@ async function getVendor(data) {
     }
 }
 
-async function getAllVendors() {
+async function getAllVendors(limit, offset, search, fields) {
     try {
-        const users = await vendorRepository.getAll();
-        return users;
+        // const users = await vendorRepository.getAll();
+        // return users;
+
+        const where = {};
+        
+        if (search && fields.length > 0) {
+            where[Op.or] = fields.map(field => ({
+                [field]: { [Op.like]: `%${search}%` }
+            }));
+        }
+        const { count, rows } = await Vendors.findAndCountAll({
+          where,
+          limit,
+          offset,
+        });
+      return { count, rows };
     } catch(error) {
         console.log(error);
         if(

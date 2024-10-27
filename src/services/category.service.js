@@ -1,6 +1,8 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { CategoryRepository } = require("../repositories");
+const { Category } = require("../models");
+const { Op } = require("sequelize");
 
 const categoryRepository = new CategoryRepository();
 
@@ -60,10 +62,23 @@ async function getCategory(data) {
     }
 }
 
-async function getAllCategories() {
+async function getAllCategories(limit, offset, search, fields) {
     try {
-        const categories = await categoryRepository.getAll();
-        return categories;
+
+        const where = {};
+        
+        if (search && fields.length > 0) {
+            where[Op.or] = fields.map(field => ({
+                [field]: { [Op.like]: `%${search}%` }
+            }));
+        }
+
+    const { count, rows } = await Category.findAndCountAll({
+      where,
+      limit,
+      offset,
+    });
+  return { count, rows };
     } catch(error) {
         console.log(error);
         if(

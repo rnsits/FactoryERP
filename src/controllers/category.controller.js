@@ -41,9 +41,25 @@ async function getCategory(req,res){
 
 async function getAllCategories(req, res){
     try{
-        const categories = await CategoryService.getAllCategories(); 
-        SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = categories;
+        // const categories = await CategoryService.getAllCategories(); 
+        // SuccessResponse.message = "Successfully completed the request";
+        // SuccessResponse.data = categories;
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        const { count, rows } = await CategoryService.getAllCategories(limit, offset, search);
+
+        SuccessResponse.message = "Categories retrieved successfully.";
+        SuccessResponse.data = {
+            categories: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)
