@@ -1,21 +1,21 @@
 const express = require("express");
 const { InvoiceController } = require("../../controllers");
 const { InvoiceMiddleware } = require("../../middlewares");
-const authenticate = require('../../middlewares/auth.middleware');
+const { authenticateToken } = require('../../middlewares/auth.middleware');
 const InvoiceRouter = express.Router();
 
 
 /**
  * /api/v1/auth/invoices   POST
  */
-InvoiceRouter.post('/', InvoiceMiddleware.validateBodyRequest, InvoiceController.addInvoice);
+InvoiceRouter.post('/', authenticateToken, InvoiceMiddleware.validateBodyRequest, InvoiceController.addInvoice);
 
 /**
  * /api/v1/auth/invoices/:invoice_id   GET
  */
-InvoiceRouter.get('/peninv', InvoiceController.getPendingInvoices);
-InvoiceRouter.get('/todInv', InvoiceController.getTodayInvoices);
-InvoiceRouter.get('/:invoiceId', InvoiceMiddleware.validateGetRequest, InvoiceController.getInvoice);
+InvoiceRouter.get('/peninv', authenticateToken, InvoiceController.getPendingInvoices);
+InvoiceRouter.get('/todInv', authenticateToken, InvoiceController.getTodayInvoices);
+InvoiceRouter.get('/:invoiceId', authenticateToken, InvoiceMiddleware.validateGetRequest, InvoiceController.getInvoice);
 
 /**
  * /api/v1/auth/invoices/  GET

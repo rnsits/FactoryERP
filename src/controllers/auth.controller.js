@@ -33,7 +33,7 @@ async function loginWithPassword(req, res) {
     await user.save();
 
     return res.status(StatusCodes.OK).json({
-      message: 'Logged in successfully',
+      message: 'Logged in successfully.',
       data: { 
         user: { id: user.id, username: user.username }, 
         accessToken, 
@@ -42,7 +42,7 @@ async function loginWithPassword(req, res) {
     });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: 'Internal Server Error',
+        message: 'Login Failed.',
         error: error.message,
     });
   }
@@ -66,7 +66,7 @@ async function loginWithPin(req, res) {
         user.refreshTokenExpiry = refreshTokenExpiry; // Save expiry date
         await user.save();
         return res.status(StatusCodes.OK).json({
-            message: "Login Successfull",
+            message: "Login Successfull.",
             data: {
                 user: { id: user.id, username: user.username },
                 accessToken,
@@ -75,7 +75,7 @@ async function loginWithPin(req, res) {
         });
     } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: 'Internal Server Error',
+            message: 'Login Failed.',
             error: error.message,
         });
     }
@@ -118,7 +118,7 @@ async function logout(req, res) {
   
     } catch (error) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: 'Logout failed',
+        message: 'Logout failed.',
         error: error.message
       });
     }

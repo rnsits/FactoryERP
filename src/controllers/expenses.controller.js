@@ -1,13 +1,12 @@
 const { StatusCodes } = require("http-status-codes");
-const { ExpensesService } = require("../services");
+const { ExpensesService, UserService, BalanceTransactionService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
-const AppError = require("../utils/errors/app.error");
 
 
 async function addExpense(req, res) {
     try {
-        // const user = req.user;
-        const { user_id, total_cost,description, description_type, audio_path, payment_date, payment_status  } = req.body;
+        const user_id = req.user.id;
+        const { total_cost,description, description_type, audio_path, payment_date, payment_status  } = req.body;
        
         const expense = await ExpensesService.createExpense({
     
@@ -22,20 +21,20 @@ async function addExpense(req, res) {
 
         // please replace user_id with user.id when authentication has been applied.
         user_data = await UserService.getUser(user_id);
-        const currentBalance = user.currentBalance - amount;
-        update_user = await UserService.updateUserBalance(user.id, currentBalance);
+        const currentBalance = user_data.current_balance - total_cost;
+        update_user = await UserService.updateUserBalance(user_data.id, currentBalance);
 
         balance_trans = await BalanceTransactionService.createBalanceTransactions({
-            user_id: user.id,
+            user_id: user_data.id,
             transaction_type: "expense",
             amount: total_cost,
             source: "expense",
-            previous_balance: user.currentBalance,
+            previous_balance: user_data.current_balance,
             new_balance: currentBalance
         });
 
         SuccessResponse.message = "Expense added successfully";
-        SuccessResponse.data = expense;
+        SuccessResponse.data = { expense, user_data, balance_trans };
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
         ErrorResponse.message = "Failed to add expense.";

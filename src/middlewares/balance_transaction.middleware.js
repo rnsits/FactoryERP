@@ -6,8 +6,8 @@ const AppError = require('../utils/errors/app.error');
 function validateBodyRequest(req, res, next){
     
     // Validate the body
-    const user = req.body.user_id;
-    if (isNaN(user) || parseInt(user) <= 0) {
+    const user = req.user;
+    if (isNaN(user.id) || parseInt(user.id) <= 0) {
         ErrorResponse.message = "Something went wrong, while adding transaction.";
         ErrorResponse.error = new AppError(["User Id missing in the incoming request"],StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);

@@ -2,27 +2,27 @@ const express = require("express");
 const { PurchaseController } = require("../../controllers");
 const { PurchasesMiddleware } = require("../../middlewares");
 const PurchaseRouter = express.Router();
-const authenticate = require('../../middlewares/auth.middleware');
+const { authenticateToken } = require('../../middlewares/auth.middleware');
 
 /**
  * /api/v1/auth/purchases   POST
  */
-PurchaseRouter.post('/', PurchasesMiddleware.validateBodyRequest, PurchaseController.addPurchase);
+PurchaseRouter.post('/', authenticateToken, PurchasesMiddleware.validateBodyRequest, PurchaseController.addPurchase);
 
 /**
  * /api/v1/auth/purchases
  */
-PurchaseRouter.get('/today', PurchaseController.getTodayPurchases);
-PurchaseRouter.post('/purDat', PurchasesMiddleware.validateDateBody, PurchaseController.getPurchasesByDate);
+PurchaseRouter.get('/today', authenticateToken, PurchaseController.getTodayPurchases);
+PurchaseRouter.post('/purDat', authenticateToken, PurchasesMiddleware.validateDateBody, PurchaseController.getPurchasesByDate);
 
 /**
  * /api/v1/auth/purchases/:Id   GET
  */
-PurchaseRouter.get('/:purchaseId', PurchasesMiddleware.validateGetRequest, PurchaseController.getPurchase);
+PurchaseRouter.get('/:purchaseId', authenticateToken, PurchasesMiddleware.validateGetRequest, PurchaseController.getPurchase);
 
 /**
  * /api/v1/auth/purchases/  GET
  */
-PurchaseRouter.get('/', PurchaseController.getAllPurchases);
+PurchaseRouter.get('/', authenticateToken, PurchaseController.getAllPurchases);
 
 module.exports = PurchaseRouter;

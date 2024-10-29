@@ -55,13 +55,12 @@ async function getAllCustomerPayments(req, res){
 
         SuccessResponse.message = "Customer Payments retrieved successfully.";
         SuccessResponse.data = {
-            payments: rows,
+            customers: rows,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,
             pageSize: limit
         };
-        return res.status(StatusCodes.OK).json(SuccessResponse);
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)

@@ -92,8 +92,9 @@ const { sequelize } = require("../models");
 
 
 async function addPurchase(req, res) {
+    const user_id = req.user.id;
     const { 
-        user_id, 
+        // user_id,  removed from body to access from req
         products,  // Array of products with id, quantity, price
         payment_date, 
         payment_status, 
@@ -175,10 +176,6 @@ async function addPurchase(req, res) {
         // Calculate new balance
         const currentBalance = Number(user.current_balance);
         const newBalance = currentBalance - totalCost;
-
-        // if (newBalance < 0) {
-        //     throw new AppError("Insufficient balance", StatusCodes.BAD_REQUEST);
-        // }
 
         // Execute all updates concurrently
         const [

@@ -18,8 +18,10 @@ const serverConfig = require("../config");
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require("../utils/common/auth");
 
-const authenticate = async (req, res, next) => {
-  const token = req.header('Authorization');
+const authenticateToken = async (req, res, next) => {
+
+  const token = req.headers['authorization']?.split(' ')[1];
+
   if (!token) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
         message: "No token provided"
@@ -42,5 +44,5 @@ const authenticate = async (req, res, next) => {
 };
 
 module.exports = {
-    authenticate
+    authenticateToken
 };

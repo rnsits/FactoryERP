@@ -29,10 +29,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       validate: {
         len: {
-          args: [8,20],
+          args: [60,60],
           msg: "Too Short. Please try again."
         }
-      }
+      } 
     },
     pin: {
       allowNull: true,

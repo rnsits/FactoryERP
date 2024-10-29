@@ -1,15 +1,15 @@
 const express = require("express");
 const { BalanceTransactionController } = require("../../controllers");
 const { BalanceTransactionMiddleware } = require("../../middlewares");
-const authenticate = require('../../middlewares/auth.middleware');
+const { authenticateToken } = require('../../middlewares/auth.middleware');
 const BalanTranRouter = express.Router();
 
 /**
  * /api/v1/auth/baltran   POST
  */
-BalanTranRouter.post('/', BalanceTransactionMiddleware.validateBodyRequest, BalanceTransactionController.addBalanceTransactions);
+BalanTranRouter.post('/', authenticateToken, BalanceTransactionMiddleware.validateBodyRequest, BalanceTransactionController.addBalanceTransactions);
 
-BalanTranRouter.get('/', BalanceTransactionController.getBalanceTransactions);
+BalanTranRouter.get('/', authenticateToken, BalanceTransactionController.getBalanceTransactions);
 
 
 module.exports = BalanTranRouter;

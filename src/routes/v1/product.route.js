@@ -1,31 +1,31 @@
 const express = require("express");
 const { ProductController } = require("../../controllers");
 const { ProductMiddleware } = require("../../middlewares");
-const authenticate = require('../../middlewares/auth.middleware');
+const { authenticateToken } = require('../../middlewares/auth.middleware');
 const ProductRouter = express.Router();
 
 /**
  * /api/v1/auth/products   POST
  */
-ProductRouter.post('/', ProductMiddleware.validateBodyRequest,ProductController.addProduct);
+ProductRouter.post('/', authenticateToken, ProductMiddleware.validateBodyRequest,ProductController.addProduct);
 
 /**
  * /api/v1/auth/products/:Id   GET
  */
-ProductRouter.get('/procount', ProductController.getProductCount);
-ProductRouter.get('/:productId', ProductMiddleware.validateGetRequest,ProductController.getProduct);
+ProductRouter.get('/procount', authenticateToken, ProductController.getProductCount);
+ProductRouter.get('/:productId', authenticateToken, ProductMiddleware.validateGetRequest,ProductController.getProduct);
 
-ProductRouter.patch('/:productId/reduce', ProductMiddleware.validateReduce, ProductController.reduceProduct);
+ProductRouter.patch('/:productId/reduce', authenticateToken, ProductMiddleware.validateReduce, ProductController.reduceProduct);
 
-ProductRouter.patch('/:productId/update', ProductMiddleware.validateBodyUpdate, ProductController.updateProductByQuantity);
+ProductRouter.patch('/:productId/update', authenticateToken, ProductMiddleware.validateBodyUpdate, ProductController.updateProductByQuantity);
 
-ProductRouter.put('/valupdate', ProductMiddleware.validatePutBodyRequest, ProductController.validateAndUpdateProducts);
+ProductRouter.put('/valupdate', authenticateToken, ProductMiddleware.validatePutBodyRequest, ProductController.validateAndUpdateProducts);
 
 
 
 /**
  * /api/v1/auth/products/  GET
  */
-ProductRouter.get('/', ProductController.getProducts);
+ProductRouter.get('/', authenticateToken, ProductController.getProducts);
 
 module.exports = ProductRouter;

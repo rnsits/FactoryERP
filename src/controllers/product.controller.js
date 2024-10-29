@@ -4,39 +4,97 @@ const { ErrorResponse, SuccessResponse } = require("../utils/common");
 
 async function addProduct(req, res) {
     try {
-        const { name, description, description_type, audio_path, category_id, quantity_type, stock, product_cost, product_image } = req.body;
+        const { 
+            name, 
+            description, 
+            description_type, 
+            audio_path, 
+            category_id, 
+            quantity_type, 
+            stock, 
+            product_cost, 
+            product_image, 
+            isManufactured 
+        } = req.body;
 
         const existingProduct = await ProductService.getProductByNameAndCategory(name, category_id);
+        const currentTime = new Date().toLocaleString();
+        let product, updatedInventory;
 
-        if (existingProduct) {
-            ErrorResponse.message = "Product with this name and category already exists.";
-            return res.status(StatusCodes.CONFLICT).json(ErrorResponse); // 409 Conflict
+        if (isManufactured === true) {
+            if (existingProduct) {
+                const newStock = existingProduct.stock + stock;
+                product = await ProductService.updateProduct(existingProduct.id, newStock);
+                
+                updatedInventory = await InventoryTransactionService.createInventoryTransaction({
+                    product_id: existingProduct.id,
+                    transaction_type: 'in',
+                    quantity: stock,
+                    quantity_type: existingProduct.quantity_type,
+                    description: `${existingProduct.name} was manufactured with quantity ${stock} at ${currentTime}`,
+                    description_type: 'text',
+                    audio_path,
+                    isManufactured: true
+                });
+            } else {
+                // Create new manufactured product
+                product = await ProductService.createProduct({
+                    name,
+                    description,
+                    description_type,
+                    audio_path,
+                    category_id,
+                    quantity_type,
+                    stock,
+                    product_cost,
+                    product_image
+                });
+
+                updatedInventory = await InventoryTransactionService.createInventoryTransaction({
+                    product_id: product.id,
+                    transaction_type: 'in',
+                    quantity: stock,
+                    quantity_type: product.quantity_type,
+                    description: `${product.name} was manufactured with quantity ${stock} at ${currentTime}`,
+                    description_type: 'text',
+                    audio_path: product.audio_path,
+                    isManufactured: true
+                });
+            }
+        } 
+        else {
+            if (existingProduct) {
+                ErrorResponse.message = "Product with this name and category already exists.";
+                return res.status(StatusCodes.CONFLICT).json(ErrorResponse);
+            }
+
+            product = await ProductService.createProduct({
+                name,
+                description,
+                description_type,
+                audio_path,
+                category_id,
+                quantity_type,
+                stock,
+                product_cost,
+                product_image
+            });
+
+            updatedInventory = await InventoryTransactionService.createInventoryTransaction({
+                product_id: product.id,
+                transaction_type: 'in',
+                quantity: stock,
+                quantity_type: product.quantity_type,
+                description: `${product.name} added with quantity ${stock} at ${currentTime}`,
+                description_type: 'text',
+                audio_path: product.audio_path
+            });
         }
-        const product = await ProductService.createProduct({
-            name,
-            description,
-            description_type,
-            audio_path,
-            category_id,
-            quantity_type,
-            stock,
-            product_cost,
-            product_image 
-        });
-        const currentTime = new Date().toLocaleString(); 
-        const updatedInventory = await InventoryTransactionService.createInventoryTransaction({
-            product_id: product.id,
-            transaction_type: 'in',
-            quantity: product.stock,  // Log the absolute value of quantity change
-            quantity_type: product.quantity_type,
-            description: `${product.name} added with quantity ${stock} at ${currentTime}`,
-            description_type: 'text',
-            audio_path: product.audio_path
-        });
 
         SuccessResponse.message = "Product added successfully";
         SuccessResponse.data = { product, updatedInventory };
         return res.status(StatusCodes.CREATED).json(SuccessResponse);
+
     } catch (error) {
         ErrorResponse.message = "Failed to add product.";
         ErrorResponse.error = error;

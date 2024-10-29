@@ -4,8 +4,9 @@ const { ErrorResponse, SuccessResponse } = require("../utils/common");
 
 async function addBalanceTransactions(req, res) {
     try {
-        // const user_id = req.user;
-        const { user_id, transaction_type, amount, source, previous_balance, new_balance  } = req.body;
+        const user = req.user;
+        const user_id = user.id;
+        const { transaction_type, amount, source, previous_balance, new_balance  } = req.body;
         const balance = await BalanceTransactionService.createBalanceTransactions({
             user_id, transaction_type, amount, source, previous_balance, new_balance  
         });

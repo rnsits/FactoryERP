@@ -68,6 +68,14 @@ module.exports = {
         type: Sequelize.DECIMAL(10, 2),
         defaultValue: 0
       },
+      refreshToken: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      refreshTokenExpiry: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

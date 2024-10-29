@@ -1,14 +1,14 @@
 const express = require("express");
 const { InvTransController } = require("../../controllers");
 // const { ExpensesMiddleware } = require("../../middlewares");
-const authenticate = require('../../middlewares/auth.middleware');
+const { authenticateToken } = require('../../middlewares/auth.middleware');
 const InvTransRoutes = express.Router();
 
 
 /**
- * /api/v1/auth/expenses/  GET
+ * /api/v1/auth/inventory/  GET
  */
-InvTransRoutes.get('/', InvTransController.getAllInventoryTransactions);
+InvTransRoutes.get('/', authenticateToken, InvTransController.getAllInventoryTransactions);
 
 
 module.exports = InvTransRoutes; 
