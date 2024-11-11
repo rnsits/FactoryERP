@@ -10,7 +10,16 @@ class PurchasesRepository extends CrudRepository {
       super(Purchases);
     }
 
-
+    async findPurchasesByDate({ where = {}, limit = 10, offset = 0 }) {
+      const response = await Purchases.findAndCountAll({
+        where,
+        limit,
+        offset,
+        order: [['createdAt', 'DESC']],
+      });
+    
+      return response; // Sequelize's `findAndCountAll` already returns { count, rows }
+    }
 
 }
 

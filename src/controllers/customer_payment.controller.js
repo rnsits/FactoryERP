@@ -74,9 +74,60 @@ async function getAllCustomerPayments(req, res){
     }
 }
 
+// async function getUnpaidCustomerPayments(req, res) {
+//     try{
+//         const page = parseInt(req.query.page) || 1; 
+//         const limit = parseInt(req.query.limit) || 10;
+//         const offset = (page - 1) * limit; 
+//         const search = req.query.search || '';
+//         const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+//         const { count, rows } = await Customer_PaymentService.getUnpaidCustomerPayments(limit, offset, search, fields);
+
+//         SuccessResponse.message = "Unpaid Payments retrieved successfully.";
+//         SuccessResponse.data = {
+//             customers: rows,
+//             totalCount: count,
+//             totalPages: Math.ceil(count / limit),
+//             currentPage: page,
+//             pageSize: limit
+//         };
+//         return res
+//             .status(StatusCodes.OK)
+//             .json(SuccessResponse)
+//     } catch(error) {
+//         // ErrorResponse.message = "Something went wrong while getting unpaid Payments.";
+//         // ErrorResponse.error = error;
+//         // return res
+//         //     .status(StatusCodes.INTERNAL_SERVER_ERROR)
+//         //     .json(ErrorResponse)
+//             if (error instanceof AppError) {
+//                 if (error.statusCode === StatusCodes.NOT_FOUND) {
+//                   ErrorResponse.message = error.message;
+//                   ErrorResponse.error = error;
+//                   return res
+//                     .status(error.statusCode)
+//                     .json(ErrorResponse);
+//                 } else {
+//                   ErrorResponse.message = error.message;
+//                   ErrorResponse.error = error;
+//                   return res
+//                     .status(error.statusCode)
+//                     .json(ErrorResponse);
+//                 }
+//             } else {
+//                 ErrorResponse.message = "Something went wrong while getting unpaid Payments.";
+//                 ErrorResponse.error = error;
+//                 return res
+//                   .status(StatusCodes.INTERNAL_SERVER_ERROR)
+//                   .json(ErrorResponse);
+//             }
+//     }
+// }
 
 module.exports = {
    addCustomerPayment,
    getCustomerPayment,
-   getAllCustomerPayments
+   getAllCustomerPayments,
+//    getUnpaidCustomerPayments
 }

@@ -10,6 +10,16 @@ class ExpensesRepository extends CrudRepository {
       super(Expenses);
     }
 
+    async findExpensesByDate({ where = {}, limit = 10, offset = 0 }) {
+      const response = await Expenses.findAndCountAll({
+        where,
+        limit,
+        offset,
+        order: [['createdAt', 'DESC']],
+      });
+    
+      return response; // Sequelize's `findAndCountAll` already returns { count, rows }
+    }
 
 
 }

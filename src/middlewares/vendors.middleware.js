@@ -34,28 +34,28 @@ function validateBodyRequest(req, res, next){
     }
     
     if (!req.body.address) {
-        ErrorResponse.mesaage = "Something went wrong.";
+        ErrorResponse.message = "Something went wrong.";
         ErrorResponse.error = new AppError(["Address not found in the incoming request"])
         return res
             .status(StatusCodes.BAD_REQUEST)
             .json(ErrorResponse);
     }   
     if (!req.body.contact_person) {
-        ErrorResponse.mesaage = "Something went wrong.";
+        ErrorResponse.message = "Something went wrong.";
         ErrorResponse.error = new AppError(["Contact Person not found in the incoming request"])
         return res
             .status(StatusCodes.BAD_REQUEST)
             .json(ErrorResponse);
     }  
     if (!req.body.pincode) {
-        ErrorResponse.mesaage = "Something went wrong.";
+        ErrorResponse.message = "Something went wrong.";
         ErrorResponse.error = new AppError(["Pincode not found in the incoming request"])
         return res
             .status(StatusCodes.BAD_REQUEST)
             .json(ErrorResponse);
     }  
     if (!req.body.mobile) {
-        ErrorResponse.mesaage = "Something went wrong.";
+        ErrorResponse.message = "Something went wrong.";
         ErrorResponse.error = new AppError(["Mobile not found in the incoming request"])
         return res
             .status(StatusCodes.BAD_REQUEST)

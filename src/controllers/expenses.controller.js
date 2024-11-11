@@ -93,9 +93,23 @@ async function getAllExpenses(req, res){
 
 async function getTodayExpenses(req, res){
     try{  
-        const expenses = await ExpensesService.getTodayExpenses(); 
-        SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = expenses;
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        const { count, rows } = await ExpensesService.getTodayExpenses(limit, offset, search);
+        SuccessResponse.message = "Expenses for today retrieved successfully.";
+        SuccessResponse.data = {
+            expenses: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        }; 
+        // SuccessResponse.message = "Successfully completed the request";
+        // SuccessResponse.data = expenses;
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)
@@ -111,12 +125,26 @@ async function getTodayExpenses(req, res){
 
 async function getExpensesByDate(req, res){
     try{
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
         const date = new Date(req.body.date);
         console.log("Controller date", date);
         
-        const purchases = await ExpensesService.getExpensesByDate(date); 
+        // const purchases = await ExpensesService.getExpensesByDate(date); 
+        // Fetch the expenses for the given date with pagination
+        const { count, rows } = await ExpensesService.getExpensesByDate(date, limit, offset, search, fields);
+        
         SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = purchases;
+        SuccessResponse.data = {
+            expenses: rows,
+            totalCount: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            pageSize: limit
+          }
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)

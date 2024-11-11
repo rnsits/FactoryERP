@@ -78,7 +78,7 @@ class CrudRepository{
         return response || null;
     }
 
-    async findToday(){
+    async findToday({ where = {}, limit = 10, offset = 0 }){
         // Get today's date at midnight
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
@@ -86,16 +86,21 @@ class CrudRepository{
         // Get tomorrow's date at midnight
         const endOfDay = new Date();
         endOfDay.setHours(24, 0, 0, 0);
+
+        // Merge the date filter with the provided `where` filter
+        where.createdAt = {
+          [Op.gte]: startOfDay,
+          [Op.lt]: endOfDay,
+        };
+
         const response = await this.model.findAll({
-            where: {
-                createdAt: {
-                    [Op.gte]: startOfDay,
-                    [Op.lt]: endOfDay
-                }
-            },
+            where,
+            limit,
+            offset,
             order: [['createdAt', 'DESC']]
         })
-        return response || null;
+        // return response || null;
+        return response || [];
     }
 
     async update(id,data, options={}){

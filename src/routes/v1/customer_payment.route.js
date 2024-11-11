@@ -19,4 +19,7 @@ CustomerPaymentRoutes.get('/:customerPaymentId', authenticateToken, CustomerPaym
  */
 CustomerPaymentRoutes.get('/', authenticateToken, CustomerPaymentController.getAllCustomerPayments);
 
+// getting unpaid customer payments
+// CustomerPaymentRoutes.get('/unpaid', authenticateToken, CustomerPaymentController.getUnpaidCustomerPayments);
+
 module.exports = CustomerPaymentRoutes;

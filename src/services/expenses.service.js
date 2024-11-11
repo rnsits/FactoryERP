@@ -126,10 +126,22 @@ async function getAllExpenses(limit, offset, search, fields) {
 }
 
 
-async function getTodayExpenses() {
+async function getTodayExpenses(limit, offset, search, fields) {
   try {
-      const expenses = await expensesRepository.findToday();
-      return expenses;
+    const where = {};
+        
+    if (search && fields.length > 0) {
+        where[Op.or] = fields.map(field => ({
+            [field]: { [Op.like]: `%${search}%` }
+        }));
+    }
+      const { count, rows } = await expensesRepository.findToday({
+        where,
+        limit,
+        offset,
+      });
+      // return expenses;
+      return { count, rows };
   } catch(error) {
       console.log(error);
       if(
@@ -158,10 +170,39 @@ async function getTodayExpenses() {
   }
 }
 
-async function getExpensesByDate(date) {
-  try {    
-      const expenses = await expensesRepository.findAll(date);
-      return expenses;
+async function getExpensesByDate(date, limit, offset, search, fields) {
+  try {   
+      const where = {};
+
+      // Filter expenses by the specified date (date is already a Date object)
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(date);
+      endOfDay.setHours(24, 0, 0, 0);
+
+      // Add the date filter to `where` clause
+      where.createdAt = {
+        [Op.gte]: startOfDay,
+        [Op.lt]: endOfDay,
+      };
+
+      // If search query and fields are provided, add the search condition
+      if (search && fields.length > 0) {
+        where[Op.or] = fields.map((field) => ({
+          [field]: { [Op.like]: `%${search}%` }
+        }));
+      } 
+      // const expenses = await expensesRepository.findAll(date);
+      // return expenses;
+      // Fetch expenses from the database with pagination
+      const { count, rows } = await expensesRepository.findExpensesByDate({
+        where,
+        limit,
+        offset,
+      });
+    
+      return { count, rows };
   } catch(error) {
       console.log(error);
       if(

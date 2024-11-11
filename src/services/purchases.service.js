@@ -108,10 +108,24 @@ async function getAllPurchases(limit, offset, search, fields) {
     }
 }
 
-async function getTodayPurchases() {
+async function getTodayPurchases(limit, offset, search, fields) {
   try {
-      const purchases = await purchaseRepository.findToday();
-      return purchases;
+      const where = {};
+        
+      if (search && fields.length > 0) {
+          where[Op.or] = fields.map(field => ({
+              [field]: { [Op.like]: `%${search}%` }
+          }));
+      }
+
+      const { count, rows } = await purchaseRepository.findToday({
+        where,
+        limit,
+        offset,
+      });
+      // return expenses;
+      return { count, rows };
+      
   } catch(error) {
       console.log(error);
       if(
@@ -140,10 +154,38 @@ async function getTodayPurchases() {
   }
 }
 
-async function getPurchasesByDate(date) {
-  try {    
-      const purchases = await purchaseRepository.findAll(date);
-      return purchases;
+async function getPurchasesByDate(date, limit, offset, search, fields) {
+  try {   
+      const where = {};
+
+       // Filter expenses by the specified date (date is already a Date object)
+       const startOfDay = new Date(date);
+       startOfDay.setHours(0, 0, 0, 0);
+ 
+       const endOfDay = new Date(date);
+       endOfDay.setHours(24, 0, 0, 0);
+ 
+       // Add the date filter to `where` clause
+       where.createdAt = {
+         [Op.gte]: startOfDay,
+         [Op.lt]: endOfDay,
+       };
+
+      if (search && fields.length > 0) {
+          where[Op.or] = fields.map(field => ({
+              [field]: { [Op.like]: `%${search}%` }
+          }));
+      } 
+
+      // const purchases = await purchaseRepository.findAll(date);
+      // return purchases;
+      const { count, rows } = await purchaseRepository.findPurchasesByDate({
+        where,
+        limit,
+        offset,
+      });
+
+      return { count, rows };
   } catch(error) {
       console.log(error);
       if(

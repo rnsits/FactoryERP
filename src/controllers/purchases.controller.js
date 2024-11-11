@@ -284,7 +284,7 @@ async function getAllPurchases(req, res) {
 
         SuccessResponse.message = "Purchases retrieved successfully.";
         SuccessResponse.data = {
-            products: rows,
+            purchases: rows,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,
@@ -300,9 +300,22 @@ async function getAllPurchases(req, res) {
 
 async function getTodayPurchases(req, res){
     try{  
-        const purchases = await PurchaseService.getTodayPurchases(); 
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        const { count, rows } = await PurchaseService.getTodayPurchases(limit, offset, search); 
         SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = purchases;
+        // SuccessResponse.data = purchases;
+        SuccessResponse.data = {
+            purchases: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)
@@ -319,10 +332,21 @@ async function getTodayPurchases(req, res){
 async function getPurchasesByDate(req, res){
     try{
         const date = new Date(req.body.date);
-        console.log("Controller date", date);       
-        const purchases = await PurchaseService.getPurchasesByDate(date); 
+        console.log("Controller date", date);   
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];    
+        const { count, rows } = await PurchaseService.getPurchasesByDate(date, limit, offset, search, fields); 
         SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = purchases;
+        SuccessResponse.data = {
+            purchases: rows,
+            totalCount: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            pageSize: limit
+          }
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)
