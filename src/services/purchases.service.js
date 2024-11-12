@@ -12,7 +12,7 @@ async function createPurchase(data) {
         const purchase = await purchaseRepository.create(data);
         return purchase;
       }catch(error){
-        console.log(error);
+        console.log("Purchase creation error:", error);
       if (
         error.name == "SequelizeValidationError" ||
         error.name == "SequelizeUniqueConstraintError"

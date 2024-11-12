@@ -41,7 +41,7 @@ module.exports = {
       },
       payment_due_date: {
         type: Sequelize.DATE,
-        allowNull: false
+        allowNull: true
       },
       vendor_id: {
         type: Sequelize.INTEGER,
