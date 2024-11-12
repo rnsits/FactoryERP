@@ -23,20 +23,33 @@ function validateGetRequest(req,res,next){
 }
 
 function validateBodyRequest(req, res, next){
-    
-    // Validate the body
-    if (req.body.auth_method === 'username_password' && !req.body.password) {
-        ErrorResponse.message = "Something went wrong while creating User.";
-        ErrorResponse.error = new AppError(["Password required"], StatusCodes.BAD_REQUEST);
-        return res
+    const auth_method = req.body.auth_method;
+    // Validate the auth method
+    if (auth_method === 'username_password') {
+        if(!req.body.password) {
+            ErrorResponse.message = "Something went wrong while creating User.";
+            ErrorResponse.error = new AppError(["Password required"], StatusCodes.BAD_REQUEST);
+            return res
             .status(StatusCodes.BAD_REQUEST)
-            .json(ErrorResponse= "Password required");
-    } else if (req.body.auth_method === 'pin' && !req.body.pin) {
-        ErrorResponse.message = "Something went wrong while creating User.";
-        ErrorResponse.error = new AppError(["Pin required"], StatusCodes.BAD_REQUEST);
-        return res
-            .status(StatusCodes.BAD_REQUEST)
-            .json(ErrorResponse.message = "Pin Required");
+            .json(ErrorResponse);
+        } else if(req.body.password.length < 8){
+            ErrorResponse.message = "Something went wrong while creating User.";
+            ErrorResponse.error = new AppError(["Password must be atleast 8 characters."], StatusCodes.BAD_REQUEST);
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        } 
+    } else if (auth_method === 'pin') {
+        if(!req.body.pin) {
+            ErrorResponse.message = "Something went wrong while creating User.";
+            ErrorResponse.error = new AppError(["Pin required"], StatusCodes.BAD_REQUEST);
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse);
+        } else if(!/^\d{6}$/.test(req.body.pin) && isNaN(req.body.pin)) {
+            ErrorResponse.message = "Something went wrong while creating User.";
+            ErrorResponse.error = new AppError(["Pin must be 6 character long"], StatusCodes.BAD_REQUEST);
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+
     }   
     next();
 };

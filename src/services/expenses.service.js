@@ -64,24 +64,6 @@ async function getExpense(data) {
 
 async function getAllExpenses(limit, offset, search, fields) {
     try {
-        // const expenses = await expensesRepository.getAll();
-        // return expenses;
-        // const page = parseInt(req.query.page) || 1; 
-        // const limit = parseInt(req.query.limit) || 10;
-        // const offset = (page - 1) * limit; 
-        // const search = req.query.search || '';
-        // const fields = req.query.fields ? req.query.fields.split(',') : [];
-
-        // const { count, rows } = await ExpensesService.getAllExpenses(limit, offset, search);
-
-        // SuccessResponse.message = "Expenses retrieved successfully.";
-        // SuccessResponse.data = {
-        //     products: rows,
-        //     totalCount: count, 
-        //     totalPages: Math.ceil(count / limit), 
-        //     currentPage: page,
-        //     pageSize: limit
-        // };
         const where = {};
         
         if (search && fields.length > 0) {
@@ -94,6 +76,7 @@ async function getAllExpenses(limit, offset, search, fields) {
       where,
       limit,
       offset,
+      order: [['createdAt', 'DESC']],
     });
   return { count, rows };
         // return res.status(StatusCodes.OK).json(SuccessResponse);
@@ -139,6 +122,7 @@ async function getTodayExpenses(limit, offset, search, fields) {
         where,
         limit,
         offset,
+        order: [['createdAt', 'DESC']],
       });
       // return expenses;
       return { count, rows };
@@ -200,6 +184,7 @@ async function getExpensesByDate(date, limit, offset, search, fields) {
         where,
         limit,
         offset,
+        order: [['createdAt', 'DESC']],
       });
     
       return { count, rows };

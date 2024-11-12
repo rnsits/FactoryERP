@@ -1,6 +1,7 @@
 const {StatusCodes} = require('http-status-codes');
 const {ErrorResponse} = require('../utils/common');
 const AppError = require('../utils/errors/app.error');
+const { validateDateFormat }= require('../utils/common/datevalidator');
 
 
 function validateGetRequest(req,res,next){
@@ -35,7 +36,7 @@ function validateDateBody(req, res, next){
 
 function validateBodyRequest(req, res, next){
 
-    if(!req.body.vendor_id || isNaN(req.body.vendor_id) || parseInt(purchaseId) <= 0){
+    if(!req.body.vendor_id || isNaN(req.body.vendor_id) || parseInt(req.body.purchaseId) <= 0){
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["Vendor ID must be a number, missing."],StatusCodes.BAD_REQUEST)
         return res 
@@ -51,16 +52,9 @@ function validateBodyRequest(req, res, next){
                 .json(ErrorResponse)
     }
 
-    //  // Validate description_type to be either "audio" or "text"
-    //  const validQuantityTypes = ['kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube'];
-    //  if (!validQuantityTypes.includes(req.body.quantity_type)) {
-    //      ErrorResponse.message = "Invalid Quantity type. Allowed types are 'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube'.";
-    //      return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    //  }
-
-    if(!req.body.payment_date || !validateDateFormat(req.body.payment_date)) {
+    if(!req.body.payment_date) {
         ErrorResponse.message = "Something went wrong while adding Expense.";
-        ErrorResponse.error = new AppError(["Invalid Payment Date or Payment date missing."],StatusCodes.BAD_REQUEST);
+        ErrorResponse.error = new AppError(["Payment date missing."],StatusCodes.BAD_REQUEST);
         return res
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
@@ -74,14 +68,6 @@ function validateBodyRequest(req, res, next){
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
-
-    // if(req.body.payment_due_date && !validateDateFormat(req.body.payment_due_date)) {
-    //     ErrorResponse.message = "Something went wrong while adding Expense.";
-    //     ErrorResponse.error = new AppError(["Invalid Payment Date"],StatusCodes.BAD_REQUEST);
-    //     return res
-    //             .status(StatusCodes.BAD_REQUEST)
-    //             .json(ErrorResponse)
-    // }
 
     const validStatusTypes = ["paid", "unpaid", "partial-payment"];
 

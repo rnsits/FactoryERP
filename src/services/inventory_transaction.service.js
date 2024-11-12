@@ -77,6 +77,7 @@ async function getAllInventoryTransactions(limit, offset, search, fields) {
       where,
       limit,
       offset,
+      order: [['createdAt', 'DESC']],
     });
   return { count, rows };
     } catch(error) {

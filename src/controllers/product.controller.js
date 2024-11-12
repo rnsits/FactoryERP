@@ -14,14 +14,17 @@ async function addProduct(req, res) {
             stock, 
             product_cost, 
             product_image, 
-            isManufactured 
+            isManufactured,
+            cgst_rate,
+            sgst_rate,
+            igst_rate
         } = req.body;
-
+        
         const existingProduct = await ProductService.getProductByNameAndCategory(name, category_id);
         const currentTime = new Date().toLocaleString();
         let product, updatedInventory;
 
-        if (isManufactured === true) {
+        if (isManufactured) {
             if (existingProduct) {
                 const newStock = existingProduct.stock + stock;
                 product = await ProductService.updateProduct(existingProduct.id, newStock);
@@ -47,7 +50,10 @@ async function addProduct(req, res) {
                     quantity_type,
                     stock,
                     product_cost,
-                    product_image
+                    product_image,
+                    cgst_rate,
+                    sgst_rate,
+                    igst_rate
                 });
 
                 updatedInventory = await InventoryTransactionService.createInventoryTransaction({
@@ -77,7 +83,10 @@ async function addProduct(req, res) {
                 quantity_type,
                 stock,
                 product_cost,
-                product_image
+                product_image,
+                cgst_rate,
+                igst_rate,
+                sgst_rate
             });
 
             updatedInventory = await InventoryTransactionService.createInventoryTransaction({

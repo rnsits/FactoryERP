@@ -77,23 +77,24 @@ function validateReduce(req, res, next){
 
 function validateBodyRequest(req, res, next){
 
+    const description_type = req.body.description_type;
     // Validate description_type to be either "audio" or "text"
     const validDescriptionTypes = ["audio", "text"];
-    if (!validDescriptionTypes.includes(req.body.description_type)) {
+    if (!validDescriptionTypes.includes(description_type)) {
         ErrorResponse.message ="Something went wrong while creating product.";
         ErrorResponse.error = new AppError(["Invalid description type. Allowed types are 'audio' and 'text'."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
 
     // If description_type is "audio", ensure audio_path is provided
-    if (req.body.description_type === "audio" && !req.body.audio_path) {
+    if (description_type === "audio" && !req.body.audio_path) {
         ErrorResponse.message = "Something went wrong while creating product.";
         ErrorResponse.error = new AppError(["Audio path must be provided when description type is 'audio'."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     
     // desription is text need description
-    if(req.body.description_type === "text" && !req.body.description) {
+    if(description_type === "text" && !req.body.description) {
         ErrorResponse.message = "Somethiong went wrong while creating a product.";
         ErrorResponse.error = new AppError(["Description must be provided when type is 'text'."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);

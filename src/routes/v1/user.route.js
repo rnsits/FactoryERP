@@ -7,7 +7,7 @@ const { authenticateToken } = require('../../middlewares/auth.middleware');
 /**
  * /api/v1/auth/User   POST
  */
-UserRouter.post('/',  UserMiddleware.validateBodyRequest, UserController.addUser);
+UserRouter.post('/', authenticateToken, UserMiddleware.validateBodyRequest, UserController.addUser);
 
 /**
  * /api/v1/auth/User/:UserId   GET

@@ -78,6 +78,7 @@ async function getAllPurchases(limit, offset, search, fields) {
           where,
           limit, 
           offset,
+          order: [['createdAt', 'DESC']],
         });
         return { count, rows };
     } catch(error) {
@@ -122,6 +123,7 @@ async function getTodayPurchases(limit, offset, search, fields) {
         where,
         limit,
         offset,
+        order: [['createdAt', 'DESC']],
       });
       // return expenses;
       return { count, rows };
@@ -183,6 +185,7 @@ async function getPurchasesByDate(date, limit, offset, search, fields) {
         where,
         limit,
         offset,
+        order: [['createdAt', 'DESC']],
       });
 
       return { count, rows };

@@ -7,31 +7,15 @@ const bcrypt = require('bcrypt');
 async function addUser(req, res) {
     try {
         const { username, password, pin, email, phone, role, auth_method, current_balance } = req.body;
-        
-        // Validate raw password before hashing
-        if (!password || typeof password !== 'string') {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                message: "Password must be a string",
-                error: "Invalid password format"
-            });
-        }
 
-        // Validate password length before hashing
-        if (password.length < 8 || password.length > 20) {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                message: "Password must be between 8 and 20 characters",
-                error: "Invalid password length"
-            });
+        // Hash the password if auth method is username_password
+        let hashedPass = null;
+        if (auth_method === 'username_password') {
+            hashedPass = await bcrypt.hash(password, parseInt(ServerConfig.TOKS));
+            if (typeof hashedPass !== 'string') {
+                throw new Error('Password hashing failed');
+            }
         }
-
-          // Hash the password
-          const hashedPass = await bcrypt.hash(password, ServerConfig.TOKS);
-          
-        
-        //  Verify that hashedPass is a string
-          if (typeof hashedPass !== 'string') {
-              throw new Error('Password hashing failed');
-          }
 
         const user = await UserService.createUser({
             username,
@@ -47,6 +31,7 @@ async function addUser(req, res) {
         SuccessResponse.data = user;
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
+        console.log("Error while adding user", error);
         ErrorResponse.message = "Failed to add user.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);

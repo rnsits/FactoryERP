@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [6,6],
-          msg: "Please try again."
+          msg: "Pin length must be atleast 6."
         }
       }
     },

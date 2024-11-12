@@ -74,12 +74,13 @@ async function getAllCustomers(limit, offset, search, fields) {
             }));
         }
 
-    const { count, rows } = await Customers.findAndCountAll({
-      where,
-      limit,
-      offset,
-    });
-  return { count, rows };
+        const { count, rows } = await Customers.findAndCountAll({
+          where,
+          limit,
+          offset,
+          order: [['createdAt', 'DESC']],
+        });
+        return { count, rows };
 
     } catch(error) {
         console.log(error);
