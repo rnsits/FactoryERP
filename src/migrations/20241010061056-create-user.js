@@ -21,7 +21,7 @@ module.exports = {
         type: Sequelize.STRING,
         validate: {
           len: {
-            args: [8,20],
+            args: [60,60],
             msg: "Too Short. Please try again."
           }
         }
