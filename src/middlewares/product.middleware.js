@@ -76,30 +76,7 @@ function validateReduce(req, res, next){
 
 
 function validateBodyRequest(req, res, next){
-
-    const description_type = req.body.description_type;
-    // Validate description_type to be either "audio" or "text"
-    const validDescriptionTypes = ["audio", "text"];
-    if (!validDescriptionTypes.includes(description_type)) {
-        ErrorResponse.message ="Something went wrong while creating product.";
-        ErrorResponse.error = new AppError(["Invalid description type. Allowed types are 'audio' and 'text'."], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
-
-    // If description_type is "audio", ensure audio_path is provided
-    if (description_type === "audio" && !req.body.audio_path) {
-        ErrorResponse.message = "Something went wrong while creating product.";
-        ErrorResponse.error = new AppError(["Audio path must be provided when description type is 'audio'."], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
-    
-    // desription is text need description
-    if(description_type === "text" && !req.body.description) {
-        ErrorResponse.message = "Somethiong went wrong while creating a product.";
-        ErrorResponse.error = new AppError(["Description must be provided when type is 'text'."], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
-
+   
     // Validate quantity_type to be one of the allowed values
     const validQuantityTypes = ["kg", "l", "m", "pcs"]; // Add more as needed
     if (!validQuantityTypes.includes(req.body.quantity_type)) {
@@ -108,11 +85,6 @@ function validateBodyRequest(req, res, next){
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
 
-    // //Validate image path
-    // if(!req.body.product_image) {
-    //     ErrorResponse.message = "Image path missing.";
-    //     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    // }
     next();
 };
 
