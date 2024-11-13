@@ -307,18 +307,14 @@ async function addInvoice(req, res) {
                  const igstRate = product.igst_rate;
                  console.log("cgstRate, sgstRate, igstRate:  ", cgstRate, sgstRate, igstRate);
                 if (payment_method.toLowerCase() !== 'cash') {
-                    console.log("State ------------: ", state);
                     
                     if (state.toLowerCase() === 'rajasthan') {
                         cgst = (itemTotal * cgstRate) / 100;
                         sgst = (itemTotal * sgstRate) / 100;
                         taxAmount = cgst + sgst;
-                        console.log("tax c g --------------------", taxAmount);
-                        
                     } else {
                         igst = (itemTotal * igstRate) / 100;
                         taxAmount = igst;
-                        console.log("tax i g --------------------", taxAmount);
                     }
                 }
 
@@ -431,7 +427,6 @@ async function getInvoice(req,res){
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
     } catch (error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Invoice.";
         ErrorResponse.error = error;
         return res
@@ -442,16 +437,13 @@ async function getInvoice(req,res){
 
 async function getAllInvoices(req, res){
     try{
-        // const invoices = await InvoiceService.getAllInvoices(); 
-        // SuccessResponse.message = "Successfully completed the request";
-        // SuccessResponse.data = invoices;
         const page = parseInt(req.query.page) || 1; 
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await InvoiceService.getAllInvoices(limit, offset, search);
+        const { count, rows } = await InvoiceService.getAllInvoices(limit, offset, search, fields);
 
         SuccessResponse.message = "Invoices retrieved successfully.";
         SuccessResponse.data = {
@@ -465,7 +457,6 @@ async function getAllInvoices(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Failed to fetch Invoices";
         ErrorResponse.error = error;
         return res
@@ -483,7 +474,6 @@ async function getPendingInvoices(req,res){
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
     } catch (error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Invoice.";
         ErrorResponse.error = error;
         return res
@@ -501,7 +491,6 @@ async function getTodayInvoices(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Invoices.";
         ErrorResponse.error = error;
         return res

@@ -52,7 +52,7 @@ async function getAllVendors(req, res){
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
         const { count, rows } = await 
-        VendorService.getAllVendors(limit, offset, search); 
+        VendorService.getAllVendors(limit, offset, search, fields); 
         SuccessResponse.message = "Vendors retrieved successfully.";
         SuccessResponse.data = {
             products: rows,
@@ -65,7 +65,6 @@ async function getAllVendors(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Vendors";
         ErrorResponse.error = error;
         return res

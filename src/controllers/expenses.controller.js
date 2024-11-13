@@ -53,7 +53,6 @@ async function getExpense(req,res){
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
     } catch (error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Expense";
         ErrorResponse.error = error;
         return res
@@ -70,7 +69,7 @@ async function getAllExpenses(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await ExpensesService.getAllExpenses(limit, offset, search);
+        const { count, rows } = await ExpensesService.getAllExpenses(limit, offset, search, fields);
 
         SuccessResponse.message = "Expenses retrieved successfully.";
         SuccessResponse.data = {
@@ -82,7 +81,6 @@ async function getAllExpenses(req, res){
         };
         return res.status(StatusCodes.OK).json(SuccessResponse);
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Expenses";
         ErrorResponse.error = error;
         return res
@@ -99,7 +97,7 @@ async function getTodayExpenses(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await ExpensesService.getTodayExpenses(limit, offset, search);
+        const { count, rows } = await ExpensesService.getTodayExpenses(limit, offset, search, fields);
         SuccessResponse.message = "Expenses for today retrieved successfully.";
         SuccessResponse.data = {
             expenses: rows,
@@ -114,7 +112,6 @@ async function getTodayExpenses(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Expenses.";
         ErrorResponse.error = error;
         return res
@@ -149,7 +146,6 @@ async function getExpensesByDate(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Expenses.";
         ErrorResponse.error = error;
         return res

@@ -94,7 +94,6 @@ const { sequelize } = require("../models");
 async function addPurchase(req, res) {
     const user_id = req.user.id;
     const { 
-        // user_id,  removed from body to access from req
         products,  // Array of products with id, quantity, price
         payment_date, 
         payment_status, 
@@ -228,7 +227,6 @@ async function addPurchase(req, res) {
 
     } catch (error) {
         await transaction.rollback();
-        console.error("Transaction failed:", error);
         ErrorResponse.message = "Failed to add purchase.";
         ErrorResponse.error = error.message || error;
         return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -254,24 +252,6 @@ async function getPurchase(req,res){
     }
 }
 
-// async function getAllPurchases(req, res){
-//     try{
-//         const purchases = await PurchaseService.getAllPurchases(); 
-//         SuccessResponse.message = "Successfully completed the request";
-//         SuccessResponse.data = purchases;
-//         return res
-//             .status(StatusCodes.OK)
-//             .json(SuccessResponse)
-//     }catch(error) {
-//         console.log(error);
-//         ErrorResponse.message = "Something went wrong while getting Purchases";
-//         ErrorResponse.error = error;
-//         return res
-//             .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//             .json(ErrorResponse)
-//     }
-// }
-
 async function getAllPurchases(req, res) {
     try {
         const page = parseInt(req.query.page) || 1; 
@@ -280,7 +260,7 @@ async function getAllPurchases(req, res) {
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await PurchaseService.getAllPurchases(limit, offset, search);
+        const { count, rows } = await PurchaseService.getAllPurchases(limit, offset, search, fields);
 
         SuccessResponse.message = "Purchases retrieved successfully.";
         SuccessResponse.data = {
@@ -306,9 +286,8 @@ async function getTodayPurchases(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await PurchaseService.getTodayPurchases(limit, offset, search); 
+        const { count, rows } = await PurchaseService.getTodayPurchases(limit, offset, search, fields); 
         SuccessResponse.message = "Successfully completed the request";
-        // SuccessResponse.data = purchases;
         SuccessResponse.data = {
             purchases: rows,
             totalCount: count, 
@@ -320,7 +299,6 @@ async function getTodayPurchases(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Purchases";
         ErrorResponse.error = error;
         return res

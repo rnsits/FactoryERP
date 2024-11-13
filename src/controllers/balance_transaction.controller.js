@@ -29,7 +29,7 @@ async function getBalanceTransactions(req,res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await BalanceTransactionService.getAllBalanceTransactions(limit, offset, search);
+        const { count, rows } = await BalanceTransactionService.getAllBalanceTransactions(limit, offset, search, fields);
 
         SuccessResponse.message = "Balance Transactions retrieved successfully.";
         SuccessResponse.data = {

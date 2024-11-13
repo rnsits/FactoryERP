@@ -13,7 +13,8 @@ async function addUser(req, res) {
         if (auth_method === 'username_password') {
             hashedPass = await bcrypt.hash(password, parseInt(ServerConfig.TOKS));
             if (typeof hashedPass !== 'string') {
-                throw new Error('Password hashing failed');
+                ErrorResponse.message = "Failed to hash Password.";
+                return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
             }
         }
 

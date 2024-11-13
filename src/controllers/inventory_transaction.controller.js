@@ -35,7 +35,6 @@ async function getInventoryTransaction(req,res){
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
     } catch (error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Inventory Transaction.";
         ErrorResponse.error = error;
         return res
@@ -58,7 +57,7 @@ async function getAllInventoryTransactions(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await InventoryTransactionService.getAllInventoryTransactions(limit, offset, search);
+        const { count, rows } = await InventoryTransactionService.getAllInventoryTransactions(limit, offset, search, fields);
 
         SuccessResponse.message = "Inventory Tansactions retrieved successfully.";
         SuccessResponse.data = {

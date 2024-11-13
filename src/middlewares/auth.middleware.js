@@ -28,7 +28,6 @@ const authenticateToken = async (req, res, next) => {
     });
   }
 
-  console.log("token test autheticate", token);
   try {
     // const payload = jwt.verify(token, process.env.SECRET_KEY);
     const tokenValue = token.split(" ")[1];

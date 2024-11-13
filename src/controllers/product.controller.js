@@ -133,7 +133,7 @@ async function getProducts(req, res) {
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await ProductService.getAllProducts(limit, offset, search);
+        const { count, rows } = await ProductService.getAllProducts(limit, offset, search, fields);
 
         SuccessResponse.message = "Products retrieved successfully.";
         SuccessResponse.data = {
@@ -240,8 +240,6 @@ async function updateProductByQuantity(req, res) {
 async function validateAndUpdateProducts(req, res){
     try{
         const { products } = req.body;
-        // console.log("products-------------", req.body);
-        
         const validatedProducts = await ProductService.validateAndUpdateProducts(products);
         SuccessResponse.message = "Products updated successfully.";
         SuccessResponse.data = validatedProducts;

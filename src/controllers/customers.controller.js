@@ -31,7 +31,6 @@ async function getCustomer(req,res){
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
     } catch (error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Customer";
         ErrorResponse.error = error;
         return res
@@ -52,7 +51,7 @@ async function getAllCustomers(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await CustomerService.getAllCustomers(limit, offset, search);
+        const { count, rows } = await CustomerService.getAllCustomers(limit, offset, search, fields);
 
         SuccessResponse.message = "Customers retrieved successfully.";
         SuccessResponse.data = {
@@ -66,7 +65,6 @@ async function getAllCustomers(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Customers";
         ErrorResponse.error = error;
         return res

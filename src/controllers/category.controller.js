@@ -30,7 +30,6 @@ async function getCategory(req,res){
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
     } catch (error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Category";
         ErrorResponse.error = error;
         return res
@@ -41,16 +40,13 @@ async function getCategory(req,res){
 
 async function getAllCategories(req, res){
     try{
-        // const categories = await CategoryService.getAllCategories(); 
-        // SuccessResponse.message = "Successfully completed the request";
-        // SuccessResponse.data = categories;
         const page = parseInt(req.query.page) || 1; 
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
 
-        const { count, rows } = await CategoryService.getAllCategories(limit, offset, search);
+        const { count, rows } = await CategoryService.getAllCategories(limit, offset, search, fields);
 
         SuccessResponse.message = "Categories retrieved successfully.";
         SuccessResponse.data = {
@@ -64,7 +60,6 @@ async function getAllCategories(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
-        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Categories";
         ErrorResponse.error = error;
         return res
