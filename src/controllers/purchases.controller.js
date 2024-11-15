@@ -154,7 +154,8 @@ async function addPurchase(req, res) {
                 transaction_type: "in",
                 quantity: product.quantity,
                 quantity_type: existingProduct.quantity_type,
-                description: `${existingProduct.name} was added quantity ${product.quantity}, total quantity ${newStock} on ${currentTime}.`,
+                // description: `${existingProduct.name} was added quantity ${product.quantity}, total quantity ${newStock} on ${currentTime}.`,
+                description: `${existingProduct.name}`,
                 description_type: 'text'
             });
 
@@ -338,11 +339,40 @@ async function getPurchasesByDate(req, res){
     }
 }
 
+async function getUnPaidPurchases(req, res){
+    try {
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];    
+        const { count, rows } = await PurchaseService.getUnPaidPurchases(limit, offset, search, fields); 
+        SuccessResponse.message = "Unpaid/Partially Paid data retrieved successfully.";
+        SuccessResponse.data = {
+            purchases: rows,
+            totalCount: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            pageSize: limit
+          }
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse)
+    } catch (error) {
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while getting Unpaid/partial paid purchases.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json(ErrorResponse)
+    }
+}
+
 
 module.exports = {
     addPurchase,
     getPurchase,
     getAllPurchases,
     getTodayPurchases,
-    getPurchasesByDate
+    getPurchasesByDate,
+    getUnPaidPurchases
 }

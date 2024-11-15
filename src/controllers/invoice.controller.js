@@ -305,7 +305,7 @@ async function addInvoice(req, res) {
                  const cgstRate = product.cgst_rate;
                  const sgstRate = product.sgst_rate;
                  const igstRate = product.igst_rate;
-                 console.log("cgstRate, sgstRate, igstRate:  ", cgstRate, sgstRate, igstRate);
+
                 if (payment_method.toLowerCase() !== 'cash') {
                     
                     if (state.toLowerCase() === 'rajasthan') {
@@ -335,7 +335,8 @@ async function addInvoice(req, res) {
                     transaction_type: "out",
                     quantity: item.quantity,
                     quantity_type: product.quantity_type,
-                    description: `${product.name} was deducted quantity ${item.quantity}, total quantity ${newStock} on ${currentTime}.`,
+                    // show only name
+                    description: `${product.name}`,
                     description_type: 'text'
                 });
 
@@ -499,11 +500,41 @@ async function getTodayInvoices(req, res){
     }
 }
 
+async function getInvoicesByDate(req, res) {
+    try {
+        const date = new Date(req.body.date);  
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];    
+        const { count, rows } = await InvoiceService.getInvoicesByDate(date, limit, offset, search, fields); 
+        SuccessResponse.message = "Invoices retrieved by date successfully.";
+        SuccessResponse.data = {
+            invoices: rows,
+            totalCount: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page,
+            pageSize: limit
+          }
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse)
+    } catch (error) {
+        ErrorResponse.message = "Something went wrong while getting Invoices by date.";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse)      
+    }    
+}
+
 
 module.exports = {
  addInvoice,
  getInvoice,
  getAllInvoices,
  getPendingInvoices,
- getTodayInvoices
+ getTodayInvoices,
+ getInvoicesByDate
 }

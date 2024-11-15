@@ -9,6 +9,7 @@ const InvoiceRouter = express.Router();
  * /api/v1/auth/invoices   POST
  */
 InvoiceRouter.post('/', authenticateToken, InvoiceMiddleware.validateBodyRequest, InvoiceController.addInvoice);
+InvoiceRouter.post('/invoicedate', authenticateToken, InvoiceController.getInvoicesByDate);
 
 /**
  * /api/v1/auth/invoices/:invoice_id   GET

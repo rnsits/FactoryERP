@@ -74,7 +74,62 @@ async function getAllInventoryTransactions(req, res){
         ErrorResponse.error = error;
         return res
             .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .json(ErrorResponse)
+            .json(ErrorResponse);
+    }
+}
+
+async function getDamagedProductsData(req, res){
+    try{
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const { count, rows } = await InventoryTransactionService.getDamagedProductsData(limit, offset, search, fields);
+        SuccessResponse.message = "Damaged products data retrieved successfully.";
+        SuccessResponse.data = {
+            products: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
+        return res.status(StatusCodes.OK).json(SuccessResponse);
+    } catch(error){
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while retrieving damaged product data.";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse);
+    }
+}
+
+async function getDamagedDataByDate(req, res){
+    try{
+        const date = req.body.date;
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const { count, rows } = await InventoryTransactionService.getDamagedDataByDate(date, limit, offset, search, fields);
+        SuccessResponse.message = "Damaged products data retrieved successfully.";
+        SuccessResponse.data = {
+            products: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
+        return res.status(StatusCodes.OK).json(SuccessResponse);
+    } catch(error){
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while retrieving damaged product data.";
+        ErrorResponse.error = error;
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse);
     }
 }
 
@@ -82,5 +137,7 @@ async function getAllInventoryTransactions(req, res){
 module.exports = {
     addInventoryTransaction,
     getAllInventoryTransactions,
-    getInventoryTransaction
+    getInventoryTransaction,
+    getDamagedProductsData,
+    getDamagedDataByDate
 }

@@ -24,17 +24,11 @@ module.exports = {
         }
       },
       description_type: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM('text', 'audio'),
         allowNull: false,
-        validate: {
-          isIn: {
-            args: [['text', 'audio']],
-            msg: 'Description type must be either text or audio.'
-          }
-        }
       },
       audio_path: {
-        type: Sequelize.STRING,
+        type: Sequelize.BLOB,
         allowNull: true
       },
       payment_date: {

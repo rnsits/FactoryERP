@@ -63,17 +63,11 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     description_type: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM('text', 'audio'),
       allowNull: false,
-      validate: {
-        isIn: {
-          args: [['text', 'audio']],
-          msg: 'Description type must be either text or audio.'
-        }
-      }
     },
     audio_path: {
-      type: DataTypes.STRING,
+      type: DataTypes.BLOB,
       allowNull: true
     },
     category_id: {

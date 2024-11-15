@@ -38,18 +38,17 @@ module.exports = {
          }
       },
       description_type: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM('text', 'audio'),
         allowNull: true,
-        validate: {
-          isIn: {
-            args: [['text', 'audio']],
-            msg: 'Description type must be either text or audio.'
-          }
-        }
       },
       audio_path: {
-        type: Sequelize.STRING,
+        type: Sequelize.BLOB,
         allowNull: true,
+      },
+      isDamaged: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

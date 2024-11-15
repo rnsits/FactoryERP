@@ -1,6 +1,8 @@
 const { StatusCodes } = require("http-status-codes");
 const { ProductService, InventoryTransactionService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
+const { Product } = require("../models");
+const { sequelize } = require("../models");
 
 async function addProduct(req, res) {
     try {
@@ -34,7 +36,7 @@ async function addProduct(req, res) {
                     transaction_type: 'in',
                     quantity: stock,
                     quantity_type: existingProduct.quantity_type,
-                    description: `${existingProduct.name} was manufactured with quantity ${stock} at ${currentTime}`,
+                    description: `${existingProduct.name}`,
                     description_type: 'text',
                     audio_path,
                     isManufactured: true
@@ -61,7 +63,7 @@ async function addProduct(req, res) {
                     transaction_type: 'in',
                     quantity: stock,
                     quantity_type: product.quantity_type,
-                    description: `${product.name} was manufactured with quantity ${stock} at ${currentTime}`,
+                    description: `${product.name}`,
                     description_type: 'text',
                     audio_path: product.audio_path,
                     isManufactured: true
@@ -94,7 +96,7 @@ async function addProduct(req, res) {
                 transaction_type: 'in',
                 quantity: stock,
                 quantity_type: product.quantity_type,
-                description: `${product.name} added with quantity ${stock} at ${currentTime}`,
+                description: `${product.name}`,
                 description_type: 'text',
                 audio_path: product.audio_path
             });
@@ -175,7 +177,7 @@ async function reduceProduct(req, res) {
             transaction_type: 'out',
             quantity: quantity,
             quantity_type: product.quantity_type,
-            description: `Product reduced by quantity ${quantity} new quantity ${changeStock}, transaction type 'out' at time ${currentTime}`,
+            description: `${product.name}`,
             description_type: 'text',
         };
         const logData = await InventoryTransactionService.createInventoryTransaction(inventoryData);
@@ -211,9 +213,10 @@ async function updateProductByQuantity(req, res) {
         }
         
         const currentTime = new Date().toLocaleString(); 
-        const description = (transaction_type === 'in')
-            ? `Stock increased by ${quantity}, stock now is ${newStock} on date: ${currentTime}`
-            : `Stock decreased by ${quantity}, stock now is ${newStock} on date: ${currentTime}`;
+        // const description = (transaction_type === 'in')
+        //     ? `Stock increased by ${quantity}, stock now is ${newStock} on date: ${currentTime}`
+        //     : `Stock decreased by ${quantity}, stock now is ${newStock} on date: ${currentTime}`;
+        const description = (transaction_type === 'in') ? `${product.name}` : `${product.name}`;
 
         // Perform product stock update and inventory log within a transaction
         const [updatedProduct, updatedInventory] = await Promise.all([
@@ -264,6 +267,82 @@ async function getProductCount(req, res){
     }
 }
 
+async function damagedProducts(req, res){
+    const t = await sequelize.transaction();
+    try {
+        const { products, description_type } = req.body;
+
+        const results = [];
+
+        await Promise.all(products.map(async (item) => {
+            const { product_id, quantity, description } = item;
+
+            if (!product_id || !quantity) {
+                ErrorResponse.message = 'Product ID and quantity are required';
+                return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
+            }
+
+            const product = await Product.findByPk(product_id, { transaction: t });
+
+            if (!product) {
+                ErrorResponse.message =  `Product with ID ${product_id} does not exist`;
+                return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
+            }
+
+            if (quantity <= 0) {
+                ErrorResponse.message = `Quantity must be greater than 0 for product ${product.name}`;
+                return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+            }
+
+            if (quantity > product.stock) {
+                ErrorResponse.message = `Insufficient stock for product ${product.name}. Available: ${product.stock}`;
+                return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+            }
+
+            const newStock = product.stock - quantity;
+
+            const inventoryTransaction = await InventoryTransactionService.createInventoryTransaction({
+                product_id,
+                transaction_type: 'out',
+                quantity,
+                quantity_type: product.quantity_type,
+                description,
+                description_type,
+                isDamaged: true,
+                isManufactured: false
+            }, { transaction: t });
+
+            const updatedProduct = await ProductService.reduceProductByQuantity(
+                product_id, 
+                newStock, 
+                { transaction: t }
+            );
+
+            results.push({
+                product_id,
+                previous_stock: product.stock,
+                damaged_quantity: quantity,
+                new_stock: newStock,
+                transaction_id: inventoryTransaction.id
+            });
+        }));
+      
+        // Commit the transaction
+        await t.commit();
+
+        SuccessResponse.message = "Damaged Products registered successfully.";
+        SuccessResponse.data = results;
+        return res.status(StatusCodes.OK).json(SuccessResponse);
+        
+    } catch(error){
+        await t.rollback();
+        console.error('Error in reportDamagedProducts:', error);
+        ErrorResponse.message = "Failed to register damanged product.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
 
 module.exports = {
     addProduct,
@@ -273,4 +352,5 @@ module.exports = {
     updateProductByQuantity,
     getProductCount,
     validateAndUpdateProducts,
+    damagedProducts
 }

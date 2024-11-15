@@ -9,6 +9,8 @@ const ProductRouter = express.Router();
  */
 ProductRouter.post('/', authenticateToken, ProductMiddleware.validateBodyRequest,ProductController.addProduct);
 
+ProductRouter.post('/damaged-products', authenticateToken, ProductMiddleware.validateDamagedProductRequest, ProductController.damagedProducts);
+
 /**
  * /api/v1/auth/products/:Id   GET
  */

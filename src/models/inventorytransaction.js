@@ -58,17 +58,11 @@ module.exports = (sequelize, DataTypes) => {
        }
     },
     description_type: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM('text', 'audio'),
       allowNull: true,
-      validate: {
-        isIn: {
-          args: [['text', 'audio']],
-          msg: 'Description type must be either text or audio.'
-        }
-      }
     },
     audio_path: {
-      type: DataTypes.STRING,
+      type: DataTypes.BLOB,
       allowNull: true,
     },
     isManufactured: {
@@ -76,6 +70,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: false
     },
+    isDamaged: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    }
   }, {
     sequelize,
     modelName: 'InventoryTransaction',

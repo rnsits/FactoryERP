@@ -13,6 +13,7 @@ PurchaseRouter.post('/', authenticateToken, PurchasesMiddleware.validateBodyRequ
  * /api/v1/auth/purchases
  */
 PurchaseRouter.get('/today', authenticateToken, PurchaseController.getTodayPurchases);
+PurchaseRouter.get('/unpaidpur', authenticateToken, PurchaseController.getUnPaidPurchases);
 PurchaseRouter.post('/purDat', authenticateToken, PurchasesMiddleware.validateDateBody, PurchaseController.getPurchasesByDate);
 
 /**
