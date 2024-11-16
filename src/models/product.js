@@ -10,11 +10,6 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
-      Product.belongsTo(models.Category, {
-        foreignKey: 'category_id',
-        as: 'category',
-      });
 
       // Each Product can have many Purchases
       Product.hasMany(models.Purchases, {
@@ -70,14 +65,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BLOB,
       allowNull: true
     },
-    category_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'Category',
-        key: 'id'
-      }
-    },
     quantity_type: {
       type: DataTypes.ENUM(
         'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube'
@@ -111,6 +98,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BLOB,
       allowNull: true
     },
+    isManufactured: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    }
   }, {
     sequelize,
     modelName: 'Product',
@@ -118,15 +110,7 @@ module.exports = (sequelize, DataTypes) => {
     indexes: [
       {
         unique: false,
-        fields: ['category_id'] // Index for faster filtering by category
-      },
-      {
-        unique: false,
-        fields: ['name'] // Index for faster searches by name
-      },
-      {
-        unique: false,
-        fields: ['category_id', 'stock'] // Composite index on category and stock
+        fields: ['name']
       },
     ]
   });

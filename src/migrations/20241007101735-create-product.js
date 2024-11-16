@@ -37,14 +37,6 @@ module.exports = {
         type: Sequelize.BLOB,
         allowNull: true
       },
-      category_id: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-        // references: {
-        //   model: 'Category', // Reference to the Category table
-        //   key: 'id'
-        // },
-      },
       quantity_type: {
         type: Sequelize.ENUM(
           'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube'
@@ -62,6 +54,11 @@ module.exports = {
       product_image: {
         type: Sequelize.BLOB,
         allowNull: true
+      },
+      isManufactured: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

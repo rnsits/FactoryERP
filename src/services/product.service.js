@@ -179,12 +179,11 @@ async function reduceProductByQuantity(productId, stockData) {
   }
 } 
 
-async function getProductByNameAndCategory(name, category_id) {
+async function getProductByName(name) {
  try {
-  const product = await productRepository.getOne({
+  const product = await Product.findOne({
     where: {
-      name, 
-      category_id 
+      name
     }
   })
   return product || null;
@@ -334,7 +333,7 @@ module.exports = {
     getAllProducts,
     updateProduct,
     reduceProductByQuantity,
-    getProductByNameAndCategory,
+    getProductByName,
     getProductCount,
     validateAndUpdateProducts,
     getProductsByIds
