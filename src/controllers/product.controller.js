@@ -352,5 +352,5 @@ module.exports = {
     updateProductByQuantity,
     getProductCount,
     validateAndUpdateProducts,
-    damagedProducts
+    damagedProducts,
 }

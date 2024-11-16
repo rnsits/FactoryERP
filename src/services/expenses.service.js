@@ -216,10 +216,98 @@ async function getExpensesByDate(date, limit, offset, search, fields) {
   }
 }
 
+async function getUnpaidExpenses(limit, offset, search, fields){
+  try {
+    const where = { 
+      payment_status: {
+        [Op.notIn]: ['paid'],
+      }
+    };
+
+      // If search query and fields are provided, add the search condition
+      if (search && fields.length > 0) {
+        where[Op.or] = fields.map((field) => ({
+          [field]: { [Op.like]: `%${search}%` }
+        }));
+      } 
+
+      const { count, rows } = await Expenses.findAndCountAll({
+        where,
+        limit,
+        offset,
+        order: [['createdAt', 'DESC']],
+      });
+
+    return { count, rows };
+  } catch (error) {
+    console.log(error);
+      if(
+          error.name == "SequelizeValidationError" ||
+          error.name == "SequelizeUniqueConstraintError"
+      ) {
+        let explanation = [];
+        error.errors.forEach((err) => {
+          explanation.push(err.message);
+        });
+        throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+      } else if (
+        error.name === "SequelizeDatabaseError" &&
+        error.original &&
+        error.original.routine === "enum_in"
+      ) {
+        throw new AppError(
+          "Invalid value for associate_with field.",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      throw new AppError(
+        "Cannot get Unpaid Expenses.",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+  }
+}
+
+async function markExpensePaid(id, amount, status) {
+  try {
+    const expense = await expensesRepository.update(id, {
+      total_cost: amount,
+      payment_status: status
+    });
+     return expense;
+    } catch(error) {
+    console.log(error);
+      if(
+          error.name == "SequelizeValidationError" ||
+          error.name == "SequelizeUniqueConstraintError"
+      ) {
+        let explanation = [];
+        error.errors.forEach((err) => {
+          explanation.push(err.message);
+        });
+        throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+      } else if (
+        error.name === "SequelizeDatabaseError" &&
+        error.original &&
+        error.original.routine === "enum_in"
+      ) {
+        throw new AppError(
+          "Invalid value for associate_with field.",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      throw new AppError(
+        "Could not mark and update Expense",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+}
+
 module.exports = {
     createExpense,
     getExpense,
     getAllExpenses,
     getTodayExpenses,
-    getExpensesByDate
+    getExpensesByDate,
+    getUnpaidExpenses, 
+    markExpensePaid
 }

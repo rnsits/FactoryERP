@@ -11,8 +11,14 @@ ExpenseRoutes.post('/', authenticateToken, ExpensesMiddleware.validateBodyReques
 ExpenseRoutes.post('/expDat', authenticateToken, ExpensesController.getExpensesByDate);
 
 /**
+ * /api/v1/auth/expenses PUT
+ */
+ExpenseRoutes.put('/markexppaid', authenticateToken, ExpensesController.markExpensePaid);
+
+/**
  * /api/v1/auth/expenses/:expenseId   GET
  */
+ExpenseRoutes.get('/unpaidexp', authenticateToken, ExpensesController.getUnpaidExpenses);
 ExpenseRoutes.get('/today', authenticateToken, ExpensesController.getTodayExpenses);
 ExpenseRoutes.get('/:expenseId', authenticateToken, ExpensesMiddleware.validateGetRequest, ExpensesController.getExpense);
 
