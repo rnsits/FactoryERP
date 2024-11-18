@@ -117,6 +117,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.JSON,
       allowNull: false,
       defaultValue: []
+    },
+    audio: {
+      type: DataTypes.BLOB,
+      allowNull: true
     }
   }, {
     sequelize,

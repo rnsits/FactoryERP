@@ -241,7 +241,7 @@ const { sequelize } = require("../models");
 //     }
 // }
 
-
+//add audio here
 async function addInvoice(req, res) {
     const user_id = req.user.id;
     const {  
@@ -253,7 +253,8 @@ async function addInvoice(req, res) {
         pincode,
         address,
         mobile,
-        products
+        products,
+        audio
     } = req.body;
 
     const state = findStateByPincode(pincode);
@@ -274,7 +275,8 @@ async function addInvoice(req, res) {
             address, 
             mobile,
             total_amount: 0,
-            total_tax: 0
+            total_tax: 0, 
+            audio: audio || null,
         }, { transaction });
         
         let totalAmount = 0;

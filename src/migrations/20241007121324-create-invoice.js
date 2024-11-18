@@ -91,6 +91,10 @@ module.exports = {
         type: Sequelize.JSON,
         defaultValue: []
       },
+      audio: {
+        type: Sequelize.BLOB,
+        allowNull: true
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

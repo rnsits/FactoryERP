@@ -52,14 +52,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       validate :{
         len: {
-         args: [10, 500],
-         msg: 'Description must be between 10 to 50 characters long.'
+         args: [4, 500],
+         msg: 'Description must be between 4 to 50 characters long.'
         }
        }
     },
     description_type: {
       type: DataTypes.ENUM('text', 'audio'),
       allowNull: true,
+      defaultValue: 'text',
     },
     audio_path: {
       type: DataTypes.BLOB,
