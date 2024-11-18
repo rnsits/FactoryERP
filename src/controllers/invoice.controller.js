@@ -1,7 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
 const { findStateByPincode } = require('../../src/utils/common/pincodehelper');
-const { InvoiceService, InventoryTransactionService, BalanceTransactionService, UserService, ProductService, } = require('../services');
+const { InvoiceService, InventoryTransactionService, BalanceTransactionService, ProductService, CustomerService, } = require('../services');
 const AppError = require("../utils/errors/app.error");
 const { sequelize } = require("../models");
 
@@ -531,6 +531,40 @@ async function getInvoicesByDate(req, res) {
     }    
 }
 
+async function markInvoicePaid(req, res) {
+    const transaction = await sequelize.transaction();
+
+    try {
+        const { invoices } = req.body;
+        if(invoices.amount < 0) {
+            throw new AppError("Amount cannot be negative.",StatusCodes.BAD_REQUEST);
+        }
+        const invoice = await InvoiceService.getInvoice(expenses.id);
+        if(!invoice) {
+            throw new AppError("Invoice not found.",StatusCodes.NOT_FOUND);
+        }
+        if(invoice.payment_status === "paid") {
+            throw new AppError(`Invoice already marked paid`, StatusCodes.BAD_REQUEST);
+        }
+        if(invoices.amount > invoice.total_amount) {
+            throw new AppError(`Amount paid is greater than the total cost of invoice.`, StatusCodes.BAD_REQUEST);
+        }
+
+        let status = invoice.payment_status;
+        const newAmount = invoice.total_amount - invoices.amount;
+        status = newAmount === 0 ? "paid" : "partial-payment";
+
+        const updateInvoice = await InvoiceService.markInvoicePaid(invoices.id, newAmount, status, { transaction });
+
+        const user = await CustomerService.getCustomer
+    } catch (error) {
+        console.log(error);
+        ErrorResponse.message ="Something went wrong while marking the Invoice.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
 
 module.exports = {
  addInvoice,
@@ -538,5 +572,6 @@ module.exports = {
  getAllInvoices,
  getPendingInvoices,
  getTodayInvoices,
- getInvoicesByDate
+ getInvoicesByDate,
+ markInvoicePaid,
 }

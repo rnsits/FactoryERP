@@ -212,7 +212,6 @@ async function markExpensePaid(req, res){
         let status = expense.payment_status;
         const newAmount = expense.total_cost - expenses.amount;
         status = newAmount === 0 ? "paid" : "partial-payment";
-        
 
         const updateExpense = await ExpensesService.markExpensePaid(expenses.id, newAmount, status, { transaction });    
 

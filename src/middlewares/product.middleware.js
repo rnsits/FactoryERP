@@ -123,24 +123,6 @@ function validateBodyRequest(req, res, next){
     next();
 };
 
-// function damagedBodyRequest(req, res, next){
-//     // Check Products is array or not
-//     const {products, description_type} = req.body;
-//     if (!Array.isArray(products) || products.length === 0) {
-//         ErrorResponse.message = "Something went wrong while registering damaged products.";
-//         ErrorResponse.error = new AppError(["Please provide atleast one product."], StatusCodes.BAD_REQUEST);
-//         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-//     }
-//     // Validate description_type
-//     if (!['text', 'audio'].includes(description_type)) {
-//         ErrorResponse.message = "Something went wrong while registering damaged products.";
-//         ErrorResponse.error = new AppError(["Invalid Description Type."], StatusCodes.BAD_REQUEST);
-//         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-//     }
-
-//     next();
-// }
-
 function validateDamagedProductRequest(req, res, next) {
     const { products, description_type } = req.body;
   
