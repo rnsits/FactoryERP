@@ -231,11 +231,49 @@ async function getInvoicesByDate(date, limit, offset, search, fields) {
   }
 }
 
+async function markInvoicePaid(id, amount, status, newAmount){
+  try {
+    const invoice = await invoiceRepository.update(id, {
+      total_amount: amount,
+      payment_status: status,
+      due_amount: newAmount
+    });
+    return invoice;
+  } catch (error) {
+    console.log(error);
+      if(
+          error.name == "SequelizeValidationError" ||
+          error.name == "SequelizeUniqueConstraintError"
+      ) {
+        let explanation = [];
+        error.errors.forEach((err) => {
+          explanation.push(err.message);
+        });
+        throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+      } else if (
+        error.name === "SequelizeDatabaseError" &&
+        error.original &&
+        error.original.routine === "enum_in"
+      ) {
+        throw new AppError(
+          "Invalid value for associate_with field.",
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      throw new AppError(
+        "Could not mark and update Invoice",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+}
+
+
 module.exports = {
     createInvoice,
     getInvoice,
     getAllInvoices,
     getPendingInvoices,
     getTodayInvoices,
-    getInvoicesByDate
+    getInvoicesByDate,
+    markInvoicePaid
 }

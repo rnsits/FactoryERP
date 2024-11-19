@@ -1,6 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const { InventoryTransactionService, ProductService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
+const {Product} = require("../models");
 
 async function addInventoryTransaction(req, res) {
     try {
@@ -86,9 +87,24 @@ async function getDamagedProductsData(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
         const { count, rows } = await InventoryTransactionService.getDamagedProductsData(limit, offset, search, fields);
+      
+        // Fetch product names for each transaction based on product_id
+        const productsWithNames = await Promise.all(
+            rows.map(async (row) => {
+                // Fetch the product name based on product_id
+                const product = await Product.findByPk(row.product_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                });
+
+                return {
+                    ...row.toJSON(),
+                    product_name: product ? product.name : null, // Include product name if found
+                };
+            })
+        );
         SuccessResponse.message = "Damaged products data retrieved successfully.";
         SuccessResponse.data = {
-            products: rows,
+            products: productsWithNames,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,
@@ -114,9 +130,23 @@ async function getDamagedDataByDate(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
         const { count, rows } = await InventoryTransactionService.getDamagedDataByDate(date, limit, offset, search, fields);
+         // Fetch product names for each transaction based on product_id
+         const productsWithNames = await Promise.all(
+            rows.map(async (row) => {
+                // Fetch the product name based on product_id
+                const product = await Product.findByPk(row.product_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                });
+
+                return {
+                    ...row.toJSON(),
+                    product_name: product ? product.name : null, // Include product name if found
+                };
+            })
+        );
         SuccessResponse.message = "Damaged products data retrieved successfully.";
         SuccessResponse.data = {
-            products: rows,
+            products: productsWithNames,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,

@@ -3,6 +3,7 @@ const { ProductService, InventoryTransactionService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
 const { Product } = require("../models");
 const { sequelize } = require("../models");
+const AppError = require("../utils/errors/app.error");
 
 async function addProduct(req, res) {
     try {
@@ -130,7 +131,7 @@ async function getProduct(req, res) {
 async function getProducts(req, res) {
     try {
         const page = parseInt(req.query.page) || 1; 
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 12;
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
@@ -309,6 +310,7 @@ async function damagedProducts(req, res){
                 description,
                 description_type,
                 isDamaged: true,
+                audio_path: products.audio_path,
                 isManufactured: false
             }, { transaction: t });
 
@@ -320,6 +322,7 @@ async function damagedProducts(req, res){
 
             results.push({
                 product_id,
+                product_name: product.name,
                 previous_stock: product.stock,
                 damaged_quantity: quantity,
                 new_stock: newStock,
@@ -343,6 +346,152 @@ async function damagedProducts(req, res){
     }
 }
 
+async function createManufacturedProduct(req, res) {
+    const transaction = await sequelize.transaction(); // Start a transaction
+    try {
+        const { name, description, quantity_type, stock, product_cost, product_image, products } = req.body;
+
+        // Validate request body
+        if (!name || !description || !quantity_type || !stock || !product_cost || !Array.isArray(products)) {
+            throw new AppError(
+                "Invalid input. All fields and 'products' array are required.",
+                StatusCodes.BAD_REQUEST
+            );
+        }
+
+        // Validate existing products and their stock
+        for (const item of products) {
+            const { product_id, quantity } = item;
+
+            if (!product_id || !quantity || quantity <= 0) {
+                throw new AppError(
+                    `Invalid input for product_id: ${product_id} or quantity: ${quantity}.`,
+                    StatusCodes.BAD_REQUEST
+                );
+            }
+
+            const product = await ProductService.getProduct(product_id);
+
+            if (!product) {
+                throw new AppError(`Product with id ${product_id} not found.`, StatusCodes.NOT_FOUND);
+            }
+
+            if (product.stock < quantity) {
+                throw new AppError(
+                    `Insufficient stock for product_id: ${product_id}. Available: ${product.stock}, Required: ${quantity}.`,
+                    StatusCodes.BAD_REQUEST
+                );
+            }
+        }
+        
+        let manufacturedProduct = await ProductService.getProductByName(name);
+        console.log("manufactured -----------", manufacturedProduct);
+       
+        // console.log("manufactured -----------", manufacturedProduct);
+        
+
+        if (manufacturedProduct) {
+            // Update existing product's stock
+            const newStock = manufacturedProduct.stock + stock;
+            const mfcId = manufacturedProduct.id;
+            // console.log("newStock===========", newStock);
+            
+
+            manufacturedProduct = await ProductService.updateProduct(
+                mfcId,
+                newStock,
+                { transaction }
+            );
+
+            // console.log("id---------------", manufacturedProduct.id);
+
+            // Create inventory transaction for the updated product
+            const invent = await InventoryTransactionService.createInventoryTransaction(
+                {
+                    product_id: mfcId,
+                    transaction_type: 'in',
+                    quantity: stock,
+                    quantity_type: quantity_type,
+                    description: `${name}`,
+                    description_type: 'text',
+                    isManufactured: true
+                },
+                { transaction }
+            );
+            console.log("inventortyyyyy0", invent);
+            
+        } else {
+            // Create a new manufactured product
+            manufacturedProduct = await ProductService.createProduct(
+                {
+                    name,
+                    description,
+                    quantity_type,
+                    stock,
+                    product_cost,
+                    product_image,
+                    isManufactured: true,
+                },
+                { transaction }
+            );
+            
+
+            // Create inventory transaction for the new product
+            await InventoryTransactionService.createInventoryTransaction(
+                {
+                    product_id: manufacturedProduct.id,
+                    transaction_type: 'in',
+                    quantity: stock,
+                    quantity_type,
+                    description: `${name}`,
+                    description_type: 'text',
+                    isManufactured: true
+                },
+                { transaction }
+            );
+        }
+
+        // Deduct stock from existing products
+        for (const item of products) {
+            const { product_id, quantity } = item;
+
+            const product = await ProductService.getProduct(product_id);
+            const newStock = product.stock - quantity;
+
+            await ProductService.updateProduct(
+                product_id,
+                newStock,
+                { transaction }
+            );
+
+            await InventoryTransactionService.createInventoryTransaction(
+                {
+                    product_id:product.id,
+                    transaction_type: 'out',
+                    quantity,
+                    quantity_type: product.quantity_type,
+                    description: `${name}`,
+                    description_type: 'text',
+                },
+                { transaction }
+            );
+        }
+
+        await transaction.commit(); // Commit the transaction
+
+        SuccessResponse.message = "Manufactured product processed successfully.";
+        SuccessResponse.data = { manufacturedProduct };
+        return res.status(StatusCodes.CREATED).json(SuccessResponse);
+    } catch (error) {
+        await transaction.rollback(); // Rollback the transaction
+        console.error('Error in createManufacturedProduct:', error);
+        ErrorResponse.message = "Failed to process manufactured product.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
+
 
 module.exports = {
     addProduct,
@@ -353,4 +502,5 @@ module.exports = {
     getProductCount,
     validateAndUpdateProducts,
     damagedProducts,
+    createManufacturedProduct
 }

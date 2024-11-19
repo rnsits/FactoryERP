@@ -213,7 +213,7 @@ async function markExpensePaid(req, res){
         const newAmount = expense.total_cost - expenses.amount;
         status = newAmount === 0 ? "paid" : "partial-payment";
 
-        const updateExpense = await ExpensesService.markExpensePaid(expenses.id, newAmount, status, { transaction });    
+        const updateExpense = await ExpensesService.markExpensePaid(expenses.id, newAmount, status, newAmount, { transaction });    
 
         // Get current user balance
         const user = await UserService.getUser(user_id); 
