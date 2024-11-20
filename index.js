@@ -2,13 +2,16 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 app.use(cors());
 // const authRoutes = require('./src/routes/v1/auth.routes'); // Adjust the path as necessary
 const apiRoutes = require('./src/routes');
 
 // Middleware to parse JSON requests
-app.use(express.json());
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}))
 
 // Use the auth routes
 app.use('/api', apiRoutes);

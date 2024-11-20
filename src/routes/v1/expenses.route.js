@@ -2,13 +2,16 @@ const express = require("express");
 const { ExpensesController } = require("../../controllers");
 const { ExpensesMiddleware } = require("../../middlewares");
 const { authenticateToken } = require('../../middlewares/auth.middleware');
+const upload = require("../../config/multer.config");
 const ExpenseRoutes = express.Router();
+
 
 /**
  * /api/v1/auth/expenses   POST
  */
-ExpenseRoutes.post('/', authenticateToken, ExpensesMiddleware.validateBodyRequest, ExpensesController.addExpense);
-ExpenseRoutes.post('/expDat', authenticateToken, ExpensesController.getExpensesByDate);
+ExpenseRoutes.post('/', authenticateToken, upload.single('audio_path'),ExpensesController.addExpense);
+
+ExpenseRoutes.post('/expDat', authenticateToken, ExpensesController.getExpensesByDate); 
 
 /**
  * /api/v1/auth/expenses PUT

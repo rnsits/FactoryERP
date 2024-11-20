@@ -6,39 +6,53 @@ const { sequelize } = require("../models");
 
 
 async function addExpense(req, res) {
+    const transaction = await sequelize.transaction();
     try {
         const user_id = req.user.id;
-        const { total_cost,description, description_type, audio_path, payment_date, payment_status  } = req.body;
+        console.log(req.file);
+        
+        const { total_cost,description, description_type, payment_date, payment_status  } = req.body;
        
+        let audioPath = null;
+        if (req.files && req.files.audio_path) {
+            // Get the buffer or path of the uploaded audio file
+            const uploadedAudio = req.files.audio_path[0]; // `audio_path` is the field name
+            audioPath = uploadedAudio.buffer.toString('base64'); // If storing as Base64
+            // Or save the file and get the file path if storing on the file system
+        }
         const expense = await ExpensesService.createExpense({
     
             total_cost,
             description,
             description_type,
-            audio_path,
+            audio_path: audioPath,
             payment_date,
             payment_status,
             
-        });
+        }, {transaction});
 
         // please replace user_id with user.id when authentication has been applied.
         user_data = await UserService.getUser(user_id);
         const currentBalance = user_data.current_balance - total_cost;
-        update_user = await UserService.updateUserBalance(user_data.id, currentBalance);
+        update_user = await UserService.updateUserBalance(user_data.id, currentBalance, {transaction});
 
-        balance_trans = await BalanceTransactionService.createBalanceTransactions({
+        const balance_trans = await BalanceTransactionService.createBalanceTransactions({
             user_id: user_data.id,
             transaction_type: "expense",
             amount: total_cost,
             source: "expense",
             previous_balance: user_data.current_balance,
             new_balance: currentBalance
-        });
+        }, {transaction});
+
+        await transaction.commit();
 
         SuccessResponse.message = "Expense added successfully";
-        SuccessResponse.data = { expense, user_data, balance_trans };
+        SuccessResponse.data = { expense, user_id, balance_trans };
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
+        console.log(error);
+        await transaction.rollback();
         ErrorResponse.message = "Failed to add expense.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -98,8 +112,9 @@ async function getTodayExpenses(req, res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const date = new Date();
 
-        const { count, rows } = await ExpensesService.getTodayExpenses(limit, offset, search, fields);
+        const { count, rows } = await ExpensesService.getExpensesByDate(date, limit, offset, search, fields);
         SuccessResponse.message = "Expenses for today retrieved successfully.";
         SuccessResponse.data = {
             expenses: rows,

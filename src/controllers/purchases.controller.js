@@ -5,20 +5,26 @@ const AppError = require("../utils/errors/app.error");
 const { sequelize } = require("../models");
 
 async function addPurchase(req, res) {
-    const user_id = req.user.id;
-    const { 
-        products,  // Array of products with id, quantity, price
-        payment_date, 
-        payment_status, 
-        payment_due_date, 
-        vendor_id, 
-        invoice_Bill 
-    } = req.body;
     
-    const currentTime = new Date().toLocaleString();
     const transaction = await sequelize.transaction();
-
+    
     try {
+        const user_id = req.user.id;
+        const { 
+            products,  // Array of products with id, quantity, price
+            payment_date, 
+            payment_status, 
+            payment_due_date, 
+            vendor_id, 
+            // invoice_Bill 
+        } = req.body;
+
+        let invoiceBill = null;
+        if (req.file) {
+
+            invoiceBill = req.file.buffer.toString('base64');
+        }
+        const currentTime = new Date().toLocaleString();
         // Validate input
         if (!Array.isArray(products) || products.length === 0) {
             throw new AppError("Products array is required", StatusCodes.BAD_REQUEST);
@@ -44,28 +50,31 @@ async function addPurchase(req, res) {
         const purchaseRecords = [];
 
         for (const product of products) {
-            const existingProduct = productMap.get(product.id);
+            const productId = Number(product.id);
+            const quantity = Number(product.quantity);
+            const price = Number(product.price);
+            const existingProduct = productMap.get(productId);
             
             if (!existingProduct) {
-                throw new AppError(`Product with ID ${product.id} not found`, StatusCodes.NOT_FOUND);
+                throw new AppError(`Product with ID ${productId} not found`, StatusCodes.NOT_FOUND);
             }
 
-            const productCost = Number(product.price) * Number(product.quantity);
+            const productCost = price * quantity;
             totalCost += productCost;
 
             // Prepare updates
-            const newStock = Number(existingProduct.stock) + Number(product.quantity);
+            const newStock = Number(existingProduct.stock) + quantity;
             
             updates.push({
-                id: product.id,
+                id: productId,
                 newStock: newStock
             });
 
             // Prepare inventory transactions
             inventoryTransactions.push({
-                product_id: product.id,
+                product_id: productId,
                 transaction_type: "in",
-                quantity: product.quantity,
+                quantity: quantity,
                 quantity_type: existingProduct.quantity_type,
                 // description: `${existingProduct.name} was added quantity ${product.quantity}, total quantity ${newStock} on ${currentTime}.`,
                 description: `${existingProduct.name}`,
@@ -75,15 +84,15 @@ async function addPurchase(req, res) {
 
             // Prepare purchase records
             purchaseRecords.push({
-                product_id: product.id,
-                quantity: product.quantity,
+                product_id: productId,
+                quantity: quantity,
                 quantity_type: existingProduct.quantity_type,
                 total_cost: productCost,
                 payment_date,
                 payment_status,
                 payment_due_date,
                 vendor_id,
-                invoice_Bill
+                invoice_Bill: invoiceBill
             });
         }
 
@@ -200,8 +209,9 @@ async function getTodayPurchases(req, res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const date = new Date();
 
-        const { count, rows } = await PurchaseService.getTodayPurchases(limit, offset, search, fields); 
+        const { count, rows } = await PurchaseService.getPurchasesByDate(date, limit, offset, search, fields); 
         SuccessResponse.message = "Successfully completed the request";
         SuccessResponse.data = {
             purchases: rows,

@@ -2,12 +2,17 @@ const express = require("express");
 const { ProductController } = require("../../controllers");
 const { ProductMiddleware } = require("../../middlewares");
 const { authenticateToken } = require('../../middlewares/auth.middleware');
+const upload = require("../../config/multer.config")
 const ProductRouter = express.Router();
 
 /**
  * /api/v1/auth/products   POST
  */
-ProductRouter.post('/', authenticateToken, ProductMiddleware.validateBodyRequest,ProductController.addProduct);
+ProductRouter.post('/', authenticateToken,
+    upload.fields([
+        { name: 'product_image', maxCount: 1 }, // Single image file
+        { name: 'audio_path', maxCount: 1 },   // Single audio file
+    ]),ProductController.addProduct);
 
 ProductRouter.post('/damaged-products', authenticateToken, ProductMiddleware.validateDamagedProductRequest, ProductController.damagedProducts);
 ProductRouter.post('/mfcpro', authenticateToken, ProductController.createManufacturedProduct);

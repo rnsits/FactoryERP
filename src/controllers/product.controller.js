@@ -6,27 +6,37 @@ const { sequelize } = require("../models");
 const AppError = require("../utils/errors/app.error");
 
 async function addProduct(req, res) {
+    const transaction = await sequelize.transaction();
     try {
         const { 
             name, 
             description, 
             description_type, 
-            audio_path, 
+            // audio_path, 
             quantity_type, 
             stock, 
             product_cost, 
-            product_image, 
+            // product_image, 
             isManufactured,
             cgst_rate,
             sgst_rate,
             igst_rate
         } = req.body;
+
+        const product_image = req.files['product_image']?.[0]?.path || null;
+        const audio_path = req.files['audio_path']?.[0]?.path || null;
         
         const existingProduct = await ProductService.getProductByName(name);
         const currentTime = new Date().toLocaleString();
         let product, updatedInventory;
 
         if (isManufactured === true) {
+              // Parse numeric values
+        const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
+        const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
+        const cgst_rate = parseFloat(req.body.cgst_rate) || 0;
+        const sgst_rate = parseFloat(req.body.sgst_rate) || 0;
+        const igst_rate = parseFloat(req.body.igst_rate) || 0;
             if (existingProduct) {
                 const newStock = existingProduct.stock + stock;
                 product = await ProductService.updateProduct(existingProduct.id, newStock);
@@ -40,9 +50,15 @@ async function addProduct(req, res) {
                     description_type: 'text',
                     audio_path,
                     isManufactured: true
-                });
+                },{transaction});
             } else {
                 // Create new manufactured product
+                // Parse numeric values
+                const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
+                const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
+                const cgst_rate = parseFloat(req.body.cgst_rate) || 0;
+                const sgst_rate = parseFloat(req.body.sgst_rate) || 0;
+                const igst_rate = parseFloat(req.body.igst_rate) || 0;
                 product = await ProductService.createProduct({
                     name,
                     description,
@@ -56,7 +72,7 @@ async function addProduct(req, res) {
                     sgst_rate,
                     igst_rate,
                     isManufactured: true
-                });
+                },{transaction});
 
                 updatedInventory = await InventoryTransactionService.createInventoryTransaction({
                     product_id: product.id,
@@ -67,10 +83,16 @@ async function addProduct(req, res) {
                     description_type: 'text',
                     audio_path: product.audio_path,
                     isManufactured: true
-                });
+                }, {transaction});
             }
         } 
         else {
+            // Parse numeric values
+            const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
+            const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
+            const cgst_rate = parseFloat(req.body.cgst_rate) || 0;
+            const sgst_rate = parseFloat(req.body.sgst_rate) || 0;
+            const igst_rate = parseFloat(req.body.igst_rate) || 0;
             if (existingProduct) {
                 ErrorResponse.message = "Product with this name already exists.";
                 return res.status(StatusCodes.CONFLICT).json(ErrorResponse);
@@ -89,7 +111,7 @@ async function addProduct(req, res) {
                 igst_rate,
                 sgst_rate,
                 isManufactured: false
-            });
+            }, {transaction});
 
             updatedInventory = await InventoryTransactionService.createInventoryTransaction({
                 product_id: product.id,
@@ -100,14 +122,18 @@ async function addProduct(req, res) {
                 description_type: 'text',
                 audio_path: product.audio_path,
                 isManufactured: false
-            });
+            },{transaction});
         }
+        
+        await transaction.commit();
 
         SuccessResponse.message = "Product added successfully";
         SuccessResponse.data = { product, updatedInventory };
         return res.status(StatusCodes.CREATED).json(SuccessResponse);
 
     } catch (error) {
+        console.log(error);
+        await transaction.rollback();
         ErrorResponse.message = "Failed to add product.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -504,3 +530,5 @@ module.exports = {
     damagedProducts,
     createManufacturedProduct
 }
+
+
