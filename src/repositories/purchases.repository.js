@@ -18,7 +18,7 @@ class PurchasesRepository extends CrudRepository {
         order: [['createdAt', 'DESC']],
       });
     
-      return response; // Sequelize's `findAndCountAll` already returns { count, rows }
+      return response;
     }
 
 }

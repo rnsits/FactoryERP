@@ -254,10 +254,26 @@ async function getPendingInvoices(req,res){
 }
 
 async function getTodayInvoices(req, res){
-    try{    
-        const invoices = await InvoiceService.getTodayInvoices(); 
+    try{   
+        
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const date = new Date();
+        const { count, rows } = await InvoiceService.getInvoicesByDate(date, limit, offset, search, fields); 
         SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = invoices;
+        SuccessResponse.data = {
+            invoices: rows,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
+        // const invoices = await InvoiceService.getTodayInvoices(); 
+        // SuccessResponse.message = "Successfully completed the request";
+        // SuccessResponse.data = invoices;
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)

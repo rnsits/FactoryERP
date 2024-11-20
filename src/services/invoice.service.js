@@ -143,10 +143,41 @@ async function getPendingInvoices() {
   }
 }
 
-async function getTodayInvoices() {
+async function getTodayInvoices(date, limit, offset, search, fields) {
   try {
-      const invoices = await invoiceRepository.findToday();
-      return invoices;
+
+    const where = {};
+
+       // Filter expenses by the specified date (date is already a Date object)
+       const startOfDay = new Date(date);
+       startOfDay.setHours(0, 0, 0, 0);
+ 
+       const endOfDay = new Date(date);
+       endOfDay.setHours(24, 0, 0, 0);
+ 
+       // Add the date filter to `where` clause
+       where.createdAt = {
+         [Op.gte]: startOfDay,
+         [Op.lt]: endOfDay,
+       };
+
+      if (search && fields.length > 0) {
+          where[Op.or] = fields.map(field => ({
+              [field]: { [Op.like]: `%${search}%` }
+          }));
+      } 
+
+    //  const invoices = await invoiceRepository.findToday();
+      // return invoices;
+
+      const { count, rows } = await invoiceRepository.findInvoicesByDate({
+        where,
+        limit,
+        offset,
+        order: [['createdAt', 'DESC']],
+      });
+
+      return { count, rows };
   } catch(error) {
       console.log(error);
       if(
@@ -169,7 +200,7 @@ async function getTodayInvoices() {
         );
       }
       throw new AppError(
-        "Cannot get Invoices.",
+        "Cannot get Invoices created today.",
         StatusCodes.INTERNAL_SERVER_ERROR
       );
   }

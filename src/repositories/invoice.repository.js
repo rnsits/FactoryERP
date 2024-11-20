@@ -10,7 +10,15 @@ class InvoiceRepository extends CrudRepository {
       super(Invoice);
     }
 
-
+async findInvoicesByDate({ where = {}, limit = 10, offset = 0 }) {
+  const response = await Invoice.findAndCountAll({
+    where,
+    limit,
+    offset,
+    order: [['createdAt', 'DESC']],
+  });
+  return response;
+}
 
 }
 
