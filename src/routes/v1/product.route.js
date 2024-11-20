@@ -14,8 +14,10 @@ ProductRouter.post('/', authenticateToken,
         { name: 'audio_path', maxCount: 1 },   // Single audio file
     ]),ProductController.addProduct);
 
-ProductRouter.post('/damaged-products', authenticateToken, ProductMiddleware.validateDamagedProductRequest, ProductController.damagedProducts);
-ProductRouter.post('/mfcpro', authenticateToken, ProductController.createManufacturedProduct);
+ProductRouter.post('/damaged-products', authenticateToken,
+    upload.single('audio_path'), ProductController.damagedProducts);
+ProductRouter.post('/mfcpro', authenticateToken,
+    upload.single('product_image'), ProductController.createManufacturedProduct);
 
 /**
  * /api/v1/auth/products/:Id   GET

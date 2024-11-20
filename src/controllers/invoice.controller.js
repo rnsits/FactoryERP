@@ -18,9 +18,11 @@ async function addInvoice(req, res) {
         address,
         mobile,
         products,
-        audio
     } = req.body;
 
+    const customer_payment_image = req.files['customer_payment_image']?.[0] || null;
+    const audio = req.files['audio']?.[0] || null;
+    
     const state = findStateByPincode(pincode);
     if(!state) {
         throw new AppError(`Invalid Pincode provided ${pincode}.`, StatusCodes.BAD_REQUEST);
@@ -40,7 +42,8 @@ async function addInvoice(req, res) {
             mobile,
             total_amount: 0,
             total_tax: 0, 
-            audio: audio || null,
+            audio,
+            customer_payment_image,
         }, { transaction });
         
         let totalAmount = 0;
@@ -116,7 +119,9 @@ async function addInvoice(req, res) {
                     sgst_amount: sgst,
                     igst_amount: igst,
                     tax_amount: taxAmount,
-                    total: itemTotal + taxAmount
+                    total: itemTotal + taxAmount,
+                    customer_payment_image: customer_payment_image,
+                    audio: audio
                 };
                 invoiceProducts.push(invoiceProduct);
 
@@ -140,7 +145,7 @@ async function addInvoice(req, res) {
         await invoice.update({
             total_amount: totalAmount + totalTax,
             total_tax: totalTax,
-            item_count: products.length
+            item_count: products.length,
         }, { transaction });
 
         // Get current user balance
@@ -165,14 +170,13 @@ async function addInvoice(req, res) {
             { transaction }
         );
 
-        await transaction.commit();
-
         // Fetch complete invoice with all related data
         // const completeInvoice = await InvoiceService.getInvoiceById(invoice.id, {
         //     include: ['customer', 'products']
         // });
         const completeInvoice = await InvoiceService.getInvoice(invoice.id);
 
+        await transaction.commit();
         SuccessResponse.message = "Invoice added successfully";
         SuccessResponse.data = { invoice: completeInvoice };
         return res.status(StatusCodes.OK).json(SuccessResponse);

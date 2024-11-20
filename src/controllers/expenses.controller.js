@@ -9,23 +9,17 @@ async function addExpense(req, res) {
     const transaction = await sequelize.transaction();
     try {
         const user_id = req.user.id;
-        console.log(req.file);
         
         const { total_cost,description, description_type, payment_date, payment_status  } = req.body;
        
-        let audioPath = null;
-        if (req.files && req.files.audio_path) {
-            // Get the buffer or path of the uploaded audio file
-            const uploadedAudio = req.files.audio_path[0]; // `audio_path` is the field name
-            audioPath = uploadedAudio.buffer.toString('base64'); // If storing as Base64
-            // Or save the file and get the file path if storing on the file system
-        }
+        let audio = req.file;
+       
         const expense = await ExpensesService.createExpense({
     
             total_cost,
             description,
             description_type,
-            audio_path: audioPath,
+            audio_path: audio,
             payment_date,
             payment_status,
             

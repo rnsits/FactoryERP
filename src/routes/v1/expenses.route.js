@@ -10,7 +10,6 @@ const ExpenseRoutes = express.Router();
  * /api/v1/auth/expenses   POST
  */
 ExpenseRoutes.post('/', authenticateToken, upload.single('audio_path'),ExpensesController.addExpense);
-
 ExpenseRoutes.post('/expDat', authenticateToken, ExpensesController.getExpensesByDate); 
 
 /**
