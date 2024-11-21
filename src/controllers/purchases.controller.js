@@ -183,8 +183,9 @@ async function getAllPurchases(req, res) {
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const filter = req.query.filter || null;
 
-        const { count, rows } = await PurchaseService.getAllPurchases(limit, offset, search, fields);
+        const { count, rows } = await PurchaseService.getAllPurchases(limit, offset, search, fields, filter);
 
         SuccessResponse.message = "Purchases retrieved successfully.";
         SuccessResponse.data = {

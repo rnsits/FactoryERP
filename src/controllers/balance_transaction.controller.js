@@ -28,8 +28,9 @@ async function getBalanceTransactions(req,res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const filter = req.query.filter || null;
 
-        const { count, rows } = await BalanceTransactionService.getAllBalanceTransactions(limit, offset, search, fields);
+        const { count, rows } = await BalanceTransactionService.getAllBalanceTransactions(limit, offset, search, fields, filter);
 
         SuccessResponse.message = "Balance Transactions retrieved successfully.";
         SuccessResponse.data = {

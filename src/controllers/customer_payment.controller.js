@@ -46,8 +46,9 @@ async function getAllCustomerPayments(req, res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const filter = req.query.filter || null;
 
-        const { count, rows } = await Customer_PaymentService.getAllCustomerPayments(limit, offset, search, fields);
+        const { count, rows } = await Customer_PaymentService.getAllCustomerPayments(limit, offset, search, fields, filter);
 
         SuccessResponse.message = "Customer Payments retrieved successfully.";
         SuccessResponse.data = {

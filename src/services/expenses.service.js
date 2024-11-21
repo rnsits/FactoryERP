@@ -62,7 +62,7 @@ async function getExpense(data) {
     }
 }
 
-async function getAllExpenses(limit, offset, search, fields) {
+async function getAllExpenses(limit, offset, search, fields, filter) {
     try {
         const where = {};
         
@@ -72,14 +72,22 @@ async function getAllExpenses(limit, offset, search, fields) {
             }));
         }
 
+        // Handle filtering
+        if (filter && typeof filter === 'string') {
+          const [key, value] = filter.split(':');
+          if (key && value) {
+              where[key] = {[Op.like]: `%${value}%`};
+          }
+        }
+
     const { count, rows } = await Expenses.findAndCountAll({
       where,
+      attributes: fields.length > 0 ? fields : undefined,
       limit,
       offset,
       order: [['createdAt', 'DESC']],
     });
   return { count, rows };
-        // return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch(error) {
         console.log(error);
         if(

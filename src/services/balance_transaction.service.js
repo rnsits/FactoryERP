@@ -29,7 +29,7 @@ async function createBalanceTransactions(data) {
     }
 }
 
-async function getAllBalanceTransactions(limit, offset, search, fields){
+async function getAllBalanceTransactions(limit, offset, search, fields, filter){
   try {
     const where = {};
         
@@ -39,17 +39,47 @@ async function getAllBalanceTransactions(limit, offset, search, fields){
             }));
         }
 
+        // Handle filtering
+        if (filter && typeof filter === 'string') {
+          const [key, value] = filter.split(':');
+          if (key && value) {
+              where[key] = {[Op.like]: `%${value}%`};
+          }
+        }
+
     const { count, rows } = await Balance_Transaction.findAndCountAll({
       where,
+      attributes: fields.length > 0 ? fields : undefined,
       limit,
       offset,
       order: [['createdAt', 'DESC']],
     });
   return { count, rows };
   } catch (error) {
-    ErrorResponse.message = "Failed to fetch Balance Transactions.";
-    ErrorResponse.error = error;
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    console.log(error);
+        if(
+            error.name == "SequelizeValidationError" ||
+            error.name == "SequelizeUniqueConstraintError"
+        ) {
+          let explanation = [];
+          error.errors.forEach((err) => {
+            explanation.push(err.message);
+          });
+          throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+        } else if (
+          error.name === "SequelizeDatabaseError" &&
+          error.original &&
+          error.original.routine === "enum_in"
+        ) {
+          throw new AppError(
+            "Invalid value for associate_with field.",
+            StatusCodes.BAD_REQUEST
+          );
+        }
+        throw new AppError(
+          "Failed to get Balance Transactions.",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
   }
 }
 

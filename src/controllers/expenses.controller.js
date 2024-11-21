@@ -78,8 +78,9 @@ async function getAllExpenses(req, res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const filter = req.query.filter || null;
 
-        const { count, rows } = await ExpensesService.getAllExpenses(limit, offset, search, fields);
+        const { count, rows } = await ExpensesService.getAllExpenses(limit, offset, search, fields, filter);
 
         SuccessResponse.message = "Expenses retrieved successfully.";
         SuccessResponse.data = {

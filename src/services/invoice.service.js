@@ -64,8 +64,6 @@ async function getInvoice(data) {
 
 async function getAllInvoices(limit, offset, search, fields) {
     try {
-        // const invoices = await invoiceRepository.getAll();
-        // return invoices;
 
         const where = {};
         
@@ -75,8 +73,17 @@ async function getAllInvoices(limit, offset, search, fields) {
             }));
         }
 
+        // Handle filtering
+        if (filter && typeof filter === 'string') {
+          const [key, value] = filter.split(':');
+          if (key && value) {
+              where[key] = {[Op.like]: `%${value}%`};
+          }
+        }
+
     const { count, rows } = await Invoice.findAndCountAll({
       where,
+      attributes: fields.length > 0 ? fields : undefined,
       limit,
       offset,
       order: [['createdAt', 'DESC']],

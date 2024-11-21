@@ -61,10 +61,9 @@ async function getCustomerPayment(data) {
     }
 }
 
-async function getAllCustomerPayments(limit, offset, search, fields) {
+async function getAllCustomerPayments(limit, offset, search, fields, filter) {
     try {
-        // const customer_payments = await customer_PaymentRepository.getAll();
-        // return customer_payments;
+      
         const where = {};
         
         if (search && fields.length > 0) {
@@ -73,8 +72,17 @@ async function getAllCustomerPayments(limit, offset, search, fields) {
             }));
         }
 
+         // Handle filtering
+         if (filter && typeof filter === 'string') {
+          const [key, value] = filter.split(':');
+          if (key && value) {
+              where[key] = {[Op.like]: `%${value}%`};
+          }
+        }
+
     const { count, rows } = await Customer_Payment.findAndCountAll({
       where,
+      attributes: fields.length > 0 ? fields : undefined,
       limit,
       offset,
       order: [['createdAt', 'DESC']],

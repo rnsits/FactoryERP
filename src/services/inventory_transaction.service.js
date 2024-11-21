@@ -61,10 +61,9 @@ async function getInventoryTransaction(data) {
     }
 }
 
-async function getAllInventoryTransactions(limit, offset, search, fields) {
+async function getAllInventoryTransactions(limit, offset, search, fields, filter) {
     try {
-        // const inventoryData = await inventoryTransactionRepository.getAll();
-        // return inventoryData;
+   
         const where = {};
         
         if (search && fields.length > 0) {
@@ -73,8 +72,17 @@ async function getAllInventoryTransactions(limit, offset, search, fields) {
             }));
         }
 
+          // Handle filtering
+          if (filter && typeof filter === 'string') {
+            const [key, value] = filter.split(':');
+            if (key && value) {
+                where[key] = {[Op.like]: `%${value}%`};
+            }
+          }
+
     const { count, rows } = await InventoryTransaction.findAndCountAll({
       where,
+      attributes: fields.length > 0 ? fields : undefined,
       limit,
       offset,
       order: [['createdAt', 'DESC']],

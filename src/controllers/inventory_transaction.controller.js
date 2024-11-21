@@ -46,19 +46,14 @@ async function getInventoryTransaction(req,res){
 
 async function getAllInventoryTransactions(req, res){
     try{
-        // const inventortyTransactions = await InventoryTransactionService.getAllInventoryTransactions(); 
-        // SuccessResponse.message = "Successfully completed the request";
-        // SuccessResponse.data = inventortyTransactions;
-        // return res
-        //     .status(StatusCodes.OK)
-        //     .json(SuccessResponse)
         const page = parseInt(req.query.page) || 1; 
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const filter = req.query.filter || null;
 
-        const { count, rows } = await InventoryTransactionService.getAllInventoryTransactions(limit, offset, search, fields);
+        const { count, rows } = await InventoryTransactionService.getAllInventoryTransactions(limit, offset, search, fields, filter);
 
         SuccessResponse.message = "Inventory Tansactions retrieved successfully.";
         SuccessResponse.data = {

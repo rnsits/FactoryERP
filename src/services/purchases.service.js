@@ -62,10 +62,8 @@ async function getPurchase(data) {
     }
 }
 
-async function getAllPurchases(limit, offset, search, fields) {
+async function getAllPurchases(limit, offset, search, fields, filter) {
     try {
-        // const purchases = await purchaseRepository.getAll();
-        // return purchases;
 
         const where = {};
         
@@ -74,8 +72,18 @@ async function getAllPurchases(limit, offset, search, fields) {
                 [field]: { [Op.like]: `%${search}%` }
             }));
         }
+
+        // Handle filtering
+        if (filter && typeof filter === 'string') {
+          const [key, value] = filter.split(':');
+          if (key && value) {
+              where[key] = {[Op.like]: `%${value}%`};
+          }
+        }
+    
         const { count, rows } = await Purchases.findAndCountAll({
           where,
+          attributes: fields.length > 0 ? fields : undefined,
           limit, 
           offset,
           order: [['createdAt', 'DESC']],
