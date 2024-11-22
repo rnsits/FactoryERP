@@ -2,17 +2,18 @@ const express = require("express");
 const { InvoiceController } = require("../../controllers");
 const { InvoiceMiddleware } = require("../../middlewares");
 const { authenticateToken } = require('../../middlewares/auth.middleware');
-const upload = require("../../config/multer.config");
+// const upload = require("../../config/multer.config");
+const {imageUpload, audioUpload} = require("../../config/multer.config");
 const InvoiceRouter = express.Router();
 
 /**
  * /api/v1/auth/invoices   POST
  */
+// InvoiceRouter.post('/', authenticateToken, upload.fields([{ name: 'customer_payment_image', maxCount: 1 },{name: 'audio', maxCount: 1 }]), InvoiceController.addInvoice);   
+      InvoiceRouter.post('/', authenticateToken, 
+            imageUpload.single('customer_payment_image'),audioUpload.single('audio'), InvoiceController.addInvoice);   
 InvoiceRouter.post('/', authenticateToken, 
-    upload.fields([
-        { name: 'customer_payment_image', maxCount: 1 }, // Single image file
-        {name: 'audio', maxCount: 1 }  // Single audio file,
-      ]), InvoiceController.addInvoice);   
+      imageUpload.single('customer_payment_image'),audioUpload.single('audio'), InvoiceController.addInvoice); 
 InvoiceRouter.post('/invoicedate', authenticateToken, InvoiceController.getInvoicesByDate);
 
 /**

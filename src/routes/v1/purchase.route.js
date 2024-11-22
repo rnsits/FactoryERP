@@ -3,13 +3,14 @@ const { PurchaseController } = require("../../controllers");
 const { PurchasesMiddleware } = require("../../middlewares");
 const PurchaseRouter = express.Router();
 const { authenticateToken } = require('../../middlewares/auth.middleware');
-const upload = require("../../config/multer.config");
+// const upload = require("../../config/multer.config");
+const {imageUpload, audioUpload} = require("../../config/multer.config");
 
 /**
  * /api/v1/auth/purchases   POST
  */
 PurchaseRouter.post('/', authenticateToken,
-    upload.single('invoice_Bill'), PurchaseController.addPurchase);
+    imageUpload.single('invoice_Bill'), PurchaseController.addPurchase);
 
 /**
  * /api/v1/auth/purchases

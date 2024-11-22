@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     audio_path: {
-      type: DataTypes.BLOB,
+      type: DataTypes.STRING,
       allowNull: true
     },
     payment_date: {

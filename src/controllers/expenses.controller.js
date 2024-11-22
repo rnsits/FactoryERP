@@ -12,14 +12,14 @@ async function addExpense(req, res) {
         
         const { total_cost,description, description_type, payment_date, payment_status  } = req.body;
        
-        let audio = req.file;
+        let audioPath = req.file ? `/uploads/audio/${req.file.filename}`: null;
        
         const expense = await ExpensesService.createExpense({
     
             total_cost,
             description,
             description_type,
-            audio_path: audio,
+            audio_path: audioPath,
             payment_date,
             payment_status,
             
