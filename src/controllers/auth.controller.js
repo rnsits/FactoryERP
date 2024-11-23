@@ -6,44 +6,61 @@ const { where } = require("sequelize");
 const ServerConfig = require("../config");
 
 
-// console.log("User", User);
-
 async function loginWithPassword(req, res) {
   try {
     const { username, password } = req.body;
-    const user = await User.findOne({where: {username: username}});
-    if (!user ||!checkPassword(password,user.password)) {
-      return res.status(StatusCodes.UNAUTHORIZED).json({
-      message: 'Invalid Credentials.'
+    
+    // Input validation
+    if (!username || !password) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: 'Username and password are required.'
       });
     }
+
+    const user = await User.findOne({ where: { username: username } });
+    
+    // Important: Don't log sensitive user data
+    // console.log("user", user);  // Remove this line
+    
+    // Use constant-time comparison for security
+    if (!user || !(await checkPassword(password, user.password))) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        message: 'Invalid credentials'
+      });
+    }
+
     const accessToken = await generateToken(user);
-
     const { refreshToken, refreshTokenExpiry } = await generateRefreshToken(user);
-      // Check if refreshTokenExpiry is valid
-      if (!refreshTokenExpiry || isNaN(refreshTokenExpiry.getTime())) {
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-          message: 'Failed to generate a valid refresh token expiry date'
-        });
-      }
-    // res.send({token});
-    // req.session.user = user;
-    user.refreshToken = refreshToken; 
-    user.refreshTokenExpiry = refreshTokenExpiry;  
-    await user.save();
 
+    if (!refreshTokenExpiry || isNaN(refreshTokenExpiry.getTime())) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: 'Failed to generate refresh token'
+      });
+    }
+
+    // Update user with new refresh token
+    await user.update({
+      refreshToken: refreshToken,
+      refreshTokenExpiry: refreshTokenExpiry
+    });
+
+    // Don't send sensitive data in response
     return res.status(StatusCodes.OK).json({
-      message: 'Logged in successfully.',
+      message: 'Logged in successfully',
       data: { 
-        user: { id: user.id, username: user.username }, 
-        accessToken, 
-        refreshToken 
-       }
+        user: {
+          id: user.id,
+          username: user.username
+        },
+        accessToken,
+        refreshToken
+      }
     });
   } catch (error) {
+    console.error('Login error:', error.message); // Log only error message
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: 'Login Failed.',
-        error: error.message,
+      message: 'Login failed'
+      // Don't send error.message to client in production
     });
   }
 }
@@ -94,9 +111,6 @@ async function logout(req, res) {
   
       // Get the token from the header
       const token = authHeader.split(' ')[1];
-
-      console.log("Token being sent for logout:", token);
-
   
       // Verify the token and extract the user data
       const decoded = await verifyToken(token, ServerConfig.JWT_SECRET); // Use your JWT secret

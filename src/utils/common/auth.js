@@ -39,9 +39,10 @@ async  function generateRefreshToken(user) {
 
 async function checkPassword(plainPassword, encryptedPassword) {
   try {
-    return bcrypt.compareSync(plainPassword, encryptedPassword);
+    return await bcrypt.compare(plainPassword, encryptedPassword);
   } catch (error) {
-    throw error;
+    console.error('Password check error: ', error.message);
+    return false;
   }
 }
 
