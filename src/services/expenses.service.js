@@ -2,7 +2,7 @@ const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { ExpensesRepository } = require("../repositories");
 const { Expenses } = require("../models");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 
 const expensesRepository = new ExpensesRepository();
 
@@ -62,56 +62,154 @@ async function getExpense(data) {
     }
 }
 
+// async function getAllExpenses(limit, offset, search, fields, filter) {
+//     try {
+//         const where = {};
+        
+//         if (search && fields.length > 0) {
+//             where[Op.or] = fields.map(field => ({
+//                 [field]: { [Op.like]: `%${search}%` }
+//             }));
+//         }
+
+//         // Handle filtering
+//         if (filter && typeof filter === 'string') {
+//           const [key, value] = filter.split(':');
+//           if (key && value) {
+//               where[key] = {[Op.like]: `%${value}%`};
+//           }
+//         }
+
+//     const { count, rows } = await Expenses.findAndCountAll({
+//       where,
+//       attributes: fields.length > 0 ? fields : undefined,
+//       limit,
+//       offset,
+//       order: [['createdAt', 'DESC']],
+//     });
+//   return { count, rows };
+//     } catch(error) {
+//         console.log(error);
+//         if(
+//             error.name == "SequelizeValidationError" ||
+//             error.name == "SequelizeUniqueConstraintError"
+//         ) {
+//           let explanation = [];
+//           error.errors.forEach((err) => {
+//             explanation.push(err.message);
+//           });
+//           throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+//         } else if (
+//           error.name === "SequelizeDatabaseError" &&
+//           error.original &&
+//           error.original.routine === "enum_in"
+//         ) {
+//           throw new AppError(
+//             "Invalid value for associate_with field.",
+//             StatusCodes.BAD_REQUEST
+//           );
+//         }
+//         throw new AppError(
+//           "Cannot get Expenses ",
+//           StatusCodes.INTERNAL_SERVER_ERROR
+//         );
+//     }
+// }
+
 async function getAllExpenses(limit, offset, search, fields, filter) {
     try {
-        const where = {};
-        
-        if (search && fields.length > 0) {
-            where[Op.or] = fields.map(field => ({
-                [field]: { [Op.like]: `%${search}%` }
-            }));
+        // Base query options
+        const queryOptions = {
+            limit: limit ? parseInt(limit) : undefined,
+            offset: offset ? parseInt(offset) : 0,
+            order: [['createdAt', 'DESC']],
+            include: [],
+            where: {}
+        };
+
+        // Handle search
+        if (search) {
+            const searchValue = search.toString().trim();
+            const searchConditions = [];
+            
+            // Define searchable fields
+            const searchableFields = fields?.length > 0 ? fields : [
+                'total_cost',
+                'description',
+                'description_type',
+                'payment_status'
+            ];
+
+            // Parse numeric search value
+            const numericSearch = parseFloat(searchValue);
+
+            searchableFields.forEach(field => {
+                if (field === 'total_cost' && !isNaN(numericSearch)) {
+                    // Handle total_cost with exact and range search
+                    searchConditions.push({
+                        total_cost: {
+                            [Op.or]: [
+                                numericSearch,  // Exact match
+                                {
+                                    [Op.between]: [
+                                        numericSearch - 0.01, 
+                                        numericSearch + 0.01
+                                    ]
+                                }
+                            ]
+                        }
+                    });
+                } else if (['description', 'description_type', 'payment_status'].includes(field)) {
+                    // Handle string fields - using LIKE for MySQL
+                    searchConditions.push({
+                        [field]: {
+                            [Op.like]: `%${searchValue}%`
+                        }
+                    });
+                }
+            });
+
+            if (searchConditions.length > 0) {
+                queryOptions.where = {
+                    [Op.or]: searchConditions
+                };
+            }
         }
 
-        // Handle filtering
-        if (filter && typeof filter === 'string') {
-          const [key, value] = filter.split(':');
-          if (key && value) {
-              where[key] = {[Op.like]: `%${value}%`};
-          }
+        // Apply additional filters if provided
+        if (filter && typeof filter === 'object') {
+            queryOptions.where = {
+                ...queryOptions.where,
+                ...filter
+            };
         }
 
-    const { count, rows } = await Expenses.findAndCountAll({
-      where,
-      attributes: fields.length > 0 ? fields : undefined,
-      limit,
-      offset,
-      order: [['createdAt', 'DESC']],
-    });
-  return { count, rows };
-    } catch(error) {
-        console.log(error);
-        if(
-            error.name == "SequelizeValidationError" ||
-            error.name == "SequelizeUniqueConstraintError"
-        ) {
-          let explanation = [];
-          error.errors.forEach((err) => {
-            explanation.push(err.message);
-          });
-          throw new AppError(explanation, StatusCodes.BAD_REQUEST);
-        } else if (
-          error.name === "SequelizeDatabaseError" &&
-          error.original &&
-          error.original.routine === "enum_in"
-        ) {
-          throw new AppError(
-            "Invalid value for associate_with field.",
-            StatusCodes.BAD_REQUEST
-          );
+        // Select specific fields if requested
+        if (fields?.length > 0) {
+            queryOptions.attributes = fields;
+        }
+
+        // Debug log
+        console.log('Search value:', search);
+        console.log('Final query options:', JSON.stringify(queryOptions, null, 2));
+
+        const { count, rows } = await Expenses.findAndCountAll(queryOptions);
+
+        const transformedRows = rows.map(expense => expense.get({ plain: true }));
+
+        return {
+            count,
+            rows: transformedRows
+        };
+
+    } catch (error) {
+        console.error('Search error:', error);
+        if (error instanceof AppError) {
+            throw error;
         }
         throw new AppError(
-          "Cannot get Expenses ",
-          StatusCodes.INTERNAL_SERVER_ERROR
+            `Failed to fetch expenses: ${error.message}`,
+            StatusCodes.INTERNAL_SERVER_ERROR
         );
     }
 }

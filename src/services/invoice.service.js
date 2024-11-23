@@ -1,7 +1,7 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { InvoiceRepository } = require("../repositories");
-const { Invoice } = require("../models");
+const { Invoice, Customers } = require("../models");
 const { Op } = require("sequelize");
 
 const invoiceRepository = new InvoiceRepository();
@@ -62,60 +62,176 @@ async function getInvoice(data) {
     }
 }
 
-async function getAllInvoices(limit, offset, search, fields, filter) {
-    try {
+// async function getAllInvoices(limit, offset, search, fields, filter) {
+//     try {
 
-        const where = {};
+//         const where = {};
         
-        if (search && fields.length > 0) {
-            where[Op.or] = fields.map(field => ({
-                [field]: { [Op.like]: `%${search}%` }
-            }));
-        }
+//         if (search && fields.length > 0) {
+//             where[Op.or] = fields.map(field => ({
+//                 [field]: { [Op.like]: `%${search}%` }
+//             }));
+//         }
 
-        // Handle filtering
-        if (filter && typeof filter === 'string') {
-          const [key, value] = filter.split(':');
-          if (key && value) {
-              where[key] = {[Op.like]: `%${value}%`};
-          }
-        }
+//         // Handle filtering
+//         if (filter && typeof filter === 'string') {
+//           const [key, value] = filter.split(':');
+//           if (key && value) {
+//               where[key] = {[Op.like]: `%${value}%`};
+//           }
+//         }
 
-    const { count, rows } = await Invoice.findAndCountAll({
-      where,
-      attributes: fields.length > 0 ? fields : undefined,
-      limit,
-      offset,
-      order: [['createdAt', 'DESC']],
-    });
-  return { count, rows };
+//     const { count, rows } = await Invoice.findAndCountAll({
+//       where,
+//       attributes: fields.length > 0 ? fields : undefined,
+//       limit,
+//       offset,
+//       order: [['createdAt', 'DESC']],
+//     });
+//   return { count, rows };
 
-    } catch(error) {
-        console.log(error);
-        if(
-            error.name == "SequelizeValidationError" ||
-            error.name == "SequelizeUniqueConstraintError"
-        ) {
-          let explanation = [];
-          error.errors.forEach((err) => {
-            explanation.push(err.message);
+//     } catch(error) {
+//         console.log(error);
+//         if(
+//             error.name == "SequelizeValidationError" ||
+//             error.name == "SequelizeUniqueConstraintError"
+//         ) {
+//           let explanation = [];
+//           error.errors.forEach((err) => {
+//             explanation.push(err.message);
+//           });
+//           throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+//         } else if (
+//           error.name === "SequelizeDatabaseError" &&
+//           error.original &&
+//           error.original.routine === "enum_in"
+//         ) {
+//           throw new AppError(
+//             "Invalid value for associate_with field.",
+//             StatusCodes.BAD_REQUEST
+//           );
+//         }
+//         throw new AppError(
+//           "Cannot get Invoices. ",
+//           StatusCodes.INTERNAL_SERVER_ERROR
+//         );
+//     }
+// }
+
+async function getAllInvoices(limit, offset, search, fields, filter) {
+  try {
+      // Base query options
+      const queryOptions = {
+          limit,
+          offset,
+          order: [['createdAt', 'DESC']],
+          include: [{
+              model: Customers,
+              as: 'customer',
+              attributes: ['name', 'email', 'mobile', 'address', 'pincode']
+          }]
+      };
+
+      // Handle search
+      if (search && search.trim()) {
+          const searchConditions = [];
+          
+          // Define searchable fields if none specified
+          const searchableFields = fields.length > 0 ? fields : [
+              'invoice_id',
+              'payment_status',
+              'payment_method',
+              'pincode',
+              'address',
+              'mobile'
+          ];
+
+          // Add search conditions for Invoice fields
+          searchableFields.forEach(field => {
+              if (field in Invoice.rawAttributes) {
+                  searchConditions.push({
+                      [field]: { [Op.like]: `%${search.trim()}%` }
+                  });
+              }
           });
-          throw new AppError(explanation, StatusCodes.BAD_REQUEST);
-        } else if (
-          error.name === "SequelizeDatabaseError" &&
-          error.original &&
-          error.original.routine === "enum_in"
-        ) {
-          throw new AppError(
-            "Invalid value for associate_with field.",
-            StatusCodes.BAD_REQUEST
-          );
-        }
-        throw new AppError(
-          "Cannot get Invoices. ",
+
+          // Add search conditions for Customer fields
+          if (searchableFields.includes('customer_name')) {
+              searchConditions.push({
+                  '$Customer.name$': { [Op.like]: `%${search.trim()}%` }
+              });
+          }
+
+          queryOptions.where = {
+              [Op.or]: searchConditions
+          };
+      }
+
+      // Handle filtering
+      if (filter) {
+          try {
+              const filters = typeof filter === 'string' ? JSON.parse(filter) : filter;
+              const filterConditions = {};
+
+              Object.entries(filters).forEach(([key, value]) => {
+                  if (value) {
+                      // Handle date range filters
+                      if (key === 'dateRange') {
+                          filterConditions.createdAt = {
+                              [Op.between]: [new Date(value.start), new Date(value.end)]
+                          };
+                      }
+                      // Handle status filter
+                      else if (key === 'payment_status') {
+                          filterConditions.payment_status = value;
+                      }
+                      // Handle amount range filter
+                      else if (key === 'amountRange') {
+                          filterConditions.total_amount = {
+                              [Op.between]: [value.min, value.max]
+                          };
+                      }
+                  }
+              });
+
+              queryOptions.where = {
+                  ...queryOptions.where,
+                  ...filterConditions
+              };
+          } catch (error) {
+              console.error('Filter parsing error:', error);
+              throw new AppError('Invalid filter format', StatusCodes.BAD_REQUEST);
+          }
+      }
+
+      // Select specific fields if requested
+      if (fields.length > 0) {
+          queryOptions.attributes = fields;
+      }
+
+      console.log('Final query options:', JSON.stringify(queryOptions, null, 2));
+
+      const { count, rows } = await Invoice.findAndCountAll(queryOptions);
+
+      return {
+          count,
+          rows: rows.map(invoice => {
+              const plainInvoice = invoice.get({ plain: true });
+              // Add any additional formatting here if needed
+              return plainInvoice;
+          })
+      };
+
+  } catch (error) {
+      console.error('Search error:', error);
+      if (error instanceof AppError) {
+          throw error;
+      }
+      throw new AppError(
+          `Failed to fetch invoices: ${error.message}`,
           StatusCodes.INTERNAL_SERVER_ERROR
-        );
-    }
+      );
+  }
 }
 
 async function getPendingInvoices() {
