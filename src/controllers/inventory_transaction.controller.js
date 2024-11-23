@@ -14,7 +14,8 @@ async function addInventoryTransaction(req, res) {
             quantity_type,
             description,
             description_type,
-            audio_path
+            audio_path,
+            image_path
         });
         SuccessResponse.message = "Inventory Transaction added successfully";
         SuccessResponse.data = inventoryTransaction;

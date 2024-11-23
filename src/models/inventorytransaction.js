@@ -63,7 +63,11 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 'text',
     },
     audio_path: {
-      type: DataTypes.BLOB,
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+    },
+    image_path: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     isManufactured: {

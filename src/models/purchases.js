@@ -71,8 +71,8 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     invoice_Bill: {
-      type: DataTypes.BLOB,
-      allowNull: false
+      type: DataTypes.TEXT('long'), // done today
+      allowNull: true
     },
   }, {
     sequelize,

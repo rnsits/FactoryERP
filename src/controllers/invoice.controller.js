@@ -20,8 +20,9 @@ async function addInvoice(req, res) {
         products,
     } = req.body;
 
-    const customer_payment_image = req.files['customer_payment_image']?.[0] || null;
-    const audio = req.files['audio']?.[0] || null;
+    let payment_image = req.file ? `/uploads/images/${req.file.filename}`: null;
+    console.log("image", payment_image);
+    
     
     const state = findStateByPincode(pincode);
     if(!state) {
@@ -42,8 +43,7 @@ async function addInvoice(req, res) {
             mobile,
             total_amount: 0,
             total_tax: 0, 
-            audio,
-            customer_payment_image,
+            payment_image,
         }, { transaction });
         
         let totalAmount = 0;
@@ -106,7 +106,8 @@ async function addInvoice(req, res) {
                     quantity_type: product.quantity_type,
                     // show only name
                     description: `${product.name}`,
-                    description_type: 'text'
+                    description_type: 'text',
+                    image_path: payment_image
                 });
 
                 // Create invoice product object with tax details
@@ -120,19 +121,13 @@ async function addInvoice(req, res) {
                     igst_amount: igst,
                     tax_amount: taxAmount,
                     total: itemTotal + taxAmount,
-                    customer_payment_image: customer_payment_image,
-                    audio: audio
+                    payment_image,
                 };
                 invoiceProducts.push(invoiceProduct);
 
                 return invoiceProduct;
             })
         );
-
-        // Create invoice products
-        // if (invoiceProducts.length > 0) {
-        //     await InvoiceProductService.createInvoiceProducts(invoiceProducts, { transaction });
-        // }
 
         // Create all inventory transactions
         await Promise.all(
@@ -180,8 +175,8 @@ async function addInvoice(req, res) {
         SuccessResponse.message = "Invoice added successfully";
         SuccessResponse.data = { invoice: completeInvoice };
         return res.status(StatusCodes.OK).json(SuccessResponse);
-
     } catch (error) {
+        console.log(error);
         await transaction.rollback();
         ErrorResponse.message = "Failed to add Invoice.";
         ErrorResponse.error = error;
@@ -219,7 +214,7 @@ async function getAllInvoices(req, res){
 
         SuccessResponse.message = "Invoices retrieved successfully.";
         SuccessResponse.data = {
-            products: rows,
+            invoices: rows,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,

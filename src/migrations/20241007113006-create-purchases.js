@@ -52,8 +52,8 @@ module.exports = {
         // }
       },
       invoice_Bill: {
-        type: Sequelize.BLOB,
-        allowNull: false
+        type: Sequelize.TEXT('long'),
+        allowNull: true // done today
       },
       createdAt: {
         allowNull: false,

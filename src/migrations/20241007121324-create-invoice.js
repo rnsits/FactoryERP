@@ -72,9 +72,10 @@ module.exports = {
           }
         }
       },
-      customer_payment_image: {
+      payment_image: {            // done today
         allowNull: true,
-        type: Sequelize.BLOB,
+        type: Sequelize.TEXT('long'),
+        defaultValue: null
       },
       total_tax: {
         allowNull: false,
@@ -90,10 +91,6 @@ module.exports = {
         allowNull: false,
         type: Sequelize.JSON,
         defaultValue: []
-      },
-      audio: {
-        type: Sequelize.BLOB,
-        allowNull: true
       },
       createdAt: {
         allowNull: false,

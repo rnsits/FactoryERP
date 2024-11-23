@@ -9,11 +9,9 @@ const InvoiceRouter = express.Router();
 /**
  * /api/v1/auth/invoices   POST
  */
-// InvoiceRouter.post('/', authenticateToken, upload.fields([{ name: 'customer_payment_image', maxCount: 1 },{name: 'audio', maxCount: 1 }]), InvoiceController.addInvoice);   
-      InvoiceRouter.post('/', authenticateToken, 
-            imageUpload.single('customer_payment_image'),audioUpload.single('audio'), InvoiceController.addInvoice);   
+// InvoiceRouter.post('/', authenticateToken, upload.fields([{ name: 'customer_payment_image', maxCount: 1 },{name: 'audio', maxCount: 1 }]), InvoiceController.addInvoice);      
 InvoiceRouter.post('/', authenticateToken, 
-      imageUpload.single('customer_payment_image'),audioUpload.single('audio'), InvoiceController.addInvoice); 
+      imageUpload.single('payment_image'), InvoiceController.addInvoice); 
 InvoiceRouter.post('/invoicedate', authenticateToken, InvoiceController.getInvoicesByDate);
 
 /**

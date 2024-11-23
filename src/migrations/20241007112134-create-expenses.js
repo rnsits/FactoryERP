@@ -28,7 +28,7 @@ module.exports = {
         allowNull: false,
       },
       audio_path: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING, // done yesterday
         allowNull: true
       },
       payment_date: {

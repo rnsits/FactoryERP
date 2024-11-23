@@ -42,9 +42,15 @@ module.exports = {
         allowNull: true,
         defaultValue: 'text',
       },
-      audio_path: {
-        type: Sequelize.BLOB,
+      audio_path: {         // done today 23
+        type: Sequelize.TEXT('long'),
         allowNull: true,
+        defaultValue: null,
+      },
+      product_image: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        defaultValue: null,
       },
       isDamaged: {
         type: Sequelize.BOOLEAN,

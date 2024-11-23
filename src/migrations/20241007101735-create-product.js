@@ -35,7 +35,7 @@ module.exports = {
         defaultValue: 'text'
       },
       audio_path: {
-        type: Sequelize.BLOB,
+        type: Sequelize.STRING,
         allowNull: true
       },
       quantity_type: {
@@ -53,7 +53,7 @@ module.exports = {
         allowNull: false
       },
       product_image: {
-        type: Sequelize.BLOB,
+        type: Sequelize.TEXT('long'),
         allowNull: true
       },
       isManufactured: {

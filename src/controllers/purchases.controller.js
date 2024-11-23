@@ -3,6 +3,7 @@ const { PurchaseService, ProductService, InventoryTransactionService, BalanceTra
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
 const AppError = require("../utils/errors/app.error");
 const { sequelize } = require("../models");
+const { Product, Vendors } = require("../models");
 
 async function addPurchase(req, res) {
     
@@ -19,11 +20,10 @@ async function addPurchase(req, res) {
             // invoice_Bill 
         } = req.body;
 
-        let invoiceBill = null;
-        if (req.file) {
-
-            invoiceBill = req.file.buffer.toString('base64');
-        }
+        let invoiceBill = req.file ? `/uploads/images/${req.file.filename}`: null;
+        // console.log("invoiceBill", invoiceBill);
+        
+        
         const currentTime = new Date().toLocaleString();
         // Validate input
         if (!Array.isArray(products) || products.length === 0) {
@@ -150,6 +150,7 @@ async function addPurchase(req, res) {
         return res.status(StatusCodes.OK).json(SuccessResponse);
 
     } catch (error) {
+        console.log(error);
         await transaction.rollback();
         ErrorResponse.message = "Failed to add purchase.";
         ErrorResponse.error = error.message || error;
@@ -186,10 +187,28 @@ async function getAllPurchases(req, res) {
         const filter = req.query.filter || null;
 
         const { count, rows } = await PurchaseService.getAllPurchases(limit, offset, search, fields, filter);
+        const withNames = await Promise.all(
+            rows.map(async (row) => {
+                // Fetch the product name based on product_id
+                const product = await Product.findByPk(row.product_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                });
+
+                const vendor = await Vendors.findByPk(row.vendor_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                })
+
+                return {
+                    ...row.toJSON(),
+                    product_name: product ? product.name : null, // Include product name if found
+                    vendor_name: vendor ? vendor.name : null, // Include product name if found
+                };
+            })
+        );
 
         SuccessResponse.message = "Purchases retrieved successfully.";
         SuccessResponse.data = {
-            purchases: rows,
+            purchases: withNames,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,
@@ -197,6 +216,7 @@ async function getAllPurchases(req, res) {
         };
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
+        console.log(error);
         ErrorResponse.message = "Failed to fetch purchases.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -213,9 +233,29 @@ async function getTodayPurchases(req, res){
         const date = new Date();
 
         const { count, rows } = await PurchaseService.getPurchasesByDate(date, limit, offset, search, fields); 
+        // Fetch product names for each transaction based on product_id
+        const withNames = await Promise.all(
+            rows.map(async (row) => {
+                // Fetch the product name based on product_id
+                const product = await Product.findByPk(row.product_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                });
+
+                const vendor = await Vendors.findByPk(row.vendor_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                })
+
+                return {
+                    ...row.toJSON(),
+                    product_name: product ? product.name : null, // Include product name if found
+                    vendor_name: vendor ? vendor.name : null, // Include product name if found
+                };
+            })
+        );
+
         SuccessResponse.message = "Successfully completed the request";
         SuccessResponse.data = {
-            purchases: rows,
+            purchases: withNames,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,
@@ -225,6 +265,7 @@ async function getTodayPurchases(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
+        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Purchases";
         ErrorResponse.error = error;
         return res
@@ -243,9 +284,28 @@ async function getPurchasesByDate(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];    
         const { count, rows } = await PurchaseService.getPurchasesByDate(date, limit, offset, search, fields); 
+
+        const withNames = await Promise.all(
+            rows.map(async (row) => {
+                // Fetch the product name based on product_id
+                const product = await Product.findByPk(row.product_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                });
+
+                const vendor = await Vendors.findByPk(row.vendor_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                })
+
+                return {
+                    ...row.toJSON(),
+                    product_name: product ? product.name : null, // Include product name if found
+                    vendor_name: vendor ? vendor.name : null, // Include product name if found
+                };
+            })
+        );
         SuccessResponse.message = "Successfully completed the request";
         SuccessResponse.data = {
-            purchases: rows,
+            purchases: withNames,
             totalCount: count,
             totalPages: Math.ceil(count / limit),
             currentPage: page,
@@ -272,9 +332,29 @@ async function getUnPaidPurchases(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];    
         const { count, rows } = await PurchaseService.getUnPaidPurchases(limit, offset, search, fields); 
+
+        const withNames = await Promise.all(
+            rows.map(async (row) => {
+                // Fetch the product name based on product_id
+                const product = await Product.findByPk(row.product_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                });
+
+                const vendor = await Vendors.findByPk(row.vendor_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                })
+
+                return {
+                    ...row.toJSON(),
+                    product_name: product ? product.name : null, // Include product name if found
+                    vendor_name: vendor ? vendor.name : null, // Include product name if found
+                };
+            })
+        );
+
         SuccessResponse.message = "Unpaid/Partially Paid data retrieved successfully.";
         SuccessResponse.data = {
-            purchases: rows,
+            purchases: withNames,
             totalCount: count,
             totalPages: Math.ceil(count / limit),
             currentPage: page,

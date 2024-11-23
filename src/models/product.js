@@ -65,7 +65,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     // it will store audio files directly
     audio_path: {
-      type: DataTypes.BLOB,
+      type: DataTypes.STRING,
       allowNull: true
     },
     quantity_type: {
@@ -98,7 +98,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 0
     },
     product_image: {
-      type: DataTypes.BLOB,
+      type: DataTypes.TEXT('long'),
       allowNull: true
     },
     isManufactured: {

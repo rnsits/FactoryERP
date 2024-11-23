@@ -17,7 +17,7 @@ const ProductRouter = express.Router();
 //     ]),ProductController.addProduct);
 
     ProductRouter.post('/', authenticateToken,
-        imageUpload.single('product_image'), audioUpload.single('audio_path'),ProductController.addProduct);    
+        imageUpload.single('product_image'), ProductController.addProduct);    
 
 
 // ProductRouter.post('/damaged-products', authenticateToken,upload.single('audio_path'), ProductController.damagedProducts);

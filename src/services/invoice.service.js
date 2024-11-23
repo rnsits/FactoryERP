@@ -62,7 +62,7 @@ async function getInvoice(data) {
     }
 }
 
-async function getAllInvoices(limit, offset, search, fields) {
+async function getAllInvoices(limit, offset, search, fields, filter) {
     try {
 
         const where = {};

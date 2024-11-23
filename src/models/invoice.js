@@ -99,9 +99,10 @@ module.exports = (sequelize, DataTypes) => {
         }
       }
     },
-    customer_payment_image: {
+    payment_image: {          // done today 23
       allowNull: true,
-      type: DataTypes.BLOB,
+      type: DataTypes.TEXT('long'),
+      defaultValue: true
     },
     total_tax: {
       type: DataTypes.FLOAT,
@@ -118,10 +119,6 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: []
     },
-    audio: {
-      type: DataTypes.BLOB,
-      allowNull: true
-    }
   }, {
     sequelize,
     modelName: 'Invoice',
