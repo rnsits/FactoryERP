@@ -22,6 +22,11 @@ InvoiceRouter.get('/todInv', authenticateToken, InvoiceController.getTodayInvoic
 InvoiceRouter.get('/:invoiceId', authenticateToken, InvoiceMiddleware.validateGetRequest, InvoiceController.getInvoice);
 
 /**
+ * /api/v1/auth/invoices/markInvPaid    PUT
+ */
+InvoiceRouter.put('/markInvPaid', authenticateToken, InvoiceController.markInvoicePaid);
+
+/**
  * /api/v1/auth/invoices/  GET
  */
 InvoiceRouter.get('/', InvoiceController.getAllInvoices);

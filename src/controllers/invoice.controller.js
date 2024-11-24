@@ -315,55 +315,74 @@ async function markInvoicePaid(req, res) {
     const transaction = await sequelize.transaction();
 
     try {
-        const { invoices } = req.body;
-        if(invoices.amount < 0) {
+        const user = req.user;
+        const { id, amount } = req.body;
+        if(amount < 0) {
             throw new AppError("Amount cannot be negative.",StatusCodes.BAD_REQUEST);
         }
-        const invoice = await InvoiceService.getInvoice(invoices.id);
+        const invoice = await InvoiceService.getInvoice(id, {transaction});
         if(!invoice) {
             throw new AppError("Invoice not found.",StatusCodes.NOT_FOUND);
         }
         if(invoice.payment_status === "paid") {
             throw new AppError(`Invoice already marked paid`, StatusCodes.BAD_REQUEST);
         }
-        if(invoices.amount > invoice.total_amount) {
+        if(amount > invoice.total_amount) {
             throw new AppError(`Amount paid is greater than the total cost of invoice.`, StatusCodes.BAD_REQUEST);
         }
 
         let status = invoice.payment_status;
-        const newAmount = invoice.total_amount - invoices.amount;
-        status = newAmount === 0 ? "paid" : "partial-payment";
+        let payment_method = invoice.payment_method;
+        const newAmount = invoice.total_amount - Number(amount);
+        status = newAmount === 0 ? "paid" : "partial paid";
 
-        const updateInvoice = await InvoiceService.markInvoicePaid(invoices.id, newAmount, status, { transaction });
+        const updateInvoice = await InvoiceService.markInvoicePaid(invoice.id, status, newAmount, { transaction });
 
-        const customer = await CustomerService.getCustomer(req.body.customer_id);
+        const customer = await CustomerService.getCustomer(invoice.customer_id, { transaction });
 
-        await Customer_PaymentService.createCustomer_Payment({
-            customer_id: customer.id,
-            invoice_id: invoice.id, 
-            payment_date: Date.now(), 
-            amount: expenses.amount, 
-            payment_method: expenses.payment_method, 
-            payment_status: status,
-        }, {transaction})
+        console.log("invoice", invoice);
+        
+        let createPayment ;
+        if(status == "partial paid"){
+            const status = "partial-paid";
+            createPayment = await Customer_PaymentService.createCustomer_Payment({
+                customer_id: customer.id,
+                invoice_id: invoice.id, 
+                payment_date: new Date(), 
+                amount: amount, 
+                payment_method: payment_method, 
+                payment_status: status,
+            }, {transaction})
+        }
+        
 
-        await BalanceTransactionService.createBalanceTransactions({
-            customer_id: customer.id,
-            transaction_type: "invoice",
-            amount: invoices.amount,
+        const balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
+            user_id: user.id,
+            transaction_type: "income",
+            amount: amount,
             source: "invoice",
             previous_balance: invoice.total_amount,
             new_balance: newAmount
         }, {transaction});
 
-        const newBalance = user.current_balance + expenses.amount;
-        await UserService.updateUserBalance(
-            user_id,
+        const newBalance = user.current_balance + amount;
+        const userBalance = await UserService.updateUserBalance(
+            user.id,
             newBalance, {transaction}
         );
+        
+        await transaction.commit();
 
+        SuccessResponse.message = 'Invoice marked paid/partial-paid successfully.';
+        SuccessResponse.data = {
+            updateInvoice,
+            userBalance,
+            balanceTransaction,createPayment
+        }
+        return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
         console.log(error);
+        await transaction.rollback();
         ErrorResponse.message ="Something went wrong while marking the Invoice.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);

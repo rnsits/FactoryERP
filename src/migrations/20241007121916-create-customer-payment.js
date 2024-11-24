@@ -18,11 +18,11 @@ module.exports = {
         }
       },
       invoice_id: {
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
         allowNull: false,
         references: {
           model: 'Invoices',
-          key: 'invoice_id'
+          key: 'id'
         }
       },
       payment_date: {

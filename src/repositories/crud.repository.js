@@ -52,7 +52,10 @@ class CrudRepository{
     async getPendingInvoices(){
         const response = await this.model.findAll({
             where: {
-                payment_status: "unpaid" || "partial-payment"
+                payment_status: {
+                    [Op.in]: ["unpaid", "partial paid"]
+                }
+               
             }
         })
         return response || null;

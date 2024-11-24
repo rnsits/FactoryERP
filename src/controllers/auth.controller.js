@@ -1,8 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
-const { ErrorResponse, SuccessResponse } = require("../utils/errors/app.error");
 const { generateToken, checkPassword, verifyToken, generateRefreshToken } = require("../utils/common/auth");
 const { User } = require("../models");
-const { where } = require("sequelize");
 const ServerConfig = require("../config");
 
 

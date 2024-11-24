@@ -33,18 +33,18 @@ module.exports = (sequelize, DataTypes) => {
     customer_id: {
       allowNull: false,
       type: DataTypes.INTEGER,
-      // references: {
-      //   model: 'Customers',
-      //   key: 'id'
-      // }
+      references: {
+        model: 'Customers',
+        key: 'id'
+      }
     },
     invoice_id: {
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,
       allowNull: false,
-      // references: {
-      //   model: 'Invoice',
-      //   key: 'id'
-      // }
+      references: {
+        model: 'Invoices',
+        key: 'id'
+      }
     },
     payment_date: {
       type: DataTypes.DATE,

@@ -385,10 +385,9 @@ async function getInvoicesByDate(date, limit, offset, search, fields) {
   }
 }
 
-async function markInvoicePaid(id, amount, status, newAmount){
+async function markInvoicePaid(id, status, newAmount){
   try {
     const invoice = await invoiceRepository.update(id, {
-      total_amount: amount,
       payment_status: status,
       due_amount: newAmount
     });
