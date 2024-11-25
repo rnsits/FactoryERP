@@ -199,7 +199,7 @@ async function getAllPurchases(req, res) {
                 })
 
                 return {
-                    ...row.toJSON(),
+                    ...row,
                     product_name: product ? product.name : null, // Include product name if found
                     vendor_name: vendor ? vendor.name : null, // Include product name if found
                 };

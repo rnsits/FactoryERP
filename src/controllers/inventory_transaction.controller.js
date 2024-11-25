@@ -82,7 +82,8 @@ async function getDamagedProductsData(req, res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
-        const { count, rows } = await InventoryTransactionService.getDamagedProductsData(limit, offset, search, fields);
+        const filter = req.query.filter || null;
+        const { count, rows } = await InventoryTransactionService.getDamagedProductsData(limit, offset, search, fields, filter);
       
         // Fetch product names for each transaction based on product_id
         const productsWithNames = await Promise.all(
@@ -93,7 +94,7 @@ async function getDamagedProductsData(req, res){
                 });
 
                 return {
-                    ...row.toJSON(),
+                    ...row,
                     product_name: product ? product.name : null, // Include product name if found
                 };
             })

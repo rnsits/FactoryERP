@@ -50,8 +50,9 @@ async function getAllCustomers(req, res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const filter = req.query.filter || '';
 
-        const { count, rows } = await CustomerService.getAllCustomers(limit, offset, search, fields);
+        const { count, rows } = await CustomerService.getAllCustomers(limit, offset, search, fields, filter);
 
         SuccessResponse.message = "Customers retrieved successfully.";
         SuccessResponse.data = {

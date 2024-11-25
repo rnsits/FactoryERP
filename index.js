@@ -3,6 +3,10 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
+
+// Define the path to the uploads/images folder
+const imagesPath = path.join(__dirname, 'uploads', 'images');
 
 app.use(cors());
 // const authRoutes = require('./src/routes/v1/auth.routes'); // Adjust the path as necessary
@@ -12,6 +16,9 @@ const apiRoutes = require('./src/routes');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}))
+
+// Serve the images folder at a public URL
+app.use('/images', express.static(imagesPath));
 
 // Use the auth routes
 app.use('/api', apiRoutes);

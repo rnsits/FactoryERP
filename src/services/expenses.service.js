@@ -136,7 +136,6 @@ async function getAllExpenses(limit, offset, search, fields, filter) {
             const searchableFields = fields?.length > 0 ? fields : [
                 'total_cost',
                 'description',
-                'description_type',
                 'payment_status'
             ];
 
@@ -159,7 +158,7 @@ async function getAllExpenses(limit, offset, search, fields, filter) {
                             ]
                         }
                     });
-                } else if (['description', 'description_type', 'payment_status'].includes(field)) {
+                } else if (['description','payment_status'].includes(field)) {
                     // Handle string fields - using LIKE for MySQL
                     searchConditions.push({
                         [field]: {

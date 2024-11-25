@@ -120,7 +120,7 @@ async function getInvoice(data) {
 
 async function getAllInvoices(limit, offset, search, fields, filter) {
   try {
-      // Base query options
+      // Base query options need to look why customers fields aren't searchable
       const queryOptions = {
           limit,
           offset,
@@ -143,24 +143,33 @@ async function getAllInvoices(limit, offset, search, fields, filter) {
               'payment_method',
               'pincode',
               'address',
-              'mobile'
+              'mobile',
+              'customer.name',
+              'customer.email',
+              'customer.mobile',
+              'customer.address',
+              'customer.pincode'
           ];
 
           // Add search conditions for Invoice fields
           searchableFields.forEach(field => {
-              if (field in Invoice.rawAttributes) {
-                  searchConditions.push({
-                      [field]: { [Op.like]: `%${search.trim()}%` }
-                  });
-              }
-          });
-
-          // Add search conditions for Customer fields
-          if (searchableFields.includes('customer_name')) {
+            if (field.includes('customer.')) {
+              // Handle customer fields
+              const customerField = field.split('.')[1];
               searchConditions.push({
-                  '$Customer.name$': { [Op.like]: `%${search.trim()}%` }
+                  ['$customer.' + customerField + '$']: { 
+                      [Op.like]: `%${search.trim()}%` 
+                  }
               });
-          }
+            } else if (field in Invoice.rawAttributes) {
+              // Handle invoice fields
+              searchConditions.push({
+                  [field]: { 
+                      [Op.like]: `%${search.trim()}%` 
+                  }
+              });
+            }
+          });
 
           queryOptions.where = {
               [Op.or]: searchConditions
@@ -190,6 +199,11 @@ async function getAllInvoices(limit, offset, search, fields, filter) {
                           filterConditions.total_amount = {
                               [Op.between]: [value.min, value.max]
                           };
+                      }
+                      // Handle customer filters
+                      else if (key.startsWith('customer_')) {
+                          const customerField = key.replace('customer_', '');
+                          filterConditions[`$customer.${customerField}$`] = value;
                       }
                   }
               });

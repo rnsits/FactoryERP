@@ -50,12 +50,13 @@ async function getAllVendors(req, res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
+        const filter = req.query.filter || null;
 
-        const { count, rows } = await 
+        const { count, rows } = await
         VendorService.getAllVendors(limit, offset, search, fields); 
         SuccessResponse.message = "Vendors retrieved successfully.";
         SuccessResponse.data = {
-            products: rows,
+            vendors: rows,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,

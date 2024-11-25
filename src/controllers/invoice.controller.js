@@ -4,6 +4,7 @@ const { findStateByPincode } = require('../../src/utils/common/pincodehelper');
 const { InvoiceService, InventoryTransactionService, BalanceTransactionService, ProductService, CustomerService, UserService, Customer_PaymentService, } = require('../services');
 const AppError = require("../utils/errors/app.error");
 const { sequelize } = require("../models");
+const { Customers } = require('../models');
 
 //add audio here
 async function addInvoice(req, res) {
@@ -21,7 +22,7 @@ async function addInvoice(req, res) {
     } = req.body;
 
     let payment_image = req.file ? `/uploads/images/${req.file.filename}`: null;
-    console.log("image", payment_image);
+    // console.log("image", payment_image);
     
     
     const state = findStateByPincode(pincode);
@@ -32,6 +33,8 @@ async function addInvoice(req, res) {
     const transaction = await sequelize.transaction();
 
     try {
+        let totalAmount = 0;
+        let totalTax = 0;
         const invoice = await InvoiceService.createInvoice({
             customer_id, 
             due_date, 
@@ -41,13 +44,12 @@ async function addInvoice(req, res) {
             pincode, 
             address, 
             mobile,
-            total_amount: 0,
-            total_tax: 0, 
+            total_amount:0,
+            total_tax:0, 
             payment_image,
         }, { transaction });
         
-        let totalAmount = 0;
-        let totalTax = 0;
+       
         const currentTime = new Date().toISOString();
         const inventoryTransactions = [];
         const invoiceProducts = [];
@@ -65,7 +67,7 @@ async function addInvoice(req, res) {
                 }
 
                 const itemTotal = item.price * item.quantity;
-                let taxAmount = 0;
+                // let taxAmount = 0;
                 let cgst = 0;
                 let sgst = 0;
                 let igst = 0;
@@ -129,6 +131,36 @@ async function addInvoice(req, res) {
             })
         );
 
+        const totalBillAmount = totalAmount + totalTax;
+        console.log("Bill Amount", totalBillAmount);
+        
+        let finalDueAmount, finalStatus;
+        switch(payment_status.toLowerCase()) {
+            case 'unpaid':
+                finalDueAmount = totalBillAmount;
+                finalStatus = 'unpaid';
+                break;
+
+            case 'partial paid':
+                if (!due_amount || due_amount <= 0) {
+                    throw new AppError('Partial payment amount must be provided and greater than 0', StatusCodes.BAD_REQUEST);
+                }
+                if (due_amount >= totalBillAmount) {
+                    throw new AppError('Partial payment cannot be greater than or equal to total bill amount', StatusCodes.BAD_REQUEST);
+                }
+                finalDueAmount = totalBillAmount - due_amount;
+                finalStatus = 'partial paid';
+                break;
+
+            case 'paid':
+                finalDueAmount = 0;
+                finalStatus = 'paid';
+                break;
+
+            default:
+                throw new AppError('Invalid payment status', StatusCodes.BAD_REQUEST);
+        }
+
         // Create all inventory transactions
         await Promise.all(
             inventoryTransactions.map(inventoryTx => 
@@ -138,21 +170,23 @@ async function addInvoice(req, res) {
 
         // Update invoice with totals
         await invoice.update({
-            total_amount: totalAmount + totalTax,
+            total_amount: totalBillAmount,
             total_tax: totalTax,
+            due_amount: finalDueAmount,
             item_count: products.length,
+            payment_status: finalStatus
         }, { transaction });
 
         // Get current user balance
         const user = await UserService.getUser(user_id); 
         const currentBalance = Number(user.current_balance) || 0;
-        const newBalance = currentBalance + invoice.total_amount;
+        const newBalance = currentBalance + finalDueAmount;
 
         // Create balance transaction
         await BalanceTransactionService.createBalanceTransactions({
             user_id: user.id, // Fixed: changed user.id to customer_id
             transaction_type: "income",
-            amount: invoice.total_amount,
+            amount: finalDueAmount,
             source: "invoice",
             previous_balance: currentBalance,
             new_balance: newBalance
@@ -212,9 +246,23 @@ async function getAllInvoices(req, res){
 
         const { count, rows } = await InvoiceService.getAllInvoices(limit, offset, search, fields, filter);
 
+        const withNames = await Promise.all(
+            rows.map(async (row) => {
+                // Fetch the product name based on product_id
+                const customer = await Customers.findByPk(row.customer_id, {
+                    attributes: ['name'], // Only fetch the `name` field
+                });
+
+                return {
+                    ...row,
+                    customer_name: customer ? customer.name : null, // Include product name if found
+                };
+            })
+        );
+
         SuccessResponse.message = "Invoices retrieved successfully.";
         SuccessResponse.data = {
-            invoices: rows,
+            invoices: withNames,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,
