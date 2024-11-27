@@ -10,4 +10,5 @@ module.exports = {
     ExpensesMiddleware: require('../middlewares/expenses.middleware'),
     PurchasesMiddleware: require('../middlewares/purchases.middleware'),
     InvoiceMiddleware: require('../middlewares/invoice.middleware'),
+    InventoryMiddleware: require('../middlewares/invTrans.middleware')
 }

@@ -200,13 +200,13 @@ async function markExpensePaid(req, res){
     const transaction = await sequelize.transaction();
 
     try {
-        const {expenses} = req.body;
+        const {expense_id, amount} = req.body;
         const user_id = req.user.id;
-        if (expenses.amount < 0) {
+        if (amount < 0) {
             throw new AppError("Amount cannot be negative.", StatusCodes.BAD_REQUEST);
         }
 
-        const expense = await ExpensesService.getExpense(expenses.id);
+        const expense = await ExpensesService.getExpense(expense_id);
         if (!expense) {
             throw new AppError("No expense found for the ID provided.", StatusCodes.NOT_FOUND);
         }
@@ -215,26 +215,26 @@ async function markExpensePaid(req, res){
             throw new AppError(`Expense already marked paid`, StatusCodes.BAD_REQUEST);
         }
         // todo : add middleware to check if amount entered is not negative.
-        if(expenses.amount > expense.total_cost){
+        if(amount > expense.total_cost){
             throw new AppError(`Amount paid is greater than the total cost of the expense.`, StatusCodes.BAD_REQUEST);
         }
 
         let status = expense.payment_status;
-        const newAmount = expense.total_cost - expenses.amount;
+        const newAmount = expense.total_cost - amount;
         status = newAmount === 0 ? "paid" : "partial-payment";
 
-        const updateExpense = await ExpensesService.markExpensePaid(expenses.id, newAmount, status, newAmount, { transaction });    
+        const updateExpense = await ExpensesService.markExpensePaid(expense.id, newAmount, status, newAmount, { transaction });    
 
         // Get current user balance
         const user = await UserService.getUser(user_id); 
         const currentBalance = Number(user.current_balance);
-        const newBalance = currentBalance - Number(expenses.amount);
+        const newBalance = currentBalance - Number(amount);
 
         // Create balance transaction
         await BalanceTransactionService.createBalanceTransactions({
             user_id: user_id, // Fixed: changed user.id to customer_id
             transaction_type: "expense",
-            amount: expenses.amount,
+            amount: amount,
             source: "expense",
             previous_balance: currentBalance,
             new_balance: newBalance

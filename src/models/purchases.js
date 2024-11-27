@@ -74,6 +74,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT('long'), // done today
       allowNull: true
     },
+    due_amount: {
+      type: DataTypes.DECIMAL(10,2),
+      allowNull: true,
+      defaultValue: 0.00
+    }
   }, {
     sequelize,
     modelName: 'Purchases',

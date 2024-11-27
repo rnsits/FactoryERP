@@ -3,7 +3,7 @@ const { InvoiceController } = require("../../controllers");
 const { InvoiceMiddleware } = require("../../middlewares");
 const { authenticateToken } = require('../../middlewares/auth.middleware');
 // const upload = require("../../config/multer.config");
-const {imageUpload, audioUpload} = require("../../config/multer.config");
+const { multerMiddleware, imageUpload } = require("../../config/multer.config");
 const InvoiceRouter = express.Router();
 
 /**
@@ -11,8 +11,8 @@ const InvoiceRouter = express.Router();
  */
 // InvoiceRouter.post('/', authenticateToken, upload.fields([{ name: 'customer_payment_image', maxCount: 1 },{name: 'audio', maxCount: 1 }]), InvoiceController.addInvoice);      
 InvoiceRouter.post('/', authenticateToken, 
-      imageUpload.single('payment_image'), InvoiceController.addInvoice); 
-InvoiceRouter.post('/invoicedate', authenticateToken, InvoiceController.getInvoicesByDate);
+      multerMiddleware(imageUpload('payment_image')), InvoiceMiddleware.validateBodyRequest, InvoiceController.addInvoice); 
+InvoiceRouter.post('/invoicedate', authenticateToken, InvoiceMiddleware.validateDateBody, InvoiceController.getInvoicesByDate);
 
 /**
  * /api/v1/auth/invoices/:invoice_id   GET
@@ -24,7 +24,7 @@ InvoiceRouter.get('/:invoiceId', authenticateToken, InvoiceMiddleware.validateGe
 /**
  * /api/v1/auth/invoices/markInvPaid    PUT
  */
-InvoiceRouter.put('/markInvPaid', authenticateToken, InvoiceController.markInvoicePaid);
+InvoiceRouter.put('/markInvPaid', authenticateToken, InvoiceMiddleware.validatePaidBody,  InvoiceController.markInvoicePaid);
 
 /**
  * /api/v1/auth/invoices/  GET

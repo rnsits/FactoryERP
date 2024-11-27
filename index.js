@@ -7,6 +7,11 @@ const path = require('path');
 
 // Define the path to the uploads/images folder
 const imagesPath = path.join(__dirname, 'uploads', 'images');
+const audioPath = path.join(__dirname, 'uploads', 'audio');
+
+// Serve the images folder at a public URL
+app.use('/images', express.static(imagesPath));
+app.use('/audio',express.static(audioPath));
 
 app.use(cors());
 // const authRoutes = require('./src/routes/v1/auth.routes'); // Adjust the path as necessary
@@ -16,9 +21,6 @@ const apiRoutes = require('./src/routes');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}))
-
-// Serve the images folder at a public URL
-app.use('/images', express.static(imagesPath));
 
 // Use the auth routes
 app.use('/api', apiRoutes);

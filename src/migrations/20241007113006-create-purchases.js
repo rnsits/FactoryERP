@@ -55,6 +55,11 @@ module.exports = {
         type: Sequelize.TEXT('long'),
         allowNull: true // done today
       },
+      due_amount: {
+        type: Sequelize.DECIMAL(10,2),
+        allowNull: true,
+        defaultValue: 0.00
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

@@ -306,10 +306,11 @@ async function getTodayInvoices(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
         const date = new Date();
-        const { count, rows } = await InvoiceService.getInvoicesByDate(date, limit, offset, search, fields); 
+        const { count, rows, totalAmount } = await InvoiceService.getInvoicesByDate(date, limit, offset, search, fields); 
         SuccessResponse.message = "Successfully completed the request";
         SuccessResponse.data = {
             invoices: rows,
+            totalAmount,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,
@@ -365,9 +366,6 @@ async function markInvoicePaid(req, res) {
     try {
         const user = req.user;
         const { id, amount } = req.body;
-        if(amount < 0) {
-            throw new AppError("Amount cannot be negative.",StatusCodes.BAD_REQUEST);
-        }
         const invoice = await InvoiceService.getInvoice(id, {transaction});
         if(!invoice) {
             throw new AppError("Invoice not found.",StatusCodes.NOT_FOUND);

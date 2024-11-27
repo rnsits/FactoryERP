@@ -2,6 +2,7 @@ const express = require("express");
 const { InvTransController } = require("../../controllers");
 // const { ExpensesMiddleware } = require("../../middlewares");
 const { authenticateToken } = require('../../middlewares/auth.middleware');
+const { InventoryMiddleware } = require("../../middlewares");
 const InvTransRoutes = express.Router();
 
 
@@ -10,6 +11,6 @@ const InvTransRoutes = express.Router();
  */
 InvTransRoutes.get('/', authenticateToken, InvTransController.getAllInventoryTransactions);
 InvTransRoutes.get('/getdamaged', authenticateToken, InvTransController.getDamagedProductsData);
-InvTransRoutes.post('/getdamageddate', authenticateToken, InvTransController.getDamagedDataByDate);
+InvTransRoutes.post('/getdamageddate', authenticateToken, InventoryMiddleware.validateBodyDate, InvTransController.getDamagedDataByDate);
 
 module.exports = InvTransRoutes; 

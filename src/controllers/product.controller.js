@@ -17,24 +17,23 @@ async function addProduct(req, res) {
             product_cost, 
             // product_image, 
             isManufactured,
-            cgst_rate,
-            sgst_rate,
-            igst_rate
+            tax
         } = req.body;
 
         let product_image = req.file ? `/uploads/images/${req.file.filename}`: null;
         
-        const existingProduct = await ProductService.getProductByName(name);
+        const existingProduct = await ProductService.getProductByName(name, {transaction});
         const currentTime = new Date().toLocaleString();
         let product, updatedInventory;
+        const cgst_rate = parseFloat(tax/2);
+        const sgst_rate = parseFloat(tax/2);
+        const igst_rate = parseFloat(tax);
+        
 
         if (isManufactured === true) {
             // Parse numeric values
             const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
             const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
-            const cgst_rate = parseFloat(req.body.cgst_rate) || 0;
-            const sgst_rate = parseFloat(req.body.sgst_rate) || 0;
-            const igst_rate = parseFloat(req.body.igst_rate) || 0;
             if (existingProduct) {
                 const newStock = existingProduct.stock + stock;
                 product = await ProductService.updateProduct(existingProduct.id, newStock);
@@ -53,9 +52,6 @@ async function addProduct(req, res) {
                 // Parse numeric values
                 const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
                 const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
-                const cgst_rate = parseFloat(req.body.cgst_rate) || 0;
-                const sgst_rate = parseFloat(req.body.sgst_rate) || 0;
-                const igst_rate = parseFloat(req.body.igst_rate) || 0;
                 product = await ProductService.createProduct({
                     name,
                     description,
@@ -84,9 +80,7 @@ async function addProduct(req, res) {
             // Parse numeric values
             const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
             const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
-            const cgst_rate = parseFloat(req.body.cgst_rate) || 0;
-            const sgst_rate = parseFloat(req.body.sgst_rate) || 0;
-            const igst_rate = parseFloat(req.body.igst_rate) || 0;
+
             if (existingProduct) {
                 ErrorResponse.message = "Product with this name already exists.";
                 return res.status(StatusCodes.CONFLICT).json(ErrorResponse);
@@ -367,15 +361,6 @@ async function createManufacturedProduct(req, res) {
         //     product_image = req.file.buffer.toString('base64');
         // }
         let product_image = req.file ? `/uploads/images/${req.file.filename}`: null;
-
-
-        // Validate request body
-        if (!Array.isArray(products)) {
-            throw new AppError(
-                "Invalid input. All fields and 'products' array are required.",
-                StatusCodes.BAD_REQUEST
-            );
-        }
 
         // Validate existing products and their stock
         for (const item of products) {

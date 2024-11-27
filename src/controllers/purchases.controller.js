@@ -3,7 +3,7 @@ const { PurchaseService, ProductService, InventoryTransactionService, BalanceTra
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
 const AppError = require("../utils/errors/app.error");
 const { sequelize } = require("../models");
-const { Product, Vendors } = require("../models");
+const { Product, Vendors, Purchases } = require("../models");
 
 async function addPurchase(req, res) {
     
@@ -17,13 +17,17 @@ async function addPurchase(req, res) {
             payment_status, 
             payment_due_date, 
             vendor_id, 
+            due_amount
             // invoice_Bill 
         } = req.body;
 
         let invoiceBill = req.file ? `/uploads/images/${req.file.filename}`: null;
         // console.log("invoiceBill", invoiceBill);
-        
-        
+        let finalDueAmount;
+        if(products.length > 1 && due_amount){
+            finalDueAmount = due_amount/products.length;
+        } else finalDueAmount = due_amount;
+
         const currentTime = new Date().toLocaleString();
         // Validate input
         if (!Array.isArray(products) || products.length === 0) {
@@ -91,6 +95,7 @@ async function addPurchase(req, res) {
                 payment_date,
                 payment_status,
                 payment_due_date,
+                due_amount: finalDueAmount,
                 vendor_id,
                 invoice_Bill: invoiceBill
             });
@@ -98,8 +103,13 @@ async function addPurchase(req, res) {
 
         // Calculate new balance
         const currentBalance = Number(user.current_balance);
-        const newBalance = currentBalance - totalCost;
-
+        let newBalance; 
+        if(due_amount){
+            newBalance = currentBalance - (totalCost - due_amount);
+        } else {
+            newBalance = currentBalance - totalCost;
+        }
+       
         // Execute all updates concurrently
         const [
             updatedProducts,
@@ -372,6 +382,78 @@ async function getUnPaidPurchases(req, res){
     }
 }
 
+async function markPurchasePaid(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+        const { purchase_id, amount } = req.body;
+        let finalDueAmount, finalStatus;
+        const userId = req.user.id;
+        const user = await UserService.getUser(userId, {transaction});
+        
+        const purchase = await PurchaseService.getPurchase(purchase_id, {transaction});
+        if(!purchase) {
+            throw new AppError(`Product with ID ${purchase_id} not found`, StatusCodes.NOT_FOUND);
+        };
+        if(purchase.payment_status === "paid") {
+            throw new AppError(`Purchase is already marked as paid`, StatusCodes.BAD_REQUEST);
+        };
+        if(amount > purchase.total_cost || amount > purchase.due_amount) {
+            throw new AppError(`Amount is greater than the total cost of the purchase`, StatusCodes.BAD_REQUEST);
+        };
+        
+
+        finalDueAmount = purchase.due_amount-amount;
+        console.log("finaldueamount", finalDueAmount);
+        
+        if(finalDueAmount === 0){
+            finalStatus = 'paid';
+        } else if(finalDueAmount > 0) {
+            finalStatus = 'partial-payment';
+        }
+
+        console.log("status",finalStatus);
+        
+
+        const updatedPurchase = await Purchases.update({
+            payment_status: finalStatus,
+            due_amount: finalDueAmount,
+            payment_date: new Date()
+        },{
+            where: {id: purchase_id}
+        },{transaction});
+
+        const newBalance = user.current_balance - amount;
+        console.log("balance change", newBalance);
+        
+
+        // Create balance transaction
+        await BalanceTransactionService.createBalanceTransactions({
+            user_id: userId,
+            transaction_type: "expense",
+            amount,
+            source: "purchase",
+            previous_balance: user.current_balance,
+            new_balance: newBalance,
+        }, { transaction }),
+
+        // Update user balance
+        await UserService.updateUserBalance(userId, newBalance, { transaction })
+
+        await transaction.commit();
+
+        SuccessResponse.message = "Purchase marked as paid/partial-payment successfully.";
+        SuccessResponse.data = updatedPurchase;
+        res.status(StatusCodes.OK).json(SuccessResponse);
+    } catch (error) {
+        console.log(error);
+        await transaction.rollback();
+        ErrorResponse.message = "Something went wrong while marking purchase paid.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json(ErrorResponse)
+    }    
+}
+
 
 module.exports = {
     addPurchase,
@@ -379,5 +461,6 @@ module.exports = {
     getAllPurchases,
     getTodayPurchases,
     getPurchasesByDate,
-    getUnPaidPurchases
+    getUnPaidPurchases,
+    markPurchasePaid
 }

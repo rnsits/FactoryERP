@@ -85,8 +85,42 @@ function validateBodyRequest(req, res, next) {
     next();
 }
 
+function validateDateBody(req, res, next) {
+    if(!req.body.date) {
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
+        ErrorResponse.error = new AppError(["Date Missing."], StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
+    next();
+}
+
+function validatePaidBody(req, res, next){
+    if(!req.body.id){
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
+        ErrorResponse.error = new AppError(["Invoice Id is Missing."], StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
+    if(!req.body.amount){
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
+        ErrorResponse.error = new AppError(["Amount Missing."], StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
+    if(req.body.amount < 1 || isNaN(Number(req.body.amount))) {
+        throw new AppError("Invalid Amount.",StatusCodes.BAD_REQUEST);
+    }
+    next();
+}
+
 
 module.exports = {
     validateGetRequest,
-    validateBodyRequest
+    validateBodyRequest,
+    validateDateBody,
+    validatePaidBody
 }

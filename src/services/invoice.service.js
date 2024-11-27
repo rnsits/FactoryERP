@@ -370,7 +370,9 @@ async function getInvoicesByDate(date, limit, offset, search, fields) {
       offset,
       order: [['createdAt', 'DESC']],
     });
-    return { count, rows };
+
+    const totalAmount = await Invoice.sum('total_amount', {where});
+    return { count, rows, totalAmount };
   } catch(error){
     console.log(error);
         if(

@@ -3,7 +3,7 @@ const { ExpensesController } = require("../../controllers");
 const { ExpensesMiddleware } = require("../../middlewares");
 const { authenticateToken } = require('../../middlewares/auth.middleware');
 const upload = require("../../config/multer.config");
-const { imageUpload, audioUpload }= require("../../config/multer.config");
+const { imageUpload, audioUpload, multerMiddleware }= require("../../config/multer.config");
 const ExpenseRoutes = express.Router();
 
 
@@ -11,13 +11,14 @@ const ExpenseRoutes = express.Router();
  * /api/v1/auth/expenses   POST
  */
 // ExpenseRoutes.post('/', authenticateToken, upload.single('audio_path'),ExpensesController.addExpense);
-ExpenseRoutes.post('/', authenticateToken, audioUpload.single('audio_path'),ExpensesController.addExpense);
-ExpenseRoutes.post('/expDat', authenticateToken, ExpensesController.getExpensesByDate); 
+ExpenseRoutes.post('/', authenticateToken, multerMiddleware(audioUpload('audio_path')),
+ExpensesMiddleware.validateBodyRequest,  ExpensesController.addExpense);
+ExpenseRoutes.post('/expDat', authenticateToken, ExpensesMiddleware.validateDateBody, ExpensesController.getExpensesByDate); 
 
 /**
  * /api/v1/auth/expenses PUT
  */
-ExpenseRoutes.put('/markexppaid', authenticateToken, ExpensesController.markExpensePaid);
+ExpenseRoutes.put('/markexppaid', authenticateToken, ExpensesMiddleware.validatePaidBody, ExpensesController.markExpensePaid);
 
 /**
  * /api/v1/auth/expenses/:expenseId   GET

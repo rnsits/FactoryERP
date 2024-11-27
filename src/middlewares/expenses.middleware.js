@@ -28,6 +28,10 @@ function validateBodyRequest(req, res, next){
         ErrorResponse.error = new AppError(["total cost not found in the request"],StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
+    if(!req.body.description_type){
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Description type is missing in the request."], StatusCodes.BAD_REQUEST);
+    }
     if(req.body.description_type === "text" && !req.body.description){
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["Descrtiption missing in the request."], StatusCodes.BAD_REQUEST);
@@ -55,7 +59,32 @@ function validateBodyRequest(req, res, next){
     next();
 };
 
+function validatePaidBody(req, res, next){
+    if(!req.body.expense_id){
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Expense Id is missing in the request."], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(!req.body.amount){
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Amount is missing in the request."], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    next();
+}
+
+function validateDateBody(req, res, next){
+    if(!req.body.date){
+        ErrorResponse.message = "Something went wrong while retrieving expense.";
+        ErrorResponse.error = new AppError(["Date is missing in the request."], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    next();
+}
+
 module.exports = {
     validateBodyRequest,
-    validateGetRequest
+    validateGetRequest,
+    validatePaidBody,
+    validateDateBody
 }
