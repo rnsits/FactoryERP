@@ -1,7 +1,7 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { InventoryTransactionRepository } = require("../repositories");
-const { InventoryTransaction } = require("../models");
+const { InventoryTransaction, Product } = require("../models");
 const { Op, where } = require("sequelize");
 
 const inventoryTransactionRepository = new InventoryTransactionRepository();
@@ -336,18 +336,38 @@ async function deleteInventoryTransaction(inventoryTransactionId) {
 //   }
 // }
 
+
 async function getDamagedProductsData(limit, offset, search, fields, filter) {
   try {
+    // Validate limit and offset values
+    const parsedLimit = limit ? parseInt(limit) : 10; // Default limit to 10 if not provided
+    const parsedOffset = offset ? parseInt(offset) : 0; // Default offset to 0 if not provided
+
+    if (isNaN(parsedLimit) || parsedLimit < 0) {
+      throw new Error('Invalid limit value');
+    }
+    if (isNaN(parsedOffset) || parsedOffset < 0) {
+      throw new Error('Invalid offset value');
+    }
+
     // Base query options
     const queryOptions = {
-      limit: limit ? parseInt(limit) : undefined,
-      offset: offset ? parseInt(offset) : 0,
+      limit: parsedLimit,
+      offset: parsedOffset,
       order: [['createdAt', 'DESC']],
-      include: [],
-      where: {}
+      include: [
+        {
+          model: Product,
+          as: 'product',  // Ensure alias matches the association
+          attributes: ['name'],  // We only want to select the name field of Product
+          required: false // left join
+        }
+      ],
+      where: {
+        isDamaged: true  // Base condition for damaged products
+      }
     };
 
-    // Start building the where clause with the base condition
     let whereConditions = {
       isDamaged: true
     };
@@ -362,17 +382,25 @@ async function getDamagedProductsData(limit, offset, search, fields, filter) {
         'description',
         'quantity',
         'quantity_type',
-        'transaction_type'
+        'transaction_type',
+        'product_name'
       ];
 
       // Parse numeric search value
       const numericSearch = parseFloat(searchValue);
 
       searchableFields.forEach(field => {
-        if (['description','quantity_type', 'transaction_type'].includes(field)) {
+        if (['description', 'quantity_type', 'transaction_type'].includes(field)) {
           // Handle string fields - using LIKE for MySQL
           searchConditions.push({
             [field]: {
+              [Op.like]: `%${searchValue}%`
+            }
+          });
+        } else if (field === 'product_name') {
+          // Special handling for product name - use LIKE in the joined Product table
+          searchConditions.push({
+            '$product.name$': {
               [Op.like]: `%${searchValue}%`
             }
           });
@@ -408,16 +436,19 @@ async function getDamagedProductsData(limit, offset, search, fields, filter) {
     queryOptions.where = whereConditions;
 
     // Select specific fields if requested
-    if (fields?.length > 0) {
+    if (Array.isArray(fields) && fields.length > 0) {
       queryOptions.attributes = fields;
     }
 
-    // Debug log
-    console.log('Search value:', search);
-    console.log('Final query options:', JSON.stringify(queryOptions, null, 2));
-
     const { count, rows } = await InventoryTransaction.findAndCountAll(queryOptions);
-    const transformedRows = rows.map(inventory => inventory.get({ plain: true }));
+
+    const transformedRows = rows.map(inventory => {
+      const plainInventory = inventory.get({ plain: true });
+      return {
+        ...plainInventory,
+        product_name: plainInventory.Product ? plainInventory.Product.name : null
+      };
+    });
 
     return {
       count,
@@ -426,17 +457,16 @@ async function getDamagedProductsData(limit, offset, search, fields, filter) {
 
   } catch (error) {
     console.error('Search error:', error);
-    
     if (error instanceof AppError) {
       throw error;
     }
-    
     throw new AppError(
-      `Failed to fetch expenses: ${error.message}`,
+      `Failed to fetch damaged products: ${error.message}`,
       StatusCodes.INTERNAL_SERVER_ERROR
     );
   }
 }
+
 
 async function getDamagedDataByDate(date, limit, offset, search, fields) {
   try{

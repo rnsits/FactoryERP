@@ -62,62 +62,6 @@ async function getInvoice(data) {
     }
 }
 
-// async function getAllInvoices(limit, offset, search, fields, filter) {
-//     try {
-
-//         const where = {};
-        
-//         if (search && fields.length > 0) {
-//             where[Op.or] = fields.map(field => ({
-//                 [field]: { [Op.like]: `%${search}%` }
-//             }));
-//         }
-
-//         // Handle filtering
-//         if (filter && typeof filter === 'string') {
-//           const [key, value] = filter.split(':');
-//           if (key && value) {
-//               where[key] = {[Op.like]: `%${value}%`};
-//           }
-//         }
-
-//     const { count, rows } = await Invoice.findAndCountAll({
-//       where,
-//       attributes: fields.length > 0 ? fields : undefined,
-//       limit,
-//       offset,
-//       order: [['createdAt', 'DESC']],
-//     });
-//   return { count, rows };
-
-//     } catch(error) {
-//         console.log(error);
-//         if(
-//             error.name == "SequelizeValidationError" ||
-//             error.name == "SequelizeUniqueConstraintError"
-//         ) {
-//           let explanation = [];
-//           error.errors.forEach((err) => {
-//             explanation.push(err.message);
-//           });
-//           throw new AppError(explanation, StatusCodes.BAD_REQUEST);
-//         } else if (
-//           error.name === "SequelizeDatabaseError" &&
-//           error.original &&
-//           error.original.routine === "enum_in"
-//         ) {
-//           throw new AppError(
-//             "Invalid value for associate_with field.",
-//             StatusCodes.BAD_REQUEST
-//           );
-//         }
-//         throw new AppError(
-//           "Cannot get Invoices. ",
-//           StatusCodes.INTERNAL_SERVER_ERROR
-//         );
-//     }
-// }
-
 async function getAllInvoices(limit, offset, search, fields, filter) {
   try {
       // Base query options need to look why customers fields aren't searchable
@@ -436,6 +380,137 @@ async function markInvoicePaid(id, status, newAmount){
     }
 }
 
+// async function getInvoicesByMonth(date, limit, offset, search, fields) {
+//   try{
+   
+//     const where = {};
+
+//     const startOfMonth = new Date(date);
+//     startOfMonth.setDate(1);
+//     startOfMonth.setHours(0, 0, 0, 0);
+
+//     const currentDate = new Date(date);
+//     currentDate.setHours(23, 59, 59, 999);
+
+//     where.createdAt = {
+//       [Op.gte]: startOfMonth,
+//       [Op.lt]: currentDate,
+//     };
+
+//     if (search && fields.length > 0) {
+//         where[Op.or] = fields.map(field => ({
+//             [field]: { [Op.like]: `%${search}%` }
+//         }));
+//     } 
+
+//     const { count, rows } = await Invoice.findAndCountAll({
+//       where,
+//       limit,
+//       offset,
+//       order: [['createdAt', 'DESC']],
+//     });
+
+//     const totalAmount = await Invoice.sum('total_amount', {where});
+//     return { count, rows, totalAmount };
+//   } catch(error){
+//     console.log(error);
+//         if(
+//             error.name == "SequelizeValidationError" ||
+//             error.name == "SequelizeUniqueConstraintError"
+//         ) {
+//           let explanation = [];
+//           error.errors.forEach((err) => {
+//             explanation.push(err.message);
+//           });
+//           throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+//         } else if (
+//           error.name === "SequelizeDatabaseError" &&
+//           error.original &&
+//           error.original.routine === "enum_in"
+//         ) {
+//           throw new AppError(
+//             "Invalid value for associate_with field.",
+//             StatusCodes.BAD_REQUEST
+//           );
+//         }
+//         throw new AppError(
+//           "Cannot get Invoice by date Data",
+//           StatusCodes.INTERNAL_SERVER_ERROR
+//         );
+//   }
+// }
+
+async function getInvoicesByMonth(date, limit = 10, offset = 0, search = '', fields = []) {
+  try {
+    // Ensure date is a valid Date object
+    const inputDate = new Date(date);
+    
+    // Set start of the month (first day at 00:00:00)
+    const startOfMonth = new Date(inputDate.getFullYear(), inputDate.getMonth(), 1, 0, 0, 0, 0);
+    
+    // Set end of the month (last day at 23:59:59)
+    const endOfMonth = new Date(inputDate.getFullYear(), inputDate.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Construct where clause
+    const where = {
+      createdAt: {
+        [Op.gte]: startOfMonth,
+        [Op.lt]: endOfMonth,
+      }
+    };
+
+    // Add search conditions if search term and fields are provided
+    if (search && fields.length > 0) {
+      where[Op.or] = fields.map(field => ({
+        [field]: { [Op.like]: `%${search}%` }
+      }));
+    }
+
+    // Find and count invoices
+    const { count, rows } = await Invoice.findAndCountAll({
+      where,
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']],
+    });
+
+    // Calculate total amount for the month
+    const totalAmount = await Invoice.sum('total_amount', { where });
+
+    return { 
+      count,       // Total number of invoices
+      rows,        // Invoices for the page
+      totalAmount, // Total amount of invoices for the month
+      startOfMonth, // Start date of the month
+      endOfMonth    // End date of the month
+    };
+  } catch (error) {
+    console.error('Error in getInvoicesByMonth:', error);
+
+    // Handle specific Sequelize errors
+    if (error.name === "SequelizeValidationError" || 
+        error.name === "SequelizeUniqueConstraintError") {
+      const explanation = error.errors.map(err => err.message);
+      throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+    }
+
+    if (error.name === "SequelizeDatabaseError" && 
+        error.original && 
+        error.original.routine === "enum_in") {
+      throw new AppError(
+        "Invalid value for associate_with field.",
+        StatusCodes.BAD_REQUEST
+      );
+    }
+
+    // Generic error for any other issues
+    throw new AppError(
+      "Cannot retrieve invoices for the specified month",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
 
 module.exports = {
     createInvoice,
@@ -444,5 +519,6 @@ module.exports = {
     getPendingInvoices,
     getTodayInvoices,
     getInvoicesByDate,
-    markInvoicePaid
+    markInvoicePaid,
+    getInvoicesByMonth
 }

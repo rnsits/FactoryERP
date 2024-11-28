@@ -17,6 +17,7 @@ InvoiceRouter.post('/invoicedate', authenticateToken, InvoiceMiddleware.validate
 /**
  * /api/v1/auth/invoices/:invoice_id   GET
  */
+InvoiceRouter.get('/monInv', authenticateToken, InvoiceController.getMonInv);
 InvoiceRouter.get('/peninv', authenticateToken, InvoiceController.getPendingInvoices);
 InvoiceRouter.get('/todInv', authenticateToken, InvoiceController.getTodayInvoices);
 InvoiceRouter.get('/:invoiceId', authenticateToken, InvoiceMiddleware.validateGetRequest, InvoiceController.getInvoice);

@@ -482,6 +482,19 @@ async function validateAndUpdateProducts(products) {
   }
 }
 
+async function updateImage(product_id, product_image, options){
+  try {
+    const response = await productRepository.update(product_id, {product_image}, options);
+    return response;
+  } catch (error) {
+    console.error('Error in validateAndUpdateProducts:', error);
+    throw new AppError(
+      error.message || "Failed to validate and update products.",
+      error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
 module.exports = {
     createProduct,
     getProduct,
@@ -491,5 +504,6 @@ module.exports = {
     getProductByName,
     getProductCount,
     validateAndUpdateProducts,
-    getProductsByIds
+    getProductsByIds,
+    updateImage
 }

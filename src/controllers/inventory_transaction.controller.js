@@ -83,25 +83,27 @@ async function getDamagedProductsData(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
         const filter = req.query.filter || null;
+    
         const { count, rows } = await InventoryTransactionService.getDamagedProductsData(limit, offset, search, fields, filter);
       
-        // Fetch product names for each transaction based on product_id
-        const productsWithNames = await Promise.all(
-            rows.map(async (row) => {
-                // Fetch the product name based on product_id
-                const product = await Product.findByPk(row.product_id, {
-                    attributes: ['name'], // Only fetch the `name` field
-                });
+        // // Fetch product names for each transaction based on product_id
+        // const productsWithNames = await Promise.all(
+        //     rows.map(async (row) => {
+        //         // Fetch the product name based on product_id
+        //         const product = await Product.findByPk(row.product_id, {
+        //             attributes: ['name'], // Only fetch the `name` field
+        //         });
 
-                return {
-                    ...row,
-                    product_name: product ? product.name : null, // Include product name if found
-                };
-            })
-        );
+        //         return {
+        //             ...row,
+        //             product_name: product ? product.name : null, // Include product name if found
+        //         };
+        //     })
+        // );
         SuccessResponse.message = "Damaged products data retrieved successfully.";
         SuccessResponse.data = {
-            products: productsWithNames,
+            // products: productsWithNames,
+            products: rows,
             totalCount: count, 
             totalPages: Math.ceil(count / limit), 
             currentPage: page,

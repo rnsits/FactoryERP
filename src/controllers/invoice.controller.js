@@ -435,6 +435,94 @@ async function markInvoicePaid(req, res) {
     }
 }
 
+// async function getMonInv(req, res) {
+//     try{   
+//         const page = parseInt(req.query.page) || 1; 
+//         const limit = parseInt(req.query.limit) || 10;
+//         const offset = (page - 1) * limit; 
+//         const search = req.query.search || '';
+//         const fields = req.query.fields ? req.query.fields.split(',') : [];
+//         const date = new Date();
+//         const { count, rows, totalAmount } = await InvoiceService.getInvoicesByMonth(date, limit, offset, search, fields); 
+//         SuccessResponse.message = "Successfully completed the request";
+//         SuccessResponse.data = {
+//             invoices: rows,
+//             totalAmount,
+//             totalCount: count, 
+//             totalPages: Math.ceil(count / limit), 
+//             currentPage: page,
+//             pageSize: limit
+//         };
+//         // const invoices = await InvoiceService.getTodayInvoices(); 
+//         // SuccessResponse.message = "Successfully completed the request";
+//         // SuccessResponse.data = invoices;
+//         return res
+//             .status(StatusCodes.OK)
+//             .json(SuccessResponse)
+//     }catch(error) {
+//         ErrorResponse.message = "Something went wrong while getting Invoices.";
+//         ErrorResponse.error = error;
+//         return res
+//             .status(StatusCodes.INTERNAL_SERVER_ERROR)
+//             .json(ErrorResponse)
+//     }
+// }
+
+async function getMonInv(req, res) {
+    try {   
+        // Pagination parameters
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit; 
+
+        // Search parameters
+        const search = req.query.search || '';
+        const fields = req.query.fields ? req.query.fields.split(',') : [];
+
+        // Use current date for monthly invoices
+        const date = new Date();
+
+        // Fetch invoices
+        const { count, rows, totalAmount } = await InvoiceService.getInvoicesByMonth(
+            date, 
+            limit, 
+            offset, 
+            search, 
+            fields
+        ); 
+
+        // Prepare success response
+        SuccessResponse.message = "Invoices retrieved successfully";
+        SuccessResponse.data = {
+            invoices: rows,
+            totalAmount,
+            totalCount: count, 
+            totalPages: Math.ceil(count / limit), 
+            currentPage: page,
+            pageSize: limit
+        };
+
+        // Return successful response
+        return res.status(StatusCodes.OK).json(SuccessResponse);
+    } catch(error) {
+        // Log the error for server-side tracking
+        console.error('Error in getMonInv:', error);
+
+        // Prepare error response
+        ErrorResponse.message = "Failed to retrieve invoices";
+        ErrorResponse.error = {
+            message: error.message,
+            // Optionally include stack trace in development
+            ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+        };
+
+        // Return error response
+        return res
+            .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse);
+    }
+}
+
 
 module.exports = {
  addInvoice,
@@ -444,4 +532,5 @@ module.exports = {
  getTodayInvoices,
  getInvoicesByDate,
  markInvoicePaid,
+ getMonInv
 }

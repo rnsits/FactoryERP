@@ -28,6 +28,8 @@ ProductRouter.patch('/:productId/reduce', authenticateToken, ProductMiddleware.v
 
 ProductRouter.patch('/:productId/update', authenticateToken, ProductMiddleware.validateBodyUpdate, ProductController.updateProductByQuantity);
 
+ProductRouter.patch('/upProImg', authenticateToken, multerMiddleware(imageUpload('product_image')), ProductController.updateImage);
+
 ProductRouter.put('/valupdate', authenticateToken, ProductMiddleware.validatePutBodyRequest, ProductController.validateAndUpdateProducts);
 
 

@@ -490,6 +490,36 @@ async function createManufacturedProduct(req, res) {
     }
 }
 
+async function updateImage(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+        const { product_id } = req.body;
+        let product_image = req.file ? `/uploads/images/${req.file.filename}`: null;
+        if(!product_image) {
+            await transaction.rollback();
+            ErrorResponse.message = "Image file is required.";
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+        const product = await ProductService.getProduct(product_id, {transaction});
+        if(!product) {
+            ErrorResponse.message = "Product does not exists.";
+            return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
+        }
+        const updatedProduct = await ProductService.updateImage(product_id, product_image, {transaction});
+
+        transaction.commit();
+        SuccessResponse.message = "Product Image updated Successfully.";
+        SuccessResponse.data = updatedProduct;
+        return res.status(StatusCodes.ACCEPTED).json(SuccessResponse);
+    } catch (error) {
+        await transaction.rollback(); // Rollback the transaction
+        console.error('Error in updating image:', error);
+        ErrorResponse.message = "Failed to update product image.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
 
 
 module.exports = {
@@ -501,7 +531,8 @@ module.exports = {
     getProductCount,
     validateAndUpdateProducts,
     damagedProducts,
-    createManufacturedProduct
+    createManufacturedProduct,
+    updateImage
 }
 
 
