@@ -117,10 +117,20 @@ function validatePaidBody(req, res, next){
     next();
 }
 
+function updateImage(req, res, next){
+    if(!req.body.id || isNaN(Number(req.body.id))) {
+      ErrorResponse.message = "Something went wrong while updating image";
+      ErrorResponse.error = new AppError(["Id missing."], StatusCodes.BAD_REQUEST);
+      return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    next();
+}
+
 
 module.exports = {
     validateGetRequest,
     validateBodyRequest,
     validateDateBody,
-    validatePaidBody
+    validatePaidBody,
+    updateImage
 }

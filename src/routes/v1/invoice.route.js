@@ -32,4 +32,6 @@ InvoiceRouter.put('/markInvPaid', authenticateToken, InvoiceMiddleware.validateP
  */
 InvoiceRouter.get('/', InvoiceController.getAllInvoices);
 
+InvoiceRouter.patch('/invimgup', authenticateToken, InvoiceMiddleware.updateImage, InvoiceController.updateImage);
+
 module.exports = InvoiceRouter;

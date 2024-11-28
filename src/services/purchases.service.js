@@ -533,7 +533,10 @@ async function getUnPaidPurchases(limit, offset, search, fields) {
       offset,
       order: [['createdAt', 'DESC']],
     });
-    return { count, rows };
+
+    // Calculate total amount for the month
+    const unpaidTotalAmount = await Purchases.sum('due_amount', { where });
+    return { count, rows, unpaidTotalAmount };
   } catch (error) {
     console.log(error);
     if(

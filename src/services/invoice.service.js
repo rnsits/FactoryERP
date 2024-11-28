@@ -192,10 +192,12 @@ async function getAllInvoices(limit, offset, search, fields, filter) {
   }
 }
 
+//need to add total amount
 async function getPendingInvoices() {
   try {
       const invoices = await invoiceRepository.getPendingInvoices();
-      return invoices;
+      const unpaidTotalAmount = invoices.reduce((sum, invoice) => sum + (invoice.due_amount || 0), 0);
+      return { invoices, unpaidTotalAmount };
   } catch(error) {
       console.log(error);
       if(
@@ -511,6 +513,19 @@ async function getInvoicesByMonth(date, limit = 10, offset = 0, search = '', fie
   }
 }
 
+async function updateImage(id, invoice_image, options) {
+  try {
+    const response = await invoiceRepository.update(id, {invoice_image}, options);
+    return response;
+  } catch (error) {
+    console.error('Error:', error);
+    throw new AppError(
+      error.message || "Failed to update invoice image.",
+      error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
 
 module.exports = {
     createInvoice,
@@ -520,5 +535,6 @@ module.exports = {
     getTodayInvoices,
     getInvoicesByDate,
     markInvoicePaid,
-    getInvoicesByMonth
+    getInvoicesByMonth,
+    updateImage
 }

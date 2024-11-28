@@ -13,7 +13,7 @@ const ProductRouter = express.Router();
 ProductRouter.post('/', authenticateToken, multerMiddleware(imageUpload('product_image')), ProductMiddleware.validateFormData, ProductController.addProduct);    
 
 // ProductRouter.post('/damaged-products', authenticateToken,upload.single('audio_path'), ProductController.damagedProducts);
-ProductRouter.post('/damaged-products', authenticateToken, multerMiddleware(audioUpload('audio_path')), ProductController.damagedProducts);
+ProductRouter.post('/damaged-products', authenticateToken, multerMiddleware(audioUpload('audio_path')), ProductMiddleware.validateDamagedProductRequest, ProductController.damagedProducts);
 
 // ProductRouter.post('/mfcpro', authenticateToken,upload.single('product_image'), ProductController.createManufacturedProduct);
 ProductRouter.post('/mfcpro', authenticateToken, multerMiddleware(imageUpload('product_image')), ProductMiddleware.validateMfcData, ProductController.createManufacturedProduct);
@@ -28,7 +28,7 @@ ProductRouter.patch('/:productId/reduce', authenticateToken, ProductMiddleware.v
 
 ProductRouter.patch('/:productId/update', authenticateToken, ProductMiddleware.validateBodyUpdate, ProductController.updateProductByQuantity);
 
-ProductRouter.patch('/upProImg', authenticateToken, multerMiddleware(imageUpload('product_image')), ProductController.updateImage);
+ProductRouter.patch('/upProImg', authenticateToken, multerMiddleware(imageUpload('product_image')), ProductMiddleware.updateImage, ProductController.updateImage);
 
 ProductRouter.put('/valupdate', authenticateToken, ProductMiddleware.validatePutBodyRequest, ProductController.validateAndUpdateProducts);
 

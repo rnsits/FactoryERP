@@ -174,12 +174,13 @@ async function getUnpaidExpenses(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
     
-        const { count, rows } = await ExpensesService.getUnpaidExpenses( limit, offset, search, fields);
+        const { count, rows, totalUnPaidAmount } = await ExpensesService.getUnpaidExpenses( limit, offset, search, fields);
         
         SuccessResponse.message = "Successfully completed the request";
         SuccessResponse.data = {
             expenses: rows,
             totalCount: count,
+            totalUnPaidAmount,
             totalPages: Math.ceil(count / limit),
             currentPage: page,
             pageSize: limit

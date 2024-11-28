@@ -341,7 +341,7 @@ async function getUnPaidPurchases(req, res){
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];    
-        const { count, rows } = await PurchaseService.getUnPaidPurchases(limit, offset, search, fields); 
+        const { count, rows, unpaidTotalAmount } = await PurchaseService.getUnPaidPurchases(limit, offset, search, fields); 
 
         const withNames = await Promise.all(
             rows.map(async (row) => {
@@ -365,6 +365,7 @@ async function getUnPaidPurchases(req, res){
         SuccessResponse.message = "Unpaid/Partially Paid data retrieved successfully.";
         SuccessResponse.data = {
             purchases: withNames,
+            unpaidTotalAmount,
             totalCount: count,
             totalPages: Math.ceil(count / limit),
             currentPage: page,

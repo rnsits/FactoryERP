@@ -343,7 +343,9 @@ async function getUnpaidExpenses(limit, offset, search, fields){
         order: [['createdAt', 'DESC']],
       });
 
-    return { count, rows };
+      const totalUnPaidAmount = await Expenses.sum('total_cost', {where});
+
+    return { count, rows , totalUnPaidAmount};
   } catch (error) {
     console.log(error);
       if(

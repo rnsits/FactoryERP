@@ -284,7 +284,9 @@ async function getPendingInvoices(req,res){
     try{
         const invoices = await InvoiceService.getPendingInvoices();
         SuccessResponse.message = "Successfully completed the request";
-        SuccessResponse.data = invoices;
+        SuccessResponse.data = {
+            invoices
+        };
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
@@ -523,6 +525,36 @@ async function getMonInv(req, res) {
     }
 }
 
+async function updateImage(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+        const { id } = req.body;
+        let invoice_image = req.file ? `/uploads/images/${req.file.filename}`: null;
+        if(!invoice_image) {
+            await transaction.rollback();
+            ErrorResponse.message = "Image file is required.";
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+        const invoice = await InvoiceService.getInvoice(id, {transaction});
+        if(!invoice) {
+            ErrorResponse.message = "Invoice does not exists.";
+            return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
+        }
+        const updatedInvoice = await InvoiceService.updateImage(id, invoice_image, {transaction});
+
+        transaction.commit();
+        SuccessResponse.message = "Invoice Image updated Successfully.";
+        SuccessResponse.data = updatedInvoice;
+        return res.status(StatusCodes.ACCEPTED).json(SuccessResponse);
+    } catch (error) {
+        console.log(error);
+        await transaction.rollback();
+        ErrorResponse.message ="Something went wrong while updating the Invoice image.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
 
 module.exports = {
  addInvoice,
@@ -532,5 +564,6 @@ module.exports = {
  getTodayInvoices,
  getInvoicesByDate,
  markInvoicePaid,
- getMonInv
+ getMonInv,
+ updateImage
 }

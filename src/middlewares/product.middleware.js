@@ -215,12 +215,13 @@ function validateFormData(req, res, next) {
 
   //Validate quantity type
   if (
-    !["kg", "tonne", "quintal", "l", "ml", "m", "cm", "pcs", "metric_cube"].includes(
+    !['kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube', 
+        'bags', 'feet', 'sheets', 'bundles', 'yard', 'mm'].includes(
       req.body.quantity_type
     )
   ) {
     return sendErrorResponse("Validation error", [
-      "Invalid quantity type. Allowed values are: 'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube'.",
+      "Invalid quantity type. Allowed values are: 'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube', 'bags', 'feet', 'sheets', 'bundles', 'yard', 'mm'.",
     ]);
   }
 
@@ -260,9 +261,19 @@ function validateMfcData(req, res, next) {
     ErrorResponse.error = new AppError(["Description Missing."], StatusCodes.BAD_REQUEST);
     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
   }
-  if(!["kg", "tonne", "quintal", "l", "ml", "m", "cm", "pcs", "metric_cube"].includes(req.body.quantity_type)) {
+  if(!['kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube', 
+        'bags', 'feet', 'sheets', 'bundles', 'yard', 'mm'].includes(req.body.quantity_type)) {
     ErrorResponse.message = "Something went wrong while creating maufactured product.";
-    ErrorResponse.error = new AppError(["Description Missing."], StatusCodes.BAD_REQUEST);
+    ErrorResponse.error = new AppError(["Invalid quantity_type need to be 'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube', 'bags', 'feet', 'sheets', 'bundles', 'yard', 'mm'"], StatusCodes.BAD_REQUEST);
+    return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+  }
+  next();
+}
+
+function updateImage(req, res, next){
+  if(!req.body.product_id || isNaN(Number(req.body.product_id))) {
+    ErrorResponse.message = "Something went wrong while updating image";
+    ErrorResponse.error = new AppError(["Product Id missing."], StatusCodes.BAD_REQUEST);
     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
   }
   next();
@@ -276,5 +287,6 @@ module.exports = {
     validatePutBodyRequest,
     validateDamagedProductRequest,
     validateFormData,
-    validateMfcData
+    validateMfcData,
+    updateImage
 }
