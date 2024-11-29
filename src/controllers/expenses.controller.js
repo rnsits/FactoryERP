@@ -134,16 +134,13 @@ async function getTodayExpenses(req, res){
 
 async function getExpensesByDate(req, res){
     try{
+        const date = new Date(req.body.date);
         const page = parseInt(req.query.page) || 1; 
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
-        const date = new Date(req.body.date);
-        console.log("Controller date", date);
-        
-        // const purchases = await ExpensesService.getExpensesByDate(date); 
-        // Fetch the expenses for the given date with pagination
+
         const { count, rows } = await ExpensesService.getExpensesByDate(date, limit, offset, search, fields);
         
         SuccessResponse.message = "Successfully completed the request";

@@ -264,11 +264,22 @@ async function getExpensesByDate(date, limit, offset, search, fields) {
       const where = {};
 
       // Filter expenses by the specified date (date is already a Date object)
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
+      // const startOfDay = new Date(date);
+      // startOfDay.setHours(0, 0, 0, 0);
 
-      const endOfDay = new Date(date);
-      endOfDay.setHours(24, 0, 0, 0);
+      // const endOfDay = new Date(date);
+      // endOfDay.setHours(24, 0, 0, 0);
+      const startOfDay = new Date(Date.UTC(
+        date.getFullYear(), 
+        date.getMonth(), 
+        date.getDate()
+      ));
+
+      const endOfDay = new Date(Date.UTC(
+        date.getFullYear(), 
+        date.getMonth(), 
+        date.getDate() + 1
+      ));
 
       // Add the date filter to `where` clause
       where.createdAt = {

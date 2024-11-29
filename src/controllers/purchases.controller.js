@@ -286,8 +286,7 @@ async function getTodayPurchases(req, res){
 
 async function getPurchasesByDate(req, res){
     try{
-        const date = new Date(req.body.date);
-        console.log("Controller date", date);   
+        const date = new Date(req.body.date); 
         const page = parseInt(req.query.page) || 1; 
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit; 
