@@ -3,20 +3,19 @@ const {ErrorResponse} = require('../utils/common');
 const AppError = require('../utils/errors/app.error');
 
 function validateGetRequest(req,res,next){
-
     // Validate if productId is a valid integer
     const productId = req.params.productId;
+    if(!productId){
+      ErrorResponse.message = "Something went wrong while getting product.";
+      ErrorResponse.error = new AppError(["Product Id not found on the incoming request."],StatusCodes.BAD_REQUEST)
+      return res 
+             .status(StatusCodes.BAD_REQUEST)
+             .json(ErrorResponse)
+    }
     if (isNaN(productId) || parseInt(productId) <= 0) {
         ErrorResponse.message = "Something went wrong while getting product.";
         ErrorResponse.error = new AppError(["Invalid product ID. Must be a positive number."])
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
-    if(!productId){
-        ErrorResponse.message = "Something went wrong while getting product.";
-        ErrorResponse.error = new AppError(["Product Id not found on the incoming request."],StatusCodes.BAD_REQUEST)
-        return res 
-               .status(StatusCodes.BAD_REQUEST)
-               .json(ErrorResponse)
     }
     next();
 }
@@ -24,24 +23,25 @@ function validateGetRequest(req,res,next){
 function validateBodyUpdate(req, res, next){
     const productId = req.params.productId;
     const quantity = req.body.quantity;
+    if(!productId){
+      ErrorResponse.message = "Something went wrong while getting product";
+      ErrorResponse.error = new AppError(["Product Id not found on the incoming request"],StatusCodes.BAD_REQUEST);
+      return res 
+             .status(StatusCodes.BAD_REQUEST)
+             .json(ErrorResponse)
+    }
     if (isNaN(productId) || parseInt(productId) <= 0) {
         ErrorResponse.message = "Something went wrong while getting product.";
         ErrorResponse.error = new AppError(["Invalid product ID. Must be a positive number."]);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-    if(!productId){
-        ErrorResponse.message = "Something went wrong while getting product";
-        ErrorResponse.error = new AppError(["Product Id not found on the incoming request"],StatusCodes.BAD_REQUEST);
-        return res 
-               .status(StatusCodes.BAD_REQUEST)
-               .json(ErrorResponse)
-    }
+   
     if(isNaN(quantity) || parseInt(quantity) <=0){
         ErrorResponse.message = "Something went wrong while getting product.";
         ErrorResponse.error = new AppError(["Invalid quantity. Must be a positive number."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-    if(req.body.transaction_type && (req.body.transaction_type !== "in" || req.body.transaction_type !== "out")) {
+    if(req.body.transaction_type && (req.body.transaction_type != "in" || req.body.transaction_type != "out")) {
         ErrorResponse.message = "Something went wrong while updating product";
         ErrorResponse.error = new AppError(["Transaction Type must be 'in' or 'out'." ], StatusCodes.BAD_REQUEST);
         return res
@@ -54,19 +54,20 @@ function validateBodyUpdate(req, res, next){
 function validateReduce(req, res, next){
     const productId = req.params.productId;
     const quantity = req.body.quantity;
+    if(!productId){
+      ErrorResponse.message = "Something went wrong while getting product";
+      ErrorResponse.error = new AppError(["Product Id not found on the incoming request"],StatusCodes.BAD_REQUEST);
+      return res 
+             .status(StatusCodes.BAD_REQUEST)
+             .json(ErrorResponse)
+  }
     if (isNaN(productId) || parseInt(productId) <= 0) {
         ErrorResponse.message = "Something went wrong while getting product.";
         ErrorResponse.error = new AppError(["Invalid product ID. Must be a positive number."]);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-    if(!productId){
-        ErrorResponse.message = "Something went wrong while getting product";
-        ErrorResponse.error = new AppError(["Product Id not found on the incoming request"],StatusCodes.BAD_REQUEST);
-        return res 
-               .status(StatusCodes.BAD_REQUEST)
-               .json(ErrorResponse)
-    }
-    if(isNaN(quantity) || parseInt(quantity) <=0){
+    
+    if(isNaN(quantity) || parseInt(quantity) <= 0){
         ErrorResponse.message = "Something went wrong while getting product.";
         ErrorResponse.error = new AppError(["Invalid quantity. Must be a positive number."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
@@ -127,22 +128,16 @@ function validateReduce(req, res, next){
 function validateDamagedProductRequest(req, res, next) {
     const { product_id, quantity, description, description_type } = req.body;
 
-    if(!product_id) {
+    if(!product_id || parseInt(product_id) <= 0) {
       ErrorResponse.message = "Something went wrong while updating products.";
-      ErrorResponse.error = new AppError(["Product Id Missing."], StatusCodes.BAD_REQUEST);
+      ErrorResponse.error = new AppError(["Invalid Product Id"], StatusCodes.BAD_REQUEST);
       return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-    if(!quantity){
-      ErrorResponse.message = "Something went wrong while updating products.";
-      ErrorResponse.error = new AppError(["Product Id Missing."], StatusCodes.BAD_REQUEST);
-      return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
-    if(isNaN(Number(quantity)) || quantity < 1){
+    if(!quantity || parseInt(quantity) <= 0) {
       ErrorResponse.message = "Something went wrong while updating products.";
       ErrorResponse.error = new AppError(["Invalid Quantity."], StatusCodes.BAD_REQUEST);
       return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-  
     if(!description || description.length < 5){
       ErrorResponse.message = "Something went wrong while updating products.";
       ErrorResponse.error = new AppError(["Description Missing."], StatusCodes.BAD_REQUEST);
@@ -162,7 +157,7 @@ function validateDamagedProductRequest(req, res, next) {
 
 function validatePutBodyRequest(req, res, next) {
     const {products} = req.body;
-    if (!Array.isArray(products) || products.length === 0) {
+    if (!Array.isArray(products) || products.length == 0) {
         ErrorResponse.message = "Something went wrong while updating products.";
         ErrorResponse.error = new AppError(["Invalid products input"], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
@@ -209,7 +204,7 @@ function validateFormData(req, res, next) {
   }
 
   // Validate Description
-  if (!req.body.description || req.body.description.trim().length === 0) {
+  if (!req.body.description || req.body.description.trim().length <= 4) {
     return sendErrorResponse("Validation error", ["Description is required."]);
   }
 
@@ -226,8 +221,8 @@ function validateFormData(req, res, next) {
   }
 
   //Validate cost
-  if (!req.body.product_cost || isNaN(Number(req.body.product_cost))) {
-    return sendErrorResponse("Validation error", ["Product cost must be a number."]);
+  if (!req.body.product_cost || parseInt(req.body.product_cost) <=0) {
+    return sendErrorResponse("Validation error", ["Product cost must be a positive number."]);
   }
 
   //Validate manufactured or not
@@ -246,9 +241,9 @@ function validateMfcData(req, res, next) {
     ErrorResponse.error = new AppError(["Name Missing."], StatusCodes.BAD_REQUEST);
     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
   }
-  if(!req.body.stock) {
+  if(parseInt(req.body.stock) <= 0) {
     ErrorResponse.message = "Something went wrong while creating maufactured product.";
-    ErrorResponse.error = new AppError(["Stock Missing."], StatusCodes.BAD_REQUEST);
+    ErrorResponse.error = new AppError(["Stock must be positive number."], StatusCodes.BAD_REQUEST);
     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
   }
   if(!Array.isArray(req.body.products)) {
@@ -256,9 +251,9 @@ function validateMfcData(req, res, next) {
     ErrorResponse.error = new AppError(["Products must be array."], StatusCodes.BAD_REQUEST);
     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
   }
-  if(!req.body.description) {
+  if(!req.body.description && !req.body.description.length <=4) {
     ErrorResponse.message = "Something went wrong while creating maufactured product.";
-    ErrorResponse.error = new AppError(["Description Missing."], StatusCodes.BAD_REQUEST);
+    ErrorResponse.error = new AppError(["Invalid Description."], StatusCodes.BAD_REQUEST);
     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
   }
   if(!['kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube', 
@@ -271,11 +266,11 @@ function validateMfcData(req, res, next) {
 }
 
 function updateImage(req, res, next){
-  if(!req.body.product_id || isNaN(Number(req.body.product_id))) {
-    ErrorResponse.message = "Something went wrong while updating image";
-    ErrorResponse.error = new AppError(["Product Id missing."], StatusCodes.BAD_REQUEST);
-    return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-  }
+  if(isNaN(parseInt(req.body.product_id)) || parseInt(req.body.product_id) <= 0) { 
+    ErrorResponse.message = "Something went wrong while updating image"; 
+    ErrorResponse.error = new AppError(["Product Id must be a positive number."], StatusCodes.BAD_REQUEST); 
+    return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse); 
+}
   next();
 }
 

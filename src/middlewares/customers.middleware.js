@@ -3,20 +3,19 @@ const {ErrorResponse} = require('../utils/common');
 const AppError = require('../utils/errors/app.error');
 
 function validateGetRequest(req,res,next){
-
-    // Validate if productId is a valid integer
     const customerId = req.params.customerId;
-    if (isNaN(customerId) || parseInt(customerId) <= 0) {
-        ErrorResponse.message = "Something went wrong while getting customers.";
-        ErrorResponse.error = new AppError(["Customer ID. Must be a positive number."], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
+    // Validate if productId is a valid integer
     if(!customerId){
         ErrorResponse.message = "Something went wrong while getting customers.";
         ErrorResponse.error = new AppError(["Customer Id not found on the incoming request"],StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
+    }
+    if (isNaN(customerId) || parseInt(customerId) <= 0) {
+        ErrorResponse.message = "Something went wrong while getting customers.";
+        ErrorResponse.error = new AppError(["Customer ID. Must be a positive number."], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();
 }
@@ -44,10 +43,24 @@ function validateBodyRequest(req, res, next) {
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
+    if(req.body.pincode.length < 6 || req.body.pincode.length > 6){
+        ErrorResponse.message = "Something went wrong while creating customers.";
+        ErrorResponse.error = new AppError(["Pincode should be 6 digit."], StatusCodes.BAD_REQUEST);
+        return res
+               .status(StatusCodes.BAD_REQUEST)
+               .json(ErrorResponse)
+    }
     if(!req.body.mobile){
         ErrorResponse.message = "Something went wrong while creating customers.";
         ErrorResponse.error = new AppError(["Mobile missing in the incoming request."], StatusCodes.BAD_REQUEST);
         return res 
+               .status(StatusCodes.BAD_REQUEST)
+               .json(ErrorResponse)
+    }
+    if(req.body.mobile.length < 10 || req.body.mobile.length >10) {
+        ErrorResponse.message = "Something went wrong while creating customers.";
+        ErrorResponse.error = new AppError(["Mobile number should be 10 digit."], StatusCodes.BAD_REQUEST);
+        return res
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }

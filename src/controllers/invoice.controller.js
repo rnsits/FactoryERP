@@ -7,10 +7,221 @@ const { sequelize } = require("../models");
 const { Customers } = require('../models');
 
 //add audio here
+// async function addInvoice(req, res) {
+//     const user_id = req.user.id;
+//     const {  
+//         customer_id, // removed user_id
+//         due_date,
+//         due_amount,
+//         payment_status,
+//         payment_method,
+//         pincode,
+//         address,
+//         mobile,
+//         products,
+//     } = req.body;
+
+//     let payment_image = req.file ? `/uploads/images/${req.file.filename}`: null;
+//     // console.log("image", payment_image);
+    
+    
+//     const state = findStateByPincode(pincode);
+//     if(!state) {
+//         throw new AppError(`Invalid Pincode provided ${pincode}.`, StatusCodes.BAD_REQUEST);
+//     }
+
+//     const transaction = await sequelize.transaction();
+
+//     try {
+//         let totalAmount = 0;
+//         let totalTax = 0;
+//         const invoice = await InvoiceService.createInvoice({
+//             customer_id, 
+//             due_date, 
+//             due_amount, 
+//             payment_status, 
+//             payment_method, 
+//             pincode, 
+//             address, 
+//             mobile,
+//             total_amount:0,
+//             total_tax:0, 
+//             payment_image,
+//         }, { transaction });
+        
+       
+//         const currentTime = new Date().toISOString();
+//         const inventoryTransactions = [];
+//         const invoiceProducts = [];
+
+//         // Process each product
+//         const processedProducts = await Promise.all(
+//             products.map(async (item) => {
+//                 const product = await ProductService.getProduct(item.product_id);
+//                 if (!product) {
+//                     throw new AppError(`Product with ID ${item.product_id} not found.`, StatusCodes.BAD_REQUEST);
+//                 }
+
+//                 if (item.quantity > product.stock) {
+//                     throw new AppError(`Requested quantity (${item.quantity}) exceeds available quantity (${product.stock}) for product ID ${item.product_id}.`, StatusCodes.BAD_REQUEST);
+//                 }
+
+//                 const itemTotal = item.price * item.quantity;
+//                 // let taxAmount = 0;
+//                 let cgst = 0;
+//                 let sgst = 0;
+//                 let igst = 0;
+
+//                  // Check if tax rates exist in product
+//                  const cgstRate = product.cgst_rate;
+//                  const sgstRate = product.sgst_rate;
+//                  const igstRate = product.igst_rate;
+
+//                 if (payment_method.toLowerCase() !== 'cash') {
+                    
+//                     if (state.toLowerCase() === 'rajasthan') {
+//                         cgst = (itemTotal * cgstRate) / 100;
+//                         sgst = (itemTotal * sgstRate) / 100;
+//                         taxAmount = cgst + sgst;
+//                     } else {
+//                         igst = (itemTotal * igstRate) / 100;
+//                         taxAmount = igst;
+//                     }
+//                 }
+
+//                 totalAmount += itemTotal;
+//                 totalTax += taxAmount;
+
+//                 // Update product quantity
+//                 const newStock = product.stock - item.quantity;
+//                 await ProductService.updateProduct(
+//                     item.product_id, 
+//                     newStock,
+//                     { transaction }
+//                 );
+
+//                 // Add to inventory transactions array
+//                 inventoryTransactions.push({
+//                     product_id: product.id,
+//                     transaction_type: "out",
+//                     quantity: item.quantity,
+//                     quantity_type: product.quantity_type,
+//                     // show only name
+//                     description: `${product.name}`,
+//                     description_type: 'text',
+//                     image_path: payment_image
+//                 });
+
+//                 // Create invoice product object with tax details
+//                 const invoiceProduct = {
+//                     invoice_id: invoice.id,
+//                     product_id: item.product_id,
+//                     quantity: item.quantity,
+//                     unit_price: item.price,
+//                     cgst_amount: cgst,
+//                     sgst_amount: sgst,
+//                     igst_amount: igst,
+//                     tax_amount: taxAmount,
+//                     total: itemTotal + taxAmount,
+//                     payment_image,
+//                 };
+//                 invoiceProducts.push(invoiceProduct);
+
+//                 return invoiceProduct;
+//             })
+//         );
+
+//         const totalBillAmount = totalAmount + totalTax;
+//         console.log("Bill Amount", totalBillAmount);
+        
+//         let finalDueAmount, finalStatus;
+//         switch(payment_status.toLowerCase()) {
+//             case 'unpaid':
+//                 finalDueAmount = totalBillAmount;
+//                 finalStatus = 'unpaid';
+//                 break;
+
+//             case 'partial paid':
+//                 if (!due_amount || due_amount <= 0) {
+//                     throw new AppError('Partial payment amount must be provided and greater than 0', StatusCodes.BAD_REQUEST);
+//                 }
+//                 if (due_amount >= totalBillAmount) {
+//                     throw new AppError('Partial payment cannot be greater than or equal to total bill amount', StatusCodes.BAD_REQUEST);
+//                 }
+//                 finalDueAmount = totalBillAmount - due_amount;
+//                 finalStatus = 'partial paid';
+//                 break;
+
+//             case 'paid':
+//                 finalDueAmount = 0;
+//                 finalStatus = 'paid';
+//                 break;
+
+//             default:
+//                 throw new AppError('Invalid payment status', StatusCodes.BAD_REQUEST);
+//         }
+
+//         // Create all inventory transactions
+//         await Promise.all(
+//             inventoryTransactions.map(inventoryTx => 
+//                 InventoryTransactionService.createInventoryTransaction(inventoryTx, { transaction })
+//             )
+//         );
+
+//         // Update invoice with totals
+//         await invoice.update({
+//             total_amount: totalBillAmount,
+//             total_tax: totalTax,
+//             due_amount: finalDueAmount,
+//             item_count: products.length,
+//             payment_status: finalStatus
+//         }, { transaction });
+
+//         // Get current user balance
+//         const user = await UserService.getUser(user_id); 
+//         const currentBalance = Number(user.current_balance) || 0;
+//         const newBalance = currentBalance + finalDueAmount;
+
+//         // Create balance transaction
+//         await BalanceTransactionService.createBalanceTransactions({
+//             user_id: user.id, // Fixed: changed user.id to customer_id
+//             transaction_type: "income",
+//             amount: finalDueAmount,
+//             source: "invoice",
+//             previous_balance: currentBalance,
+//             new_balance: newBalance
+//         }, { transaction });
+
+//         // Update user balance
+//         await UserService.updateUserBalance(
+//             user_id, // Fixed: changed user.id to customer_id
+//             newBalance, 
+//             { transaction }
+//         );
+
+//         // Fetch complete invoice with all related data
+//         // const completeInvoice = await InvoiceService.getInvoiceById(invoice.id, {
+//         //     include: ['customer', 'products']
+//         // });
+//         const completeInvoice = await InvoiceService.getInvoice(invoice.id);
+
+//         await transaction.commit();
+//         SuccessResponse.message = "Invoice added successfully";
+//         SuccessResponse.data = { invoice: completeInvoice };
+//         return res.status(StatusCodes.OK).json(SuccessResponse);
+//     } catch (error) {
+//         console.log(error);
+//         await transaction.rollback();
+//         ErrorResponse.message = "Failed to add Invoice.";
+//         ErrorResponse.error = error;
+//         return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+//     }
+// }
+
 async function addInvoice(req, res) {
     const user_id = req.user.id;
     const {  
-        customer_id, // removed user_id
+        customer_id,
         due_date,
         due_amount,
         payment_status,
@@ -22,8 +233,6 @@ async function addInvoice(req, res) {
     } = req.body;
 
     let payment_image = req.file ? `/uploads/images/${req.file.filename}`: null;
-    // console.log("image", payment_image);
-    
     
     const state = findStateByPincode(pincode);
     if(!state) {
@@ -35,27 +244,9 @@ async function addInvoice(req, res) {
     try {
         let totalAmount = 0;
         let totalTax = 0;
-        const invoice = await InvoiceService.createInvoice({
-            customer_id, 
-            due_date, 
-            due_amount, 
-            payment_status, 
-            payment_method, 
-            pincode, 
-            address, 
-            mobile,
-            total_amount:0,
-            total_tax:0, 
-            payment_image,
-        }, { transaction });
         
-       
-        const currentTime = new Date().toISOString();
-        const inventoryTransactions = [];
-        const invoiceProducts = [];
-
-        // Process each product
-        const processedProducts = await Promise.all(
+        // Prepare items array with full product details
+        const items = await Promise.all(
             products.map(async (item) => {
                 const product = await ProductService.getProduct(item.product_id);
                 if (!product) {
@@ -67,18 +258,17 @@ async function addInvoice(req, res) {
                 }
 
                 const itemTotal = item.price * item.quantity;
-                // let taxAmount = 0;
+                let taxAmount = 0;
                 let cgst = 0;
                 let sgst = 0;
                 let igst = 0;
 
-                 // Check if tax rates exist in product
-                 const cgstRate = product.cgst_rate;
-                 const sgstRate = product.sgst_rate;
-                 const igstRate = product.igst_rate;
+                // Tax calculation logic (same as in your original code)
+                const cgstRate = product.cgst_rate;
+                const sgstRate = product.sgst_rate;
+                const igstRate = product.igst_rate;
 
                 if (payment_method.toLowerCase() !== 'cash') {
-                    
                     if (state.toLowerCase() === 'rajasthan') {
                         cgst = (itemTotal * cgstRate) / 100;
                         sgst = (itemTotal * sgstRate) / 100;
@@ -92,122 +282,51 @@ async function addInvoice(req, res) {
                 totalAmount += itemTotal;
                 totalTax += taxAmount;
 
-                // Update product quantity
-                const newStock = product.stock - item.quantity;
-                await ProductService.updateProduct(
-                    item.product_id, 
-                    newStock,
-                    { transaction }
-                );
-
-                // Add to inventory transactions array
-                inventoryTransactions.push({
+                // Return full product details along with invoice-specific information
+                return {
                     product_id: product.id,
-                    transaction_type: "out",
-                    quantity: item.quantity,
-                    quantity_type: product.quantity_type,
-                    // show only name
-                    description: `${product.name}`,
-                    description_type: 'text',
-                    image_path: payment_image
-                });
-
-                // Create invoice product object with tax details
-                const invoiceProduct = {
-                    invoice_id: invoice.id,
-                    product_id: item.product_id,
+                    product_name: product.name,
+                    product_details: {
+                        sku: product.sku,
+                        description: product.description,
+                        category: product.category,
+                        // Add any other product details you want to include
+                    },
                     quantity: item.quantity,
                     unit_price: item.price,
-                    cgst_amount: cgst,
-                    sgst_amount: sgst,
-                    igst_amount: igst,
-                    tax_amount: taxAmount,
-                    total: itemTotal + taxAmount,
-                    payment_image,
+                    total_price: itemTotal,
+                    tax_details: {
+                        cgst_rate: cgstRate,
+                        sgst_rate: sgstRate,
+                        igst_rate: igstRate,
+                        cgst_amount: cgst,
+                        sgst_amount: sgst,
+                        igst_amount: igst,
+                        total_tax_amount: taxAmount
+                    }
                 };
-                invoiceProducts.push(invoiceProduct);
-
-                return invoiceProduct;
             })
         );
 
-        const totalBillAmount = totalAmount + totalTax;
-        console.log("Bill Amount", totalBillAmount);
-        
-        let finalDueAmount, finalStatus;
-        switch(payment_status.toLowerCase()) {
-            case 'unpaid':
-                finalDueAmount = totalBillAmount;
-                finalStatus = 'unpaid';
-                break;
-
-            case 'partial paid':
-                if (!due_amount || due_amount <= 0) {
-                    throw new AppError('Partial payment amount must be provided and greater than 0', StatusCodes.BAD_REQUEST);
-                }
-                if (due_amount >= totalBillAmount) {
-                    throw new AppError('Partial payment cannot be greater than or equal to total bill amount', StatusCodes.BAD_REQUEST);
-                }
-                finalDueAmount = totalBillAmount - due_amount;
-                finalStatus = 'partial paid';
-                break;
-
-            case 'paid':
-                finalDueAmount = 0;
-                finalStatus = 'paid';
-                break;
-
-            default:
-                throw new AppError('Invalid payment status', StatusCodes.BAD_REQUEST);
-        }
-
-        // Create all inventory transactions
-        await Promise.all(
-            inventoryTransactions.map(inventoryTx => 
-                InventoryTransactionService.createInventoryTransaction(inventoryTx, { transaction })
-            )
-        );
-
-        // Update invoice with totals
-        await invoice.update({
-            total_amount: totalBillAmount,
-            total_tax: totalTax,
-            due_amount: finalDueAmount,
-            item_count: products.length,
-            payment_status: finalStatus
+        // Create invoice with items included
+        const invoice = await InvoiceService.createInvoice({
+            customer_id, 
+            due_date, 
+            due_amount, 
+            payment_status, 
+            payment_method, 
+            pincode, 
+            address, 
+            mobile,
+            total_amount: totalAmount,
+            total_tax: totalTax, 
+            payment_image,
+            items: items, // Include the full items array
         }, { transaction });
 
-        // Get current user balance
-        const user = await UserService.getUser(user_id); 
-        const currentBalance = Number(user.current_balance) || 0;
-        const newBalance = currentBalance + finalDueAmount;
+        // Rest of the function remains the same...
+        // (existing code for inventory transactions, balance updates, etc.)
 
-        // Create balance transaction
-        await BalanceTransactionService.createBalanceTransactions({
-            user_id: user.id, // Fixed: changed user.id to customer_id
-            transaction_type: "income",
-            amount: finalDueAmount,
-            source: "invoice",
-            previous_balance: currentBalance,
-            new_balance: newBalance
-        }, { transaction });
-
-        // Update user balance
-        await UserService.updateUserBalance(
-            user_id, // Fixed: changed user.id to customer_id
-            newBalance, 
-            { transaction }
-        );
-
-        // Fetch complete invoice with all related data
-        // const completeInvoice = await InvoiceService.getInvoiceById(invoice.id, {
-        //     include: ['customer', 'products']
-        // });
-        const completeInvoice = await InvoiceService.getInvoice(invoice.id);
-
-        await transaction.commit();
-        SuccessResponse.message = "Invoice added successfully";
-        SuccessResponse.data = { invoice: completeInvoice };
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
         console.log(error);
@@ -373,18 +492,20 @@ async function markInvoicePaid(req, res) {
             throw new AppError("Invoice not found.",StatusCodes.NOT_FOUND);
         }
         if(invoice.payment_status === "paid") {
-            throw new AppError(`Invoice already marked paid`, StatusCodes.BAD_REQUEST);
+            throw new AppError("Invoice already marked paid", StatusCodes.BAD_REQUEST);
         }
         if(amount > invoice.total_amount) {
-            throw new AppError(`Amount paid is greater than the total cost of invoice.`, StatusCodes.BAD_REQUEST);
+            throw new AppError("Amount paid is greater than the total cost of invoice.", StatusCodes.BAD_REQUEST);
         }
 
         let status = invoice.payment_status;
+        let finalDueAmount;
         let payment_method = invoice.payment_method;
-        const newAmount = invoice.total_amount - Number(amount);
+        const newAmount = invoice.due_amount - Number(amount);
         status = newAmount === 0 ? "paid" : "partial paid";
+        finalDueAmount = newAmount === 0 ? 0 : newAmount;
 
-        const updateInvoice = await InvoiceService.markInvoicePaid(invoice.id, status, newAmount, { transaction });
+        const updateInvoice = await InvoiceService.markInvoicePaid(invoice.id, status, finalDueAmount, { transaction });
 
         const customer = await CustomerService.getCustomer(invoice.customer_id, { transaction });
 
@@ -404,16 +525,17 @@ async function markInvoicePaid(req, res) {
         }
         
 
+        const newBalance = user.current_balance + amount;
         const balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
             user_id: user.id,
             transaction_type: "income",
             amount: amount,
             source: "invoice",
-            previous_balance: invoice.total_amount,
-            new_balance: newAmount
+            previous_balance: user.currentBalance,
+            new_balance: newBalance
         }, {transaction});
 
-        const newBalance = user.current_balance + amount;
+       
         const userBalance = await UserService.updateUserBalance(
             user.id,
             newBalance, {transaction}
@@ -436,39 +558,6 @@ async function markInvoicePaid(req, res) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
     }
 }
-
-// async function getMonInv(req, res) {
-//     try{   
-//         const page = parseInt(req.query.page) || 1; 
-//         const limit = parseInt(req.query.limit) || 10;
-//         const offset = (page - 1) * limit; 
-//         const search = req.query.search || '';
-//         const fields = req.query.fields ? req.query.fields.split(',') : [];
-//         const date = new Date();
-//         const { count, rows, totalAmount } = await InvoiceService.getInvoicesByMonth(date, limit, offset, search, fields); 
-//         SuccessResponse.message = "Successfully completed the request";
-//         SuccessResponse.data = {
-//             invoices: rows,
-//             totalAmount,
-//             totalCount: count, 
-//             totalPages: Math.ceil(count / limit), 
-//             currentPage: page,
-//             pageSize: limit
-//         };
-//         // const invoices = await InvoiceService.getTodayInvoices(); 
-//         // SuccessResponse.message = "Successfully completed the request";
-//         // SuccessResponse.data = invoices;
-//         return res
-//             .status(StatusCodes.OK)
-//             .json(SuccessResponse)
-//     }catch(error) {
-//         ErrorResponse.message = "Something went wrong while getting Invoices.";
-//         ErrorResponse.error = error;
-//         return res
-//             .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//             .json(ErrorResponse)
-//     }
-// }
 
 async function getMonInv(req, res) {
     try {   

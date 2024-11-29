@@ -83,7 +83,7 @@ async function addProduct(req, res) {
 
             if (existingProduct) {
                 ErrorResponse.message = "Product with this name already exists.";
-                return res.status(StatusCodes.CONFLICT).json(ErrorResponse);
+                throw new AppError(ErrorResponse.message, StatusCodes.CONFLICT);
             }
 
             product = await ProductService.createProduct({

@@ -282,10 +282,25 @@ async function getExpensesByDate(date, limit, offset, search, fields) {
       ));
 
       // Add the date filter to `where` clause
-      where.createdAt = {
-        [Op.gte]: startOfDay,
-        [Op.lt]: endOfDay,
-      };
+      // where.createdAt = {
+      //   [Op.gte]: startOfDay,
+      //   [Op.lt]: endOfDay,
+      // };
+
+      where[Op.or] = [
+        {
+          createdAt: {
+            [Op.gte]: startOfDay,
+            [Op.lt]: endOfDay,
+          }
+        },
+        {
+          payment_date: {
+            [Op.gte]: startOfDay,
+            [Op.lt]: endOfDay,
+          }
+        },
+      ];
 
       // If search query and fields are provided, add the search condition
       if (search && fields.length > 0) {
@@ -300,7 +315,9 @@ async function getExpensesByDate(date, limit, offset, search, fields) {
         where,
         limit,
         offset,
-        order: [['createdAt', 'DESC']],
+        order: [
+          ['payment_date', 'DESC'],
+          ['createdAt', 'DESC']],
       });
     
       return { count, rows };
@@ -385,10 +402,9 @@ async function getUnpaidExpenses(limit, offset, search, fields){
   }
 }
 
-async function markExpensePaid(id, amount, status, newAmount) {
+async function markExpensePaid(id, status, newAmount) {
   try {
     const expense = await expensesRepository.update(id, {
-      total_cost: amount,
       payment_status: status,
       due_amount: newAmount
     });

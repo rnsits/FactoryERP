@@ -466,11 +466,26 @@ async function getPurchasesByDate(date, limit, offset, search, fields) {
        const endOfDay = new Date(date);
        endOfDay.setHours(24, 0, 0, 0);
  
-       // Add the date filter to `where` clause
-       where.createdAt = {
-         [Op.gte]: startOfDay,
-         [Op.lt]: endOfDay,
-       };
+      //  // Add the date filter to `where` clause
+      //  where.createdAt = {
+      //    [Op.gte]: startOfDay,
+      //    [Op.lt]: endOfDay,
+      //  };
+       // Add date filter to include both createdAt and payment_date
+      where[Op.or] = [
+        {
+          createdAt: {
+            [Op.gte]: startOfDay,
+            [Op.lt]: endOfDay,
+          }
+        },
+        {
+          payment_date: {
+            [Op.gte]: startOfDay,
+            [Op.lt]: endOfDay,
+          }
+        }
+      ];
 
       if (search && fields.length > 0) {
           where[Op.or] = fields.map(field => ({
@@ -484,7 +499,10 @@ async function getPurchasesByDate(date, limit, offset, search, fields) {
         where,
         limit,
         offset,
-        order: [['createdAt', 'DESC']],
+        order: [
+          ['payment_date', 'DESC'],
+          ['createdAt', 'DESC']
+        ],
       });
 
       return { count, rows };

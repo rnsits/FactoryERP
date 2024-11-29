@@ -32,12 +32,12 @@ function validateBodyRequest(req, res, next){
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["Description type is missing in the request."], StatusCodes.BAD_REQUEST);
     }
-    if(req.body.description_type === "text" && !req.body.description){
+    if(req.body.description_type == "text" && !req.body.description){
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["Descrtiption missing in the request."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-    if(req.body.description_type === "audio" && !req.body.audio_path){
+    if(req.body.description_type == "audio" && !req.body.audio_path){
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["Audio Path is missing in the request."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
@@ -54,13 +54,25 @@ function validateBodyRequest(req, res, next){
         ErrorResponse.error = new AppError(["Payment Status should be 'paid','unpaid','partial-payment'."],StatusCodes.BAD_REQUEST);
         return res
                 .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse)
+                .json(ErrorResponse);
+    }
+
+    if(!req.body.payment_status != "paid" && !req.body.due_amount) {
+        ErrorResponse.message = "Something went wrong while marking expense.";
+        ErrorResponse.error = new AppError(["Add Due Amount"], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    
+    if(!req.body.payment_status != "paid" && !req.body.due_date) {
+        ErrorResponse.message = "Something went wrong while marking expense.";
+        ErrorResponse.error = new AppError(["Add Due Date"], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();
 };
 
 function validatePaidBody(req, res, next){
-    if(!req.body.expense_id){
+    if(!req.body.expense_id || isNaN(parseInt(req.body.expense_id))){
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["Expense Id is missing in the request."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);

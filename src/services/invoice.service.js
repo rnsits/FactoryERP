@@ -2,7 +2,7 @@ const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { InvoiceRepository } = require("../repositories");
 const { Invoice, Customers } = require("../models");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 
 const invoiceRepository = new InvoiceRepository();
 
@@ -32,7 +32,16 @@ async function createInvoice(data) {
 
 async function getInvoice(data) {
     try {
-        const invoice = await invoiceRepository.get(data);
+        const invoice = await Invoice.findOne({
+          where: { id: data},
+          include: [
+            {
+              model: Customers,
+              as: 'customer',
+              attributes: ['name'],
+            }
+          ]
+        });
         return invoice;
     } catch(error) {
         console.log(error);
@@ -299,10 +308,25 @@ async function getInvoicesByDate(date, limit, offset, search, fields) {
     const endOfDay = new Date(date);
     endOfDay.setHours(24, 0, 0, 0);
 
-    where.createdAt = {
-      [Op.gte]: startOfDay,
-      [Op.lt]: endOfDay,
-    };
+    // where.createdAt = {
+    //   [Op.gte]: startOfDay,
+    //   [Op.lt]: endOfDay,
+    // };
+
+    where[Op.or] = [
+      {
+        createdAt: {
+          [Op.gte]: startOfDay,
+          [Op.lt]: endOfDay,
+        }
+      },
+      {
+        due_date: {
+          [Op.gte]: startOfDay,
+          [Op.lt]: endOfDay,
+        }
+      },
+    ];
 
     if (search && fields.length > 0) {
         where[Op.or] = fields.map(field => ({
@@ -314,7 +338,10 @@ async function getInvoicesByDate(date, limit, offset, search, fields) {
       where,
       limit,
       offset,
-      order: [['createdAt', 'DESC']],
+      order: [
+        ['due_date', 'DESC'],
+        ['createdAt', 'DESC']
+      ],
     });
 
     const totalAmount = await Invoice.sum('total_amount', {where});
@@ -347,11 +374,11 @@ async function getInvoicesByDate(date, limit, offset, search, fields) {
   }
 }
 
-async function markInvoicePaid(id, status, newAmount){
+async function markInvoicePaid(id, status, finalDueAmount){
   try {
     const invoice = await invoiceRepository.update(id, {
       payment_status: status,
-      due_amount: newAmount
+      due_amount: finalDueAmount
     });
     return invoice;
   } catch (error) {

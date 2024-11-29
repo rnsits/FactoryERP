@@ -10,9 +10,64 @@ async function addExpense(req, res) {
     try {
         const user_id = req.user.id;
         
-        const { total_cost,description, description_type, payment_date, payment_status  } = req.body;
+        const { total_cost,description, description_type, payment_date, payment_status, due_date, due_amount  } = req.body;
        
+        // Validate due amount logic based on payment status
+        let finalDueAmount = 0;
+        let finalDueDate = null;
         let audioPath = req.file ? `/uploads/audio/${req.file.filename}`: null;
+
+        switch(payment_status) {
+            case 'paid':
+                // No due amount or due date for paid status
+                finalDueAmount = 0;
+                finalDueDate = null;
+                break;
+            
+            case 'unpaid':
+                // For unpaid, due amount is the full total cost
+                finalDueAmount = total_cost;
+                
+                // Require due date for unpaid status
+                if (!due_date) {
+                    throw new AppError('Due date is required for unpaid expenses',StatusCodes.BAD_REQUEST);
+                }
+                finalDueDate = due_date;
+                break;
+            
+            case 'partial-payment':
+                // For partial payment, user provides due amount and due date
+                if (!due_amount || !due_date) {
+                    throw new AppError('Both due amount and due date are required for partial payments', StatusCodes.BAD_REQUEST);
+                }
+                
+                // Ensure due amount is less than total cost
+                if (due_amount >= total_cost) {
+                    throw new AppError('Partial payment amount must be less than total cost', StatusCodes.BAD_REQUEST);
+                }
+                
+                finalDueAmount = due_amount;
+                finalDueDate = due_date;
+                
+                // Reduce balance by the amount paid
+                const user_data = await UserService.getUser(user_id);
+                const currentBalance = user_data.current_balance - (total_cost-due_amount);
+                await UserService.updateUserBalance(user_data.id, currentBalance, {transaction});
+
+                // Create balance transaction for partial payment
+                await BalanceTransactionService.createBalanceTransactions({
+                    user_id: user_data.id,
+                    transaction_type: "partial-expense",
+                    amount: currentBalance,
+                    source: "expense",
+                    previous_balance: user_data.current_balance,
+                    new_balance: currentBalance
+                }, {transaction});
+                break;
+            
+            default:
+                throw new Error('Invalid payment status');
+        }
        
         const expense = await ExpensesService.createExpense({
     
@@ -22,22 +77,26 @@ async function addExpense(req, res) {
             audio_path: audioPath,
             payment_date,
             payment_status,
+            due_amount: finalDueAmount,
+            due_date: finalDueDate
             
         }, {transaction});
 
-        // please replace user_id with user.id when authentication has been applied.
-        user_data = await UserService.getUser(user_id);
-        const currentBalance = user_data.current_balance - total_cost;
-        update_user = await UserService.updateUserBalance(user_data.id, currentBalance, {transaction});
+        let balance_trans;
+        if(payment_status == "paid") {
+            user_data = await UserService.getUser(user_id);
+            const currentBalance = user_data.current_balance - total_cost;
+            update_user = await UserService.updateUserBalance(user_data.id, currentBalance, {transaction});
 
-        const balance_trans = await BalanceTransactionService.createBalanceTransactions({
-            user_id: user_data.id,
-            transaction_type: "expense",
-            amount: total_cost,
-            source: "expense",
-            previous_balance: user_data.current_balance,
-            new_balance: currentBalance
-        }, {transaction});
+            balance_trans = await BalanceTransactionService.createBalanceTransactions({
+                user_id: user_data.id,
+                transaction_type: "expense",
+                amount: total_cost,
+                source: "expense",
+                previous_balance: user_data.current_balance,
+                new_balance: currentBalance
+            }, {transaction});
+        }        
 
         await transaction.commit();
 
@@ -209,19 +268,19 @@ async function markExpensePaid(req, res){
             throw new AppError("No expense found for the ID provided.", StatusCodes.NOT_FOUND);
         }
 
-        if(expense.payment_status === "paid"){
+        if(expense.payment_status == "paid" || expense.due_amount == 0){
             throw new AppError(`Expense already marked paid`, StatusCodes.BAD_REQUEST);
         }
         // todo : add middleware to check if amount entered is not negative.
-        if(amount > expense.total_cost){
-            throw new AppError(`Amount paid is greater than the total cost of the expense.`, StatusCodes.BAD_REQUEST);
+        if(amount > expense.due_amount){
+            throw new AppError(`Amount paid is greater than the due amount of the expense.`, StatusCodes.BAD_REQUEST);
         }
 
         let status = expense.payment_status;
-        const newAmount = expense.total_cost - amount;
-        status = newAmount === 0 ? "paid" : "partial-payment";
+        const newAmount = expense.due_amount - amount;
+        status = newAmount == 0 ? "paid" : "partial-payment";
 
-        const updateExpense = await ExpensesService.markExpensePaid(expense.id, newAmount, status, newAmount, { transaction });    
+        const updateExpense = await ExpensesService.markExpensePaid(expense.id, newAmount, status, { transaction });    
 
         // Get current user balance
         const user = await UserService.getUser(user_id); 

@@ -241,6 +241,7 @@ async function getTodayPurchases(req, res){
         const search = req.query.search || '';
         const fields = req.query.fields ? req.query.fields.split(',') : [];
         const date = new Date();
+        
 
         const { count, rows } = await PurchaseService.getPurchasesByDate(date, limit, offset, search, fields); 
         // Fetch product names for each transaction based on product_id

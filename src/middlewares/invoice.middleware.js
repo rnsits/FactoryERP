@@ -31,7 +31,7 @@ function validateBodyRequest(req, res, next) {
                .json(ErrorResponse)
     }
    
-    if(req.body.due_date && !validateDateFormat(req.body.due_date)){
+    if(req.body.payment_status != 'paid' && !req.body.due_amount){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Due Date is invalid."]);
         return res
@@ -99,7 +99,7 @@ function validateDateBody(req, res, next) {
 function validatePaidBody(req, res, next){
     if(!req.body.id){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
-        ErrorResponse.error = new AppError(["Invoice Id is Missing."], StatusCodes.BAD_REQUEST);
+        ErrorResponse.error = new AppError(["Invoice Id(id) is Missing."], StatusCodes.BAD_REQUEST);
         return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
@@ -111,8 +111,10 @@ function validatePaidBody(req, res, next){
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
     }
-    if(req.body.amount < 1 || isNaN(Number(req.body.amount))) {
-        throw new AppError("Invalid Amount.",StatusCodes.BAD_REQUEST);
+    if(isNaN(parseInt(req.body.amount))) {
+        ErrorResponse.message = "Something went wrong while marking Invoice paid/partial-paid.";
+        ErrorResponse.error = new AppError(['Amount must be a number.'], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();
 }

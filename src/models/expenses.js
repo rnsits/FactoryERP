@@ -50,6 +50,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM("paid","unpaid","partial-payment"),
       allowNull: false
     },
+    due_amount: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0
+    },
+    due_date: {
+      type: DataTypes.DATE,
+      allowNull: true
+    }
   }, {
     sequelize,
     modelName: 'Expenses',

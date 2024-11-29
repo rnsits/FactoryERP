@@ -42,14 +42,14 @@ function validateBodyRequest(req, res, next){
      }
  
      // If description_type is "audio", ensure audio_path is provided
-     if (req.body.description_type === "audio" && !req.body.audio_path) {
+     if (req.body.description_type == "audio" && !req.body.audio_path) {
          ErrorResponse.message = "Something went wrong while Category.";
          ErrorResponse.error = new AppError(["Audio Path missing in the incoming request"],StatusCodes.BAD_REQUEST);
          return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
      }
      
      // desription is text need description
-     if(req.body.description_type === "text" && !req.body.description) {
+     if(req.body.description_type == "text" && !req.body.description) {
          ErrorResponse.message = "Something went wrong while Category.";
          ErrorResponse.error = new AppError(["Description must be provided when type is 'text'."],StatusCodes.BAD_REQUEST);
          return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);

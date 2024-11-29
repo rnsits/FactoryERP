@@ -39,6 +39,15 @@ module.exports = {
         type: Sequelize.ENUM("paid","unpaid","partial-payment"),
         allowNull: false
       },
+      due_amount: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
+      due_date: {
+        type: Sequelize.DATE,
+        allowNull: true
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
