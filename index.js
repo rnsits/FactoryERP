@@ -12,9 +12,9 @@ const audioPath = path.join(__dirname, 'uploads', 'audio');
 console.log("Image Path", imagesPath);
 
 // Serve the images folder at a public URL
-app.use('/images', express.static(imagesPath));
-app.use('/audio',express.static(audioPath));
-
+app.use('/uploads/images', express.static(imagesPath));
+app.use('/uploads/audio',express.static(audioPath));
+//added path
 app.use(cors());
 // const authRoutes = require('./src/routes/v1/auth.routes'); // Adjust the path as necessary
 const apiRoutes = require('./src/routes');
