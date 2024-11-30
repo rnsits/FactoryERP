@@ -49,7 +49,14 @@ function validateBodyRequest(req, res, next){
     }
 
     const validStatusTypes = ["paid", "unpaid", "partial-payment"];
-    if(!req.body.payment_status || !validStatusTypes.includes(req.body.payment_status)){
+    if(!req.body.payment_status){
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Payment Status Missing."],StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse);
+    }
+    if(!validStatusTypes.includes(req.body.payment_status)){
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["Payment Status should be 'paid','unpaid','partial-payment'."],StatusCodes.BAD_REQUEST);
         return res
@@ -57,13 +64,13 @@ function validateBodyRequest(req, res, next){
                 .json(ErrorResponse);
     }
 
-    if(!req.body.payment_status != "paid" && !req.body.due_amount) {
+    if(req.body.payment_status != "paid" && !req.body.due_amount) {
         ErrorResponse.message = "Something went wrong while marking expense.";
         ErrorResponse.error = new AppError(["Add Due Amount"], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     
-    if(!req.body.payment_status != "paid" && !req.body.due_date) {
+    if(req.body.payment_status != "paid" && !req.body.due_date) {
         ErrorResponse.message = "Something went wrong while marking expense.";
         ErrorResponse.error = new AppError(["Add Due Date"], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);

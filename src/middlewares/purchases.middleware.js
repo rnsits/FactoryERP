@@ -8,15 +8,15 @@ function validateGetRequest(req,res,next){
     // Validate if productId is a valid integer
     const purchaseId = req.params.purchaseId;
     if(!purchaseId){
-        ErrorResponse.message = "Something went wrong while getting expenses";
+        ErrorResponse.message = "Something went wrong while getting purchases";
         ErrorResponse.error = new AppError(["Purchase Id not found on the incoming request"],StatusCodes.BAD_REQUEST)
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
-    if (!purchaseId || isNaN(parseInt(purchaseId)) < 1) {
+    if (isNaN(purchaseId) || parseInt(purchaseId) < 1) {
         ErrorResponse.message = "Purchase ID. Must be a positive number.";
-        ErrorResponse.message = ErrorResponse;
+        ErrorResponse.message = new AppError(["Purchase Id must be a valid number."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();
@@ -24,7 +24,7 @@ function validateGetRequest(req,res,next){
 
 function validateDateBody(req, res, next){
     if(!req.body.date) {
-        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.message = "Something went wrong while creating purchases.";
         ErrorResponse.error = new AppError(["Date not found in the incoming request."], StatusCodes.BAD_REQUEST)
         return res
                 .status(StatusCodes.BAD_REQUEST)
@@ -36,20 +36,34 @@ function validateDateBody(req, res, next){
 function validateMrkPaidExpense(req, res, next) {
     const { purchase_id, amount } = req.body;
 
-    // Validate purchase_id
-    if (!purchase_id || isNaN(parseInt(purchase_id))) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-            message: "Something went wrong while marking expense.",
-            error: new AppError(["Provide a valid Purchase Id."], StatusCodes.BAD_REQUEST)
-        });
+    if(!purchase_id) {
+        ErrorResponse.message = "Something went wrong while marking purchases.";
+        ErrorResponse.error = new AppError(["Purchase Id missing."], StatusCodes.BAD_REQUEST)
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
     }
-
+    // Validate purchase_id
+    if (isNaN(purchase_id) || parseInt(purchase_id)) {
+        ErrorResponse.message = "Something went wrong while marking purchases.";
+        ErrorResponse.error = new AppError(["Invalid Purchase Id."], StatusCodes.BAD_REQUEST)
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
+    
+    if(!amount) {
+        ErrorResponse.message = "Something went wrong while marking purchases.";
+        ErrorResponse.error = new AppError(["Amount missing."], StatusCodes.BAD_REQUEST)
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
     // Validate amount
-    if (!amount || parseInt(amount) < 1) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-            message: "Something went wrong while marking expense.",
-            error: new AppError(["Invalid Amount"], StatusCodes.BAD_REQUEST)
-        });
+    if (isNaN(amount) || parseInt(amount) < 1) {
+        ErrorResponse.message = "Something went wrong while marking purchases.";
+        ErrorResponse.error = new AppError(["Invalid Amount"], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
 
     next();
@@ -57,7 +71,7 @@ function validateMrkPaidExpense(req, res, next) {
 
 function validateBodyRequest(req, res, next){
     if(!req.body.products || !Array.isArray(req.body.products)) {
-        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.message = "Something went wrong while creating purchase.";
         ErrorResponse.error = new AppError(["Products missing/must be an array."],StatusCodes.BAD_REQUEST)
         return  res
                 .status(StatusCodes.BAD_REQUEST)
@@ -65,16 +79,24 @@ function validateBodyRequest(req, res, next){
     }
 
     if(parseInt(req.body.vendor_id) < 1){
-        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.message = "Something went wrong while creating purchase.";
         ErrorResponse.error = new AppError(["Vendor ID must be a number"],StatusCodes.BAD_REQUEST)
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
 
+    if(!req.body.payment_status) {
+        ErrorResponse.message = "Something went wrong while creating purchase.";
+        ErrorResponse.error = new AppError(["Payment Status Missing."],StatusCodes.BAD_REQUEST)
+        return res 
+               .status(StatusCodes.BAD_REQUEST)
+               .json(ErrorResponse)
+    }
+
     const validStatusTypes = ["paid", "unpaid", "partial-payment"];
-    if(!req.body.payment_status || !validStatusTypes.includes(req.body.payment_status)){
-        ErrorResponse.message = "Something went wrong while creating expense.";
+    if(!validStatusTypes.includes(req.body.payment_status)){
+        ErrorResponse.message = "Something went wrong while creating purchase.";
         ErrorResponse.error = new AppError(["Payment Status should be 'paid','unpaid','partial-payment'."],StatusCodes.BAD_REQUEST);
         return res
                 .status(StatusCodes.BAD_REQUEST)
@@ -83,9 +105,16 @@ function validateBodyRequest(req, res, next){
 
     if (req.body.payment_status !== "paid") { 
         // Check for payment_due_date and due_amount
-        if (!req.body.payment_due_date || !req.body.due_amount) {
-            ErrorResponse.message = "Something went wrong while creating expense.";
-            ErrorResponse.error = new AppError(['Need due date and due amount for unpaid invoice.']);
+        if (!req.body.payment_due_date) {
+            ErrorResponse.message = "Something went wrong while creating purchase.";
+            ErrorResponse.error = new AppError(['Missing payment due date.']);
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse);
+        }
+        if (!req.body.due_amount) {
+            ErrorResponse.message = "Something went wrong while creating purchase.";
+            ErrorResponse.error = new AppError(['Missing due amount']);
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse);
@@ -93,19 +122,16 @@ function validateBodyRequest(req, res, next){
     
         // Check if due_amount is a positive number
         if (parseInt(req.body.due_amount) <= 0) {
-            ErrorResponse.message = "Something went wrong while creating expense.";
+            ErrorResponse.message = "Something went wrong while creating purchase.";
             ErrorResponse.error = new AppError(['Due Amount must be a positive number.']);
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse);
         }
     }
-    
-
-   
 
     if(!req.body.payment_date) {
-        ErrorResponse.message = "Something went wrong while adding Expense.";
+        ErrorResponse.message = "Something went wrong while adding Purchase.";
         ErrorResponse.error = new AppError(["Payment date missing."],StatusCodes.BAD_REQUEST);
         return res
                .status(StatusCodes.BAD_REQUEST)

@@ -9,8 +9,6 @@ const path = require('path');
 const imagesPath = path.join(__dirname, 'uploads', 'images');
 const audioPath = path.join(__dirname, 'uploads', 'audio');
 
-console.log("Image Path", imagesPath);
-
 // Serve the images folder at a public URL
 app.use('/uploads/images', express.static(imagesPath));
 app.use('/uploads/audio',express.static(audioPath));

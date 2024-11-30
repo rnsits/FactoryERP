@@ -59,9 +59,23 @@ function validateBodyRequest(req, res, next) {
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse);
     }
+    if(req.body.pincode.length < 6 || req.body.pincode.length > 6){
+        ErrorResponse.message = "Something went wrong while creating customers.";
+        ErrorResponse.error = new AppError(["Pincode length must be 6"], StatusCodes.BAD_REQUEST);
+        return res 
+               .status(StatusCodes.BAD_REQUEST)
+               .json(ErrorResponse);
+    }
     if(!req.body.mobile){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Mobile missing in the incoming request."], StatusCodes.BAD_REQUEST);
+        return res 
+               .status(StatusCodes.BAD_REQUEST)
+               .json(ErrorResponse);
+    }
+    if(req.body.mobile.length < 10 || req.body.pincode.length > 10){
+        ErrorResponse.message = "Something went wrong while creating customers.";
+        ErrorResponse.error = new AppError(["Mobile length must be 6"], StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse);
@@ -111,7 +125,7 @@ function validatePaidBody(req, res, next){
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
     }
-    if(isNaN(parseInt(req.body.amount))) {
+    if(isNaN(req.body.amount) || (parseInt(req.body.amount))) {
         ErrorResponse.message = "Something went wrong while marking Invoice paid/partial-paid.";
         ErrorResponse.error = new AppError(['Amount must be a number.'], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
@@ -120,7 +134,7 @@ function validatePaidBody(req, res, next){
 }
 
 function updateImage(req, res, next){
-    if(!req.body.id || isNaN(Number(req.body.id))) {
+    if(!req.body.id || isNaN(parseInt(req.body.id))) {
       ErrorResponse.message = "Something went wrong while updating image";
       ErrorResponse.error = new AppError(["Id missing."], StatusCodes.BAD_REQUEST);
       return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
