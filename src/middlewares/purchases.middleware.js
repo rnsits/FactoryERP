@@ -56,6 +56,13 @@ function validateMrkPaidExpense(req, res, next) {
 }
 
 function validateBodyRequest(req, res, next){
+    if(!req.body.products || !Array.isArray(req.body.products)) {
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Products missing/must be an array."],StatusCodes.BAD_REQUEST)
+        return  res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
 
     if(parseInt(req.body.vendor_id) < 1){
         ErrorResponse.message = "Something went wrong while creating expense.";
@@ -63,6 +70,15 @@ function validateBodyRequest(req, res, next){
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
+    }
+
+    const validStatusTypes = ["paid", "unpaid", "partial-payment"];
+    if(!req.body.payment_status || !validStatusTypes.includes(req.body.payment_status)){
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Payment Status should be 'paid','unpaid','partial-payment'."],StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
     }
 
     if (req.body.payment_status !== "paid") { 
@@ -86,13 +102,7 @@ function validateBodyRequest(req, res, next){
     }
     
 
-    if(!req.body.products || !Array.isArray(req.body.products)) {
-        ErrorResponse.message = "Something went wrong while creating expense.";
-        ErrorResponse.error = new AppError(["Products missing/must be an array."],StatusCodes.BAD_REQUEST)
-        return  res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse)
-    }
+   
 
     if(!req.body.payment_date) {
         ErrorResponse.message = "Something went wrong while adding Expense.";
@@ -100,15 +110,6 @@ function validateBodyRequest(req, res, next){
         return res
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
-    }
-
-    const validStatusTypes = ["paid", "unpaid", "partial-payment"];
-    if(!req.body.payment_status || !validStatusTypes.includes(req.body.payment_status)){
-        ErrorResponse.message = "Something went wrong while creating expense.";
-        ErrorResponse.error = new AppError(["Payment Status should be 'paid','unpaid','partial-payment'."],StatusCodes.BAD_REQUEST);
-        return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse)
     }
 
     next();

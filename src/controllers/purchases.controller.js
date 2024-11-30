@@ -398,8 +398,8 @@ async function markPurchasePaid(req, res) {
         if(purchase.payment_status === "paid") {
             throw new AppError(`Purchase is already marked as paid`, StatusCodes.BAD_REQUEST);
         };
-        if(amount > purchase.total_cost || amount > purchase.due_amount) {
-            throw new AppError(`Amount is greater than the total cost of the purchase`, StatusCodes.BAD_REQUEST);
+        if(amount > purchase.total_cost && amount > purchase.due_amount) {
+            throw new AppError(`Amount is greater than the total cost or due amount of the purchase`, StatusCodes.BAD_REQUEST);
         };
         
 

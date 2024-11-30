@@ -272,8 +272,8 @@ async function markExpensePaid(req, res){
             throw new AppError(`Expense already marked paid`, StatusCodes.BAD_REQUEST);
         }
         // todo : add middleware to check if amount entered is not negative.
-        if(amount > expense.due_amount){
-            throw new AppError(`Amount paid is greater than the due amount of the expense.`, StatusCodes.BAD_REQUEST);
+        if(amount > expense.due_amount && amount > expense.total_cost){
+            throw new AppError(`Check amount it is greater than due amount or total cost.`, StatusCodes.BAD_REQUEST);
         }
 
         let status = expense.payment_status;

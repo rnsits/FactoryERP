@@ -494,8 +494,8 @@ async function markInvoicePaid(req, res) {
         if(invoice.payment_status === "paid") {
             throw new AppError("Invoice already marked paid", StatusCodes.BAD_REQUEST);
         }
-        if(amount > invoice.total_amount) {
-            throw new AppError("Amount paid is greater than the total cost of invoice.", StatusCodes.BAD_REQUEST);
+        if(amount > invoice.total_amount && amount > invoice.due_amount) {
+            throw new AppError("Amount paid is greater than the total cost or due amount of invoice.", StatusCodes.BAD_REQUEST);
         }
 
         let status = invoice.payment_status;
