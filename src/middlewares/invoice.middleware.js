@@ -134,10 +134,20 @@ function validatePaidBody(req, res, next){
 }
 
 function updateImage(req, res, next){
-    if(!req.body.id || isNaN(parseInt(req.body.id))) {
+    if(!req.body.id) {
       ErrorResponse.message = "Something went wrong while updating image";
       ErrorResponse.error = new AppError(["Id missing."], StatusCodes.BAD_REQUEST);
       return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(isNaN(parseInt(req.body.id))) {
+      ErrorResponse.message = "Something went wrong while updating image";
+      ErrorResponse.error = new AppError(["Invalid Id"], StatusCodes.BAD_REQUEST);
+      return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(!req.file) {
+        ErrorResponse.message = "Something went wrong while updating image";
+        ErrorResponse.error = new AppError(["Missing Image"], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();
 }

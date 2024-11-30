@@ -34,9 +34,9 @@ function validateDateBody(req, res, next){
 }
 
 function validateMrkPaidExpense(req, res, next) {
-    const { purchase_id, amount } = req.body;
+    // const { purchase_id, amount } = req.body;
 
-    if(!purchase_id) {
+    if(!req.body.purchase_id) {
         ErrorResponse.message = "Something went wrong while marking purchases.";
         ErrorResponse.error = new AppError(["Purchase Id missing."], StatusCodes.BAD_REQUEST)
         return res
@@ -44,7 +44,7 @@ function validateMrkPaidExpense(req, res, next) {
                 .json(ErrorResponse)
     }
     // Validate purchase_id
-    if (isNaN(purchase_id) || parseInt(purchase_id)) {
+    if (isNaN(parseInt(req.body.purchase_id))) {
         ErrorResponse.message = "Something went wrong while marking purchases.";
         ErrorResponse.error = new AppError(["Invalid Purchase Id."], StatusCodes.BAD_REQUEST)
         return res
@@ -52,7 +52,7 @@ function validateMrkPaidExpense(req, res, next) {
                 .json(ErrorResponse)
     }
     
-    if(!amount) {
+    if(!req.body.amount) {
         ErrorResponse.message = "Something went wrong while marking purchases.";
         ErrorResponse.error = new AppError(["Amount missing."], StatusCodes.BAD_REQUEST)
         return res
@@ -60,7 +60,7 @@ function validateMrkPaidExpense(req, res, next) {
                 .json(ErrorResponse)
     }
     // Validate amount
-    if (isNaN(amount) || parseInt(amount) < 1) {
+    if (isNaN(req.body.amount) || parseInt(req.body.amount) < 1) {
         ErrorResponse.message = "Something went wrong while marking purchases.";
         ErrorResponse.error = new AppError(["Invalid Amount"], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);

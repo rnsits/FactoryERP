@@ -540,9 +540,9 @@ async function getInvoicesByMonth(date, limit = 10, offset = 0, search = '', fie
   }
 }
 
-async function updateImage(id, invoice_image, options) {
+async function updateImage(id, payment_image, options) {
   try {
-    const response = await invoiceRepository.update(id, {invoice_image}, options);
+    const response = await invoiceRepository.update(id, {payment_image}, options);
     return response;
   } catch (error) {
     console.error('Error:', error);

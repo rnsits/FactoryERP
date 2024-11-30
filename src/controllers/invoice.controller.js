@@ -618,18 +618,19 @@ async function updateImage(req, res) {
     const transaction = await sequelize.transaction();
     try {
         const { id } = req.body;
-        let invoice_image = req.file ? `/uploads/images/${req.file.filename}`: null;
-        if(!invoice_image) {
+        let payment_image = req.file ? `/uploads/images/${req.file.filename}`: null;
+        if(!payment_image) {
             await transaction.rollback();
             ErrorResponse.message = "Image file is required.";
             return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
         const invoice = await InvoiceService.getInvoice(id, {transaction});
         if(!invoice) {
+            await transaction.rollback();
             ErrorResponse.message = "Invoice does not exists.";
             return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
         }
-        const updatedInvoice = await InvoiceService.updateImage(id, invoice_image, {transaction});
+        const updatedInvoice = await InvoiceService.updateImage(id, payment_image, {transaction});
 
         transaction.commit();
         SuccessResponse.message = "Invoice Image updated Successfully.";
