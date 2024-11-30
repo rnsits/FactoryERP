@@ -41,10 +41,6 @@ async function getCustomer(req,res){
 
 async function getAllCustomers(req, res){
     try{
-        // const customers = await CustomerService.getAllCustomers(); 
-        // SuccessResponse.message = "Successfully completed the request";
-        // SuccessResponse.data = customers;
-
         const page = parseInt(req.query.page) || 1; 
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit; 

@@ -82,8 +82,7 @@ async function addProduct(req, res) {
             const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
 
             if (existingProduct) {
-                ErrorResponse.message = "Product with this name already exists.";
-                throw new AppError(ErrorResponse.message, StatusCodes.CONFLICT);
+                throw new AppError(["Product with this name already exists."], StatusCodes.CONFLICT);
             }
 
             product = await ProductService.createProduct({
@@ -368,7 +367,7 @@ async function createManufacturedProduct(req, res) {
 
             if (!product_id || !quantity || quantity <= 0) {
                 throw new AppError(
-                    `Invalid input for product_id: ${product_id} or quantity: ${quantity}.`,
+                    [`Invalid input for product_id: ${product_id} or quantity: ${quantity}.`],
                     StatusCodes.BAD_REQUEST
                 );
             }
@@ -376,19 +375,18 @@ async function createManufacturedProduct(req, res) {
             const product = await ProductService.getProduct(product_id);
 
             if (!product) {
-                throw new AppError(`Product with id ${product_id} not found.`, StatusCodes.NOT_FOUND);
+                throw new AppError([`Product with id ${product_id} not found.`], StatusCodes.NOT_FOUND);
             }
 
             if (product.stock < quantity) {
                 throw new AppError(
-                    `Insufficient stock for product_id: ${product_id}. Available: ${product.stock}, Required: ${quantity}.`,
+                    [`Insufficient stock for product_id: ${product_id}. Available: ${product.stock}, Required: ${quantity}.`],
                     StatusCodes.BAD_REQUEST
                 );
             }
         }
         
         let manufacturedProduct = await ProductService.getProductByName(name);
-        console.log("manufactured -----------", manufacturedProduct); 
 
         if (manufacturedProduct) {
             // Update existing product's stock

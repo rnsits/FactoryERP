@@ -23,21 +23,25 @@ async function addPurchase(req, res) {
 
         let invoiceBill = req.file ? `/uploads/images/${req.file.filename}`: null;
         // console.log("invoiceBill", invoiceBill);
-        let finalDueAmount;
-        if(products.length > 1 && due_amount){
+        let finalDueAmount, finalStatus;
+        if(products.length > 1 && due_amount != 0){
             finalDueAmount = due_amount/products.length;
-        } else finalDueAmount = due_amount;
+            finalStatus = "unpaid";
+        } else if(due_amount == 0){
+            finalDueAmount = due_amount;
+            finalStatus = "paid";
+        } 
 
         const currentTime = new Date().toLocaleString();
         // Validate input
         if (!Array.isArray(products) || products.length === 0) {
-            throw new AppError("Products array is required", StatusCodes.BAD_REQUEST);
+            throw new AppError(["Products array is required"], StatusCodes.BAD_REQUEST);
         }
 
         // Get user
         const user = await UserService.getUser(user_id, { transaction });
         if (!user) {
-            throw new AppError("User not found", StatusCodes.NOT_FOUND);
+            throw new AppError(["User not found"], StatusCodes.NOT_FOUND);
         }
 
         // Get all product IDs
@@ -60,7 +64,7 @@ async function addPurchase(req, res) {
             const existingProduct = productMap.get(productId);
             
             if (!existingProduct) {
-                throw new AppError(`Product with ID ${productId} not found`, StatusCodes.NOT_FOUND);
+                throw new AppError([`Product with ID ${productId} not found`], StatusCodes.NOT_FOUND);
             }
 
             const productCost = price * quantity;
@@ -93,7 +97,7 @@ async function addPurchase(req, res) {
                 quantity_type: existingProduct.quantity_type,
                 total_cost: productCost,
                 payment_date,
-                payment_status,
+                payment_status: finalStatus,
                 payment_due_date,
                 due_amount: finalDueAmount,
                 vendor_id,
@@ -393,28 +397,23 @@ async function markPurchasePaid(req, res) {
         
         const purchase = await PurchaseService.getPurchase(purchase_id, {transaction});
         if(!purchase) {
-            throw new AppError(`Product with ID ${purchase_id} not found`, StatusCodes.NOT_FOUND);
+            throw new AppError([`Product with ID ${purchase_id} not found`], StatusCodes.NOT_FOUND);
         };
-        if(purchase.payment_status === "paid") {
-            throw new AppError(`Purchase is already marked as paid`, StatusCodes.BAD_REQUEST);
+        if(purchase.payment_status == "paid" || purchase.due_amount == 0) {
+            throw new AppError([`Purchase is already marked as paid`], StatusCodes.BAD_REQUEST);
         };
         if(amount > purchase.total_cost && amount > purchase.due_amount) {
-            throw new AppError(`Amount is greater than the total cost or due amount of the purchase`, StatusCodes.BAD_REQUEST);
+            throw new AppError([`Amount is greater than the total cost or due amount of the purchase`], StatusCodes.BAD_REQUEST);
         };
         
-
         finalDueAmount = purchase.due_amount-amount;
-        console.log("finaldueamount", finalDueAmount);
         
-        if(finalDueAmount === 0){
+        if(finalDueAmount == 0){
             finalStatus = 'paid';
         } else if(finalDueAmount > 0) {
             finalStatus = 'partial-payment';
         }
-
-        console.log("status",finalStatus);
         
-
         const updatedPurchase = await Purchases.update({
             payment_status: finalStatus,
             due_amount: finalDueAmount,
@@ -424,9 +423,7 @@ async function markPurchasePaid(req, res) {
         },{transaction});
 
         const newBalance = user.current_balance - amount;
-        console.log("balance change", newBalance);
-        
-
+             
         // Create balance transaction
         await BalanceTransactionService.createBalanceTransactions({
             user_id: userId,

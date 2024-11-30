@@ -11,7 +11,7 @@ async function loginWithPassword(req, res) {
     // Input validation
     if (!username || !password) {
       return res.status(StatusCodes.BAD_REQUEST).json({
-        message: 'Username and password are required.'
+        message: ['Username and password are required.']
       });
     }
 
@@ -32,7 +32,7 @@ async function loginWithPassword(req, res) {
 
     if (!refreshTokenExpiry || isNaN(refreshTokenExpiry.getTime())) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: 'Failed to generate refresh token'
+        message: ['Failed to generate refresh token']
       });
     }
 
@@ -44,7 +44,7 @@ async function loginWithPassword(req, res) {
 
     // Don't send sensitive data in response
     return res.status(StatusCodes.OK).json({
-      message: 'Logged in successfully',
+      message: ['Logged in successfully'],
       data: { 
         user: {
           id: user.id,
@@ -55,9 +55,9 @@ async function loginWithPassword(req, res) {
       }
     });
   } catch (error) {
-    console.error('Login error:', error.message); // Log only error message
+    console.error(['Login error:'], error.message); // Log only error message
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: 'Login failed'
+      message: ['Login failed']
       // Don't send error.message to client in production
     });
   }
@@ -69,11 +69,10 @@ async function loginWithPin(req, res) {
         const user = await User.findOne({ where: { username }});
         if(!user || user.pin !== pin) {
             return res.status(StatusCodes.UNAUTHORIZED).json({
-                message: 'Invalid Credentials'
+                message: ['Invalid Credentials']
             });
         }
         const accessToken = await generateToken(user);
-        console.log("Generated Access Token (PIN Login):", accessToken);
         const { refreshToken, refreshTokenExpiry } = await generateRefreshToken(user);
 
         // Save the refresh token and expiry to the database
@@ -103,7 +102,7 @@ async function logout(req, res) {
   
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: 'Authorization token not found or invalid'
+          message: ['Authorization token not found or invalid']
         });
       }
   
@@ -118,7 +117,7 @@ async function logout(req, res) {
   
       if (!user) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: 'User not found'
+          message: ['User not found']
         });
       }
   
@@ -144,7 +143,7 @@ async function refreshAccessToken(req, res) {
   
       if (!refreshToken) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-          message: 'Refresh token is required'
+          message: ['Refresh token is required']
         });
       }
   
@@ -152,7 +151,7 @@ async function refreshAccessToken(req, res) {
       const user = await User.findOne({ where: { refreshToken } });
       if (!user) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: 'Invalid refresh token'
+          message: ['Invalid refresh token']
         });
       }
 
@@ -160,7 +159,7 @@ async function refreshAccessToken(req, res) {
       const now = new Date();
       if (!user.refreshToken || user.refreshTokenExpiry < now) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
-              message: 'Refresh token has expired or is Invalid'
+              message: ['Refresh token has expired or is Invalid']
           });
       }
   
@@ -168,7 +167,7 @@ async function refreshAccessToken(req, res) {
       const decoded = await verifyToken(refreshToken, process.env.JWT_REFRESH_SECRET);
       if (!decoded) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: 'Invalid or expired refresh token'
+          message: ['Invalid or expired refresh token']
         });
       }
   
@@ -176,12 +175,12 @@ async function refreshAccessToken(req, res) {
       const accessToken = await generateToken(user);
       
       return res.status(StatusCodes.OK).json({
-        message: 'Access token refreshed successfully',
+        message: ['Access token refreshed successfully'],
         data: { accessToken }
       });
     } catch (error) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: 'Internal Server Error',
+        message: ['Internal Server Error'],
         error: error.message
       });
     }

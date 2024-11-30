@@ -30,7 +30,7 @@ async function addExpense(req, res) {
                 
                 // Require due date for unpaid status
                 if (!due_date) {
-                    throw new AppError('Due date is required for unpaid expenses',StatusCodes.BAD_REQUEST);
+                    throw new AppError(['Due date is required for unpaid expenses'],StatusCodes.BAD_REQUEST);
                 }
                 finalDueDate = due_date;
                 break;
@@ -38,12 +38,12 @@ async function addExpense(req, res) {
             case 'partial-payment':
                 // For partial payment, user provides due amount and due date
                 if (!due_amount || !due_date) {
-                    throw new AppError('Both due amount and due date are required for partial payments', StatusCodes.BAD_REQUEST);
+                    throw new AppError(['Both due amount and due date are required for partial payments'], StatusCodes.BAD_REQUEST);
                 }
                 
                 // Ensure due amount is less than total cost
                 if (due_amount >= total_cost) {
-                    throw new AppError('Partial payment amount must be less than total cost', StatusCodes.BAD_REQUEST);
+                    throw new AppError(['Partial payment amount must be less than total cost'], StatusCodes.BAD_REQUEST);
                 }
                 
                 finalDueAmount = due_amount;
@@ -260,20 +260,20 @@ async function markExpensePaid(req, res){
         const {expense_id, amount} = req.body;
         const user_id = req.user.id;
         if (amount < 0) {
-            throw new AppError("Amount cannot be negative.", StatusCodes.BAD_REQUEST);
+            throw new AppError(["Amount cannot be negative."], StatusCodes.BAD_REQUEST);
         }
 
         const expense = await ExpensesService.getExpense(expense_id);
         if (!expense) {
-            throw new AppError("No expense found for the ID provided.", StatusCodes.NOT_FOUND);
+            throw new AppError(["No expense found for the ID provided."], StatusCodes.NOT_FOUND);
         }
 
         if(expense.payment_status == "paid" || expense.due_amount == 0){
-            throw new AppError(`Expense already marked paid`, StatusCodes.BAD_REQUEST);
+            throw new AppError([`Expense already marked paid`], StatusCodes.BAD_REQUEST);
         }
         // todo : add middleware to check if amount entered is not negative.
         if(amount > expense.due_amount && amount > expense.total_cost){
-            throw new AppError(`Check amount it is greater than due amount or total cost.`, StatusCodes.BAD_REQUEST);
+            throw new AppError([`Check amount it is greater than due amount or total cost.`], StatusCodes.BAD_REQUEST);
         }
 
         let status = expense.payment_status;
