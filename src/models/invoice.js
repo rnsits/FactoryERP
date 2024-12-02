@@ -49,7 +49,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     due_amount: {
       allowNull: true,
-      type: DataTypes.INTEGER
+      type: DataTypes.DECIMAL,
+      defaultValue: 0.00
     },
     payment_status: {
       allowNull: false,

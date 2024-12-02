@@ -40,9 +40,9 @@ module.exports = {
         allowNull: false
       },
       due_amount: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.DECIMAL(10,2),
         allowNull: true,
-        defaultValue: 0
+        defaultValue: 0.00
       },
       due_date: {
         type: Sequelize.DATE,

@@ -51,9 +51,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     due_amount: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
-      defaultValue: 0
+      defaultValue: 0.00
     },
     due_date: {
       type: DataTypes.DATE,

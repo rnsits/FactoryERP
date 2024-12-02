@@ -28,7 +28,8 @@ module.exports = {
       },
       due_amount: {
         allowNull: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.DECIMAL(10, 2),
+        defaultValue: true
       },
       payment_status: {
         allowNull: false,
