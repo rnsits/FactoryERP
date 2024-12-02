@@ -30,7 +30,7 @@ async function addProduct(req, res) {
         const igst_rate = parseFloat(tax);
         
 
-        if (isManufactured === true) {
+        if (isManufactured == true) {
             // Parse numeric values
             const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
             const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
@@ -96,7 +96,7 @@ async function addProduct(req, res) {
                 cgst_rate,
                 igst_rate,
                 sgst_rate,
-                isManufactured: false
+                isManufactured: true
             }, {transaction});
 
             updatedInventory = await InventoryTransactionService.createInventoryTransaction({
@@ -106,7 +106,7 @@ async function addProduct(req, res) {
                 quantity_type: product.quantity_type,
                 description: `${product.name}`,
                 description_type: 'text',
-                isManufactured: false
+                isManufactured: true
             },{transaction});
         }
         
