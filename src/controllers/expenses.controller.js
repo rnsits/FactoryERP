@@ -236,7 +236,7 @@ async function getUnpaidExpenses(req, res){
         SuccessResponse.data = {
             expenses: rows,
             totalCount: count,
-            totalUnPaidAmount,
+            totalUnPaidAmount: totalUnPaidAmount ?? 0.00,
             totalPages: Math.ceil(count / limit),
             currentPage: page,
             pageSize: limit

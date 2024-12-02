@@ -16,11 +16,6 @@ module.exports = (sequelize, DataTypes) => {
         as: "customer"
       });
 
-      Invoice.hasMany(models.Invoice_Item, {
-        foreignKey: "id",
-        "as": "invoice_item"
-      });
-
       Invoice.hasMany(models.Customer_Payment, {
         foreignKey: "invoice_id",
         as: "customer_payments"

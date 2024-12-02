@@ -18,11 +18,11 @@ module.exports = (sequelize, DataTypes) => {
         as: 'purchases',
       });
 
-      // Each Product can be part of many InvoiceItems
-      Product.hasMany(models.Invoice_Item, {
-        foreignKey: 'product_id',
-        as: 'invoiceItems',
-      });
+      // // Each Product can be part of many InvoiceItems
+      // Product.hasMany(models.Invoice_Item, {
+      //   foreignKey: 'product_id',
+      //   as: 'invoiceItems',
+      // });
 
       // Each Product can be part of many InventoryTransactions
       Product.hasMany(models.InventoryTransaction, {
