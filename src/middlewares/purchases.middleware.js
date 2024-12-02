@@ -70,6 +70,8 @@ function validateMrkPaidExpense(req, res, next) {
 }
 
 function validateBodyRequest(req, res, next){
+    const paymentDate = new Date(req.body.payment_date);
+    const paymentDueDate = new Date(req.body.payment_due_date);
     if(!req.body.products || !Array.isArray(req.body.products)) {
         ErrorResponse.message = "Something went wrong while creating purchase.";
         ErrorResponse.error = new AppError(["Products missing/must be an array."],StatusCodes.BAD_REQUEST)
@@ -105,7 +107,7 @@ function validateBodyRequest(req, res, next){
 
     if (req.body.payment_status !== "paid") { 
         // Check for payment_due_date and due_amount
-        if (!req.body.payment_due_date) {
+        if (!paymentDueDate) {
             ErrorResponse.message = "Something went wrong while creating purchase.";
             ErrorResponse.error = new AppError(['Missing payment due date.']);
             return res
@@ -119,7 +121,6 @@ function validateBodyRequest(req, res, next){
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse);
         }
-    
         // Check if due_amount is a positive number
         if (parseInt(req.body.due_amount) <= 0) {
             ErrorResponse.message = "Something went wrong while creating purchase.";
@@ -128,6 +129,14 @@ function validateBodyRequest(req, res, next){
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse);
         }
+        if(paymentDueDate < paymentDate) {
+            ErrorResponse.message = "Something went wrong while creating purchase.";
+            ErrorResponse.error = new AppError(['Due date must be greater than payment date.']);
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse);
+        }
+        
     }
 
     if(!req.body.payment_date) {

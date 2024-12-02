@@ -88,6 +88,17 @@ function validateBodyRequest(req, res, next) {
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
     }
+    const dueDate = new Date(req.body.due_date);
+    const today = new Date();
+    // Set the time to 00:00:00 to compare only the date part
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+
+    if(dueDate < today) {
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Due Date cannot be less than today."],StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
     const validPaymentMethods = ["cash", "digital-payment"];
     if(!req.body.payment_method || !validPaymentMethods.includes(req.body.payment_method) ){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
