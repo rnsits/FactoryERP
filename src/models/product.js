@@ -71,7 +71,7 @@ module.exports = (sequelize, DataTypes) => {
     quantity_type: {
       type: DataTypes.ENUM(
         'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube', 
-        'bags', 'feet', 'sheets', 'bundles', 'yard', 'mm'
+        'bags', 'feet', 'sheets', 'bundles', 'yard', 'mm', 'sqft', 'cubic_feet'
       ),
       allowNull: false,
     },

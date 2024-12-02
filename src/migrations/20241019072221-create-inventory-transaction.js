@@ -24,7 +24,7 @@ module.exports = {
       quantity_type: {
         type: Sequelize.ENUM(
           'kg', 'tonne', 'quintal', 'l', 'ml', 'm', 'cm', 'pcs', 'metric_cube', 
-        'bags', 'feet', 'sheets', 'bundles', 'yard', 'mm'
+        'bags', 'feet', 'sheets', 'bundles', 'yard', 'mm', 'sqft', 'cubic_feet'
         ),
         allowNull: false,
       },
