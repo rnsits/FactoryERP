@@ -33,7 +33,7 @@ function validateBodyRequest(req, res, next) {
    
     if(req.body.payment_status != 'paid' && !req.body.due_amount){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
-        ErrorResponse.error = new AppError(["Due Date is invalid."]);
+        ErrorResponse.error = new AppError(["Due Amount Missing."]);
         return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)

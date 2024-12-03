@@ -7,6 +7,7 @@ const { sequelize } = require("../models");
 const { Customers } = require('../models');
 
 async function addInvoice(req, res) {
+    const transaction = await sequelize.transaction();
     const user_id = req.user.id;
     const {  
         customer_id,
@@ -20,6 +21,7 @@ async function addInvoice(req, res) {
         products,
     } = req.body;
 
+    const user = await UserService.getUser(user_id, {transaction});
     let payment_image = req.file ? `/uploads/images/${req.file.filename}`: null;
     
     const state = findStateByPincode(pincode);
@@ -27,12 +29,9 @@ async function addInvoice(req, res) {
         throw new AppError([`Invalid Pincode provided ${pincode}.`], StatusCodes.BAD_REQUEST);
     }
 
-    const transaction = await sequelize.transaction();
-
     try {
         let totalAmount = 0;
         let totalTax = 0;
-        let grandTotal = 0;
         
         // Prepare items array with full product details
         const items = await Promise.all(
@@ -113,13 +112,52 @@ async function addInvoice(req, res) {
             total_amount: totalAmount+totalTax,
             total_tax: totalTax, 
             payment_image,
-            items: items, // Include the full items array
+            items: items,
+            item_count: items.length 
         }, { transaction });
 
-        // Rest of the function remains the same...
-        // (existing code for inventory transactions, balance updates, etc.)
+        const createPayment = await Customer_PaymentService.createCustomer_Payment({
+                customer_id: invoice.customer_id,
+                invoice_id: invoice.id, 
+                payment_date: new Date(), 
+                amount: invoice.total_amount, 
+                payment_method: invoice.payment_method, 
+                payment_status: invoice.payment_status,
+            }, {transaction});
+
+            let newBalance;
+            let userBalance, balanceTransaction;
+            if(invoice.payment_status == "paid" || invoice.payment_status =="partial paid") {
+                newBalance = Number(invoice.total_amount) + Number(user.current_balance);
+                balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
+                    user_id: user.id,
+                    transaction_type: "income",
+                    amount: newBalance,
+                    source: "invoice",
+                    previous_balance: user.currentBalance,
+                    new_balance: newBalance
+                }, {transaction});
+            
+                userBalance = await UserService.updateUserBalance(
+                    user.id,
+                    newBalance, {transaction}
+                );
+            } else {
+                balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
+                    user_id: user.id,
+                    transaction_type: "income",
+                    amount: 0,
+                    source: "invoice",
+                    previous_balance: user.current_balance,
+                    new_balance: user.current_balance
+                }, {transaction});
+                // No need to update balance since no payment done
+            }
+
+        await transaction.commit();
+
         SuccessResponse.message = "Invoice Added Successfully.";
-        SuccessResponse.data = { invoice }
+        SuccessResponse.data = { invoice, createPayment, userBalance, balanceTransaction }
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
         console.log(error);
@@ -301,8 +339,6 @@ async function markInvoicePaid(req, res) {
         const updateInvoice = await InvoiceService.markInvoicePaid(invoice.id, status, finalDueAmount, { transaction });
 
         const customer = await CustomerService.getCustomer(invoice.customer_id, { transaction });
-
-        console.log("invoice", invoice);
         
         let createPayment ;
         if(status == "partial paid"){
@@ -314,7 +350,17 @@ async function markInvoicePaid(req, res) {
                 amount: amount, 
                 payment_method: payment_method, 
                 payment_status: status,
-            }, {transaction})
+            }, {transaction});
+        } else if(status == "paid") {
+            const status = "paid";
+            createPayment = await Customer_PaymentService.createCustomer_Payment({
+                customer_id: customer.id,
+                invoice_id: invoice.id,
+                payment_date: new Date(),
+                amount: amount,
+                payment_method,
+                payment_status: status
+            }, {transaction});
         }
         
 

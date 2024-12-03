@@ -35,10 +35,10 @@ const authenticateToken = async (req, res, next) => {
     req.user = payload;
     next();
   } catch (error) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({
-        message: 'Invalid or expired token',
-        error: error.message
-    });
+    console.log(error);
+    ErrorResponse.message = 'Invalid or expired token'
+    ErrorResponse.error = error;
+    return res.status(StatusCodes.UNAUTHORIZED).json({ErrorResponse});
   }
 };
 
