@@ -54,9 +54,30 @@ function validateBodyRequest(req, res, next){
             .status(StatusCodes.BAD_REQUEST)
             .json(ErrorResponse);
     }  
+    if(req.body.pincode.length > 6 || req.body.length > 6) {
+        ErrorResponse.message = "Something went wrong.";
+        ErrorResponse.error = new AppError(["Pincode must be atleast 6 digits"]);
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json(ErrorResponse);
+    }
     if (!req.body.mobile) {
         ErrorResponse.message = "Something went wrong.";
         ErrorResponse.error = new AppError(["Mobile not found in the incoming request"])
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json(ErrorResponse);
+    } 
+    if (!req.body.mobile) {
+        ErrorResponse.message = "Something went wrong.";
+        ErrorResponse.error = new AppError(["Mobile not found in the incoming request"])
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json(ErrorResponse);
+    } 
+    if (req.body.mobile.length < 10 || req.body.mobile.length > 10) {
+        ErrorResponse.message = "Something went wrong.";
+        ErrorResponse.error = new AppError(["Mobile must be atleasr 10 digit."])
         return res
             .status(StatusCodes.BAD_REQUEST)
             .json(ErrorResponse);

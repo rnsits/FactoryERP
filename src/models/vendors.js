@@ -64,7 +64,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [6, 6],
-          msg: "Pincode must be 10 characters long."
+          msg: "Pincode must be 6 characters long."
         }
       }
     },

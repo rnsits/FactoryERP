@@ -467,7 +467,7 @@ async function createManufacturedProduct(req, res) {
                     transaction_type: 'out',
                     quantity,
                     quantity_type: product.quantity_type,
-                    description: `${name}`,
+                    description: `${product.name}`,
                     description_type: 'text',
                 },
                 { transaction }
