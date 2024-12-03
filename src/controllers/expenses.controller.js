@@ -276,11 +276,17 @@ async function markExpensePaid(req, res){
             throw new AppError([`Check amount it is greater than due amount or total cost.`], StatusCodes.BAD_REQUEST);
         }
 
-        let status = expense.payment_status;
-        const newAmount = expense.due_amount - amount;
-        status = newAmount == 0 ? "paid" : "partial-payment";
+        // const newAmount = expense.due_amount - amount;
+        // const status = newAmount == 0 ? "paid" : "partial-payment";
 
-        const updateExpense = await ExpensesService.markExpensePaid(expense.id, newAmount, status, { transaction });    
+        let status = expense.payment_status;
+        let finalDueAmount;
+        // let payment_method = invoice.payment_method;
+        const newAmount = expense.due_amount - Number(amount);
+        status = newAmount == 0 ? "paid" : "partial-payment";
+        finalDueAmount = newAmount == 0 ? 0 : newAmount;
+
+        const updateExpense = await ExpensesService.markExpensePaid(expense.id, status, finalDueAmount, { transaction });    
 
         // Get current user balance
         const user = await UserService.getUser(user_id); 

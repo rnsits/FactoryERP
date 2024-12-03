@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
     amount: {
       type: DataTypes.DECIMAL(10,2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0.00,
     },
     source: {
       type: DataTypes.ENUM("purchase", "invoice", "expense"),
@@ -38,12 +38,12 @@ module.exports = (sequelize, DataTypes) => {
     previous_balance: {
       type: DataTypes.DECIMAL(10,2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0.00,
     },
     new_balance: {
       type: DataTypes.DECIMAL(10,2), 
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0.00,
     },
   }, {
     sequelize,

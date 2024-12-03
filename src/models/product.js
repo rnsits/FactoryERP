@@ -86,17 +86,17 @@ module.exports = (sequelize, DataTypes) => {
     cgst_rate: {
       type: DataTypes.FLOAT,
       allowNull: true,
-      defaultValue: 0
+      defaultValue: 0.00
     },
     sgst_rate: {
       type: DataTypes.FLOAT,
       allowNull: true,
-      defaultValue: 0
+      defaultValue: 0.00
     },
     igst_rate: {
       type: DataTypes.FLOAT,
       allowNull: true,
-      defaultValue: 0
+      defaultValue: 0.00
     },
     product_image: {
       type: DataTypes.TEXT('long'),

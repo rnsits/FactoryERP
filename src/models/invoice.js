@@ -63,7 +63,7 @@ module.exports = (sequelize, DataTypes) => {
     total_amount: {
       allowNull: true,
       type: DataTypes.FLOAT,
-      defaultValue: 0
+      defaultValue: 0.00
     },
     pincode: {
       allowNull: false,
@@ -103,7 +103,7 @@ module.exports = (sequelize, DataTypes) => {
     total_tax: {
       type: DataTypes.FLOAT,
       allowNull: false,  // Final total including tax
-      defaultValue: 0
+      defaultValue: 0.00
     },
     item_count: {
       type: DataTypes.INTEGER,

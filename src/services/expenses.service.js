@@ -402,11 +402,11 @@ async function getUnpaidExpenses(limit, offset, search, fields){
   }
 }
 
-async function markExpensePaid(id, status, newAmount) {
+async function markExpensePaid(id, status, finalDueAmount) {
   try {
     const expense = await expensesRepository.update(id, {
       payment_status: status,
-      due_amount: newAmount
+      due_amount: finalDueAmount
     });
      return expense;
     } catch(error) {
