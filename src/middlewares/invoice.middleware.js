@@ -136,9 +136,9 @@ function validatePaidBody(req, res, next){
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
     }
-    if(isNaN(req.body.amount) || (parseInt(req.body.amount))) {
+    if(isNaN(req.body.amount) || (parseInt(req.body.amount < 1))) {
         ErrorResponse.message = "Something went wrong while marking Invoice paid/partial-paid.";
-        ErrorResponse.error = new AppError(['Amount must be a number.'], StatusCodes.BAD_REQUEST);
+        ErrorResponse.error = new AppError(['Amount must be a positive number.'], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();

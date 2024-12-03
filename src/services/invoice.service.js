@@ -342,6 +342,11 @@ async function getInvoicesByDate(date, limit, offset, search, fields) {
         ['due_date', 'DESC'],
         ['createdAt', 'DESC']
       ],
+      include: [{
+        model: Customers,
+        as: 'customer',
+        attributes: ['name']
+      }]
     });
 
     const totalAmount = await Invoice.sum('total_amount', {where});
@@ -408,66 +413,6 @@ async function markInvoicePaid(id, status, finalDueAmount){
       );
     }
 }
-
-// async function getInvoicesByMonth(date, limit, offset, search, fields) {
-//   try{
-   
-//     const where = {};
-
-//     const startOfMonth = new Date(date);
-//     startOfMonth.setDate(1);
-//     startOfMonth.setHours(0, 0, 0, 0);
-
-//     const currentDate = new Date(date);
-//     currentDate.setHours(23, 59, 59, 999);
-
-//     where.createdAt = {
-//       [Op.gte]: startOfMonth,
-//       [Op.lt]: currentDate,
-//     };
-
-//     if (search && fields.length > 0) {
-//         where[Op.or] = fields.map(field => ({
-//             [field]: { [Op.like]: `%${search}%` }
-//         }));
-//     } 
-
-//     const { count, rows } = await Invoice.findAndCountAll({
-//       where,
-//       limit,
-//       offset,
-//       order: [['createdAt', 'DESC']],
-//     });
-
-//     const totalAmount = await Invoice.sum('total_amount', {where});
-//     return { count, rows, totalAmount };
-//   } catch(error){
-//     console.log(error);
-//         if(
-//             error.name == "SequelizeValidationError" ||
-//             error.name == "SequelizeUniqueConstraintError"
-//         ) {
-//           let explanation = [];
-//           error.errors.forEach((err) => {
-//             explanation.push(err.message);
-//           });
-//           throw new AppError(explanation, StatusCodes.BAD_REQUEST);
-//         } else if (
-//           error.name === "SequelizeDatabaseError" &&
-//           error.original &&
-//           error.original.routine === "enum_in"
-//         ) {
-//           throw new AppError(
-//             "Invalid value for associate_with field.",
-//             StatusCodes.BAD_REQUEST
-//           );
-//         }
-//         throw new AppError(
-//           "Cannot get Invoice by date Data",
-//           StatusCodes.INTERNAL_SERVER_ERROR
-//         );
-//   }
-// }
 
 async function getInvoicesByMonth(date, limit = 10, offset = 0, search = '', fields = []) {
   try {

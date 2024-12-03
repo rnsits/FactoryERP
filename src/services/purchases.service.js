@@ -397,7 +397,7 @@ async function getAllPurchases(limit, offset, search, fields, filter ) {
   };
 
   } catch(error) {
-    console.error('Search error:',error);
+    console.log('Search error:',error);
     if(error instanceof AppError){
       throw error;
     }

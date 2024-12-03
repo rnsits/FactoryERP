@@ -21,6 +21,9 @@ async function addPurchase(req, res) {
             // invoice_Bill 
         } = req.body;
 
+        console.log("Status", payment_status);
+        
+
         let invoiceBill = req.file ? `/uploads/images/${req.file.filename}`: null;
         // console.log("invoiceBill", invoiceBill);
         let finalDueAmount, finalStatus;
