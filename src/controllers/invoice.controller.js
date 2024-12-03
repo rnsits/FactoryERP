@@ -32,6 +32,7 @@ async function addInvoice(req, res) {
     try {
         let totalAmount = 0;
         let totalTax = 0;
+        let grandTotal = 0;
         
         // Prepare items array with full product details
         const items = await Promise.all(
@@ -109,7 +110,7 @@ async function addInvoice(req, res) {
             pincode, 
             address, 
             mobile,
-            total_amount: totalAmount,
+            total_amount: totalAmount+totalTax,
             total_tax: totalTax, 
             payment_image,
             items: items, // Include the full items array

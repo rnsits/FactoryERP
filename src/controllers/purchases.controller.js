@@ -33,7 +33,9 @@ async function addPurchase(req, res) {
         } else if(due_amount == 0){
             finalDueAmount = due_amount;
             finalStatus = "paid";
-        } 
+        } else {
+            finalStatus = payment_status;
+        }
 
         const currentTime = new Date().toLocaleString();
         // Validate input
