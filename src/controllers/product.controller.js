@@ -316,7 +316,7 @@ async function damagedProducts(req, res){
             description_type,
             isDamaged: true,
             audio_path, // Attach audio file path or base64 string
-            isManufactured: false,
+            isManufactured: product.isManufactured,
         }, { transaction: t });
 
         await ProductService.reduceProductByQuantity(product_id, newStock, { transaction: t });

@@ -3,17 +3,6 @@ const { StatusCodes } = require("http-status-codes");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
 const serverConfig = require("../config");
 
-// const authenticate = async (req, res, next) => {
-//     if (!req.session.user) {
-//       return res.status(StatusCodes.UNAUTHORIZED).send(ErrorResponse.error);
-//     }
-//     next();
-//   };
-  
-//   module.exports = authenticate;
-
-
-
   // middleware/auth.js
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require("../utils/common/auth");

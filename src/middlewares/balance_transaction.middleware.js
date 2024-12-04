@@ -26,7 +26,7 @@ function validateBodyRequest(req, res, next){
     }
     if(!req.body.amount) {
         ErrorResponse.message = "Something went wrong, while adding transaction.";
-        ErrorResponse.error = new AppError(["Amount missing in the incoming request"], StatusCodes.BAD_REQUEST);
+        ErrorResponse.error = new AppError(["Amount missing."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();

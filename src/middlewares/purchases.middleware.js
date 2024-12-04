@@ -14,7 +14,7 @@ function validateGetRequest(req,res,next){
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
-    if (isNaN(purchaseId) || parseInt(purchaseId) < 1) {
+    if (isNaN(purchaseId) || parseInt(purchaseId) <= 0) {
         ErrorResponse.message = "Purchase ID. Must be a positive number.";
         ErrorResponse.message = new AppError(["Purchase Id must be a valid number."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
@@ -44,14 +44,13 @@ function validateMrkPaidExpense(req, res, next) {
                 .json(ErrorResponse)
     }
     // Validate purchase_id
-    if (isNaN(parseInt(req.body.purchase_id))) {
+    if (isNaN(req.body.purchase_id) || parseInt(req.body.purchase_id) <= 0) {
         ErrorResponse.message = "Something went wrong while marking purchases.";
-        ErrorResponse.error = new AppError(["Invalid Purchase Id."], StatusCodes.BAD_REQUEST)
+        ErrorResponse.error = new AppError(["Purchase Id must be a positive number."], StatusCodes.BAD_REQUEST)
         return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
     }
-    
     if(!req.body.amount) {
         ErrorResponse.message = "Something went wrong while marking purchases.";
         ErrorResponse.error = new AppError(["Amount missing."], StatusCodes.BAD_REQUEST)
@@ -60,12 +59,11 @@ function validateMrkPaidExpense(req, res, next) {
                 .json(ErrorResponse)
     }
     // Validate amount
-    if (isNaN(req.body.amount) || parseInt(req.body.amount) < 1) {
+    if (isNaN(req.body.amount) || parseInt(req.body.amount) <= 0) {
         ErrorResponse.message = "Something went wrong while marking purchases.";
-        ErrorResponse.error = new AppError(["Invalid Amount"], StatusCodes.BAD_REQUEST);
+        ErrorResponse.error = new AppError(["Amount must be a positive number."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-
     next();
 }
 
@@ -80,9 +78,16 @@ function validateBodyRequest(req, res, next){
                 .json(ErrorResponse)
     }
 
-    if(parseInt(req.body.vendor_id) < 1){
+    if(!req.body.vendor_id) {
         ErrorResponse.message = "Something went wrong while creating purchase.";
-        ErrorResponse.error = new AppError(["Vendor ID must be a number"],StatusCodes.BAD_REQUEST)
+        ErrorResponse.error = new AppError(["Vendor ID missing."],StatusCodes.BAD_REQUEST)
+        return res 
+               .status(StatusCodes.BAD_REQUEST)
+               .json(ErrorResponse)
+    }
+    if(parseInt(req.body.vendor_id) <= 0){
+        ErrorResponse.message = "Something went wrong while creating purchase.";
+        ErrorResponse.error = new AppError(["Vendor ID must be a positive number"],StatusCodes.BAD_REQUEST)
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
@@ -105,7 +110,7 @@ function validateBodyRequest(req, res, next){
                 .json(ErrorResponse)
     }
 
-    if (req.body.payment_status !== "paid") { 
+    if (req.body.payment_status != "paid") { 
         // Check for payment_due_date and due_amount
         if (!paymentDueDate) {
             ErrorResponse.message = "Something went wrong while creating purchase.";
@@ -122,7 +127,7 @@ function validateBodyRequest(req, res, next){
                 .json(ErrorResponse);
         }
         // Check if due_amount is a positive number
-        if (parseInt(req.body.due_amount) <= 0) {
+        if (isNaN(req.body.due_amount) || parseInt(req.body.due_amount) <= 0) {
             ErrorResponse.message = "Something went wrong while creating purchase.";
             ErrorResponse.error = new AppError(['Due Amount must be a positive number.']);
             return res

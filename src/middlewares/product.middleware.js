@@ -35,7 +35,13 @@ function validateBodyUpdate(req, res, next){
         ErrorResponse.error = new AppError(["Invalid product ID. Must be a positive number."]);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-   
+    if(!quantity){
+      ErrorResponse.message = "Something went wrong while getting product";
+      ErrorResponse.error = new AppError(["Quantity not found on the incoming request"],StatusCodes.BAD_REQUEST);
+      return res 
+             .status(StatusCodes.BAD_REQUEST)
+             .json(ErrorResponse)
+    }
     if(isNaN(quantity) || parseInt(quantity) <=0){
         ErrorResponse.message = "Something went wrong while getting product.";
         ErrorResponse.error = new AppError(["Invalid quantity. Must be a positive number."], StatusCodes.BAD_REQUEST);
@@ -60,7 +66,7 @@ function validateReduce(req, res, next){
       return res 
              .status(StatusCodes.BAD_REQUEST)
              .json(ErrorResponse)
-  }
+    }
     if(isNaN(productId) || parseInt(productId) <= 0) {
         ErrorResponse.message = "Something went wrong while getting product.";
         ErrorResponse.error = new AppError(["Invalid product ID. Must be a positive number."]);
@@ -188,9 +194,19 @@ function validatePutBodyRequest(req, res, next) {
           ErrorResponse.error = new AppError(["Product id missing in products."], StatusCodes.BAD_REQUEST);
           return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
+        if (isNaN(product.id) || parseInt(product) <= 0) {
+          ErrorResponse.message = "Something went wrong while updating products.";
+          ErrorResponse.error = new AppError(["Product Id must be positive."], StatusCodes.BAD_REQUEST);
+          return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
         if (!product.quantity) {
           ErrorResponse.message = "Something went wrong while updating products.";
-          ErrorResponse.error = new AppError(["Product id missing in products."], StatusCodes.BAD_REQUEST);
+          ErrorResponse.error = new AppError(["Quantity missing in products."], StatusCodes.BAD_REQUEST);
+          return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+        if (isNaN(product.quantity) || parseInt(product.quantity) <= 0) {
+          ErrorResponse.message = "Something went wrong while updating products.";
+          ErrorResponse.error = new AppError(["Quantity must be a positive number."], StatusCodes.BAD_REQUEST);
           return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
         if (!product.transaction_type) {
@@ -202,11 +218,6 @@ function validatePutBodyRequest(req, res, next) {
         if (!['in', 'out'].includes(product.transaction_type)) {
           ErrorResponse.message = "Something went wrong while updating products.";
           ErrorResponse.error = new AppError(["Invalid transaction type"], StatusCodes.BAD_REQUEST);
-          return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-        }
-        if (product.quantity <= 0) {
-          ErrorResponse.message = "Something went wrong while updating products.";
-          ErrorResponse.error = new AppError(["Quantity must be greater than 0"], StatusCodes.BAD_REQUEST);
           return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
       }
@@ -279,6 +290,11 @@ function validateMfcData(req, res, next) {
     ErrorResponse.error = new AppError(["Name Missing."], StatusCodes.BAD_REQUEST);
     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
   }
+  if(!req.body.stock) {
+    ErrorResponse.message = "Something went wrong while creating maufactured product.";
+    ErrorResponse.error = new AppError(["Stock Missing."], StatusCodes.BAD_REQUEST);
+    return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+  }
   if(isNaN(req.body.stock) || parseInt(req.body.stock) <= 0) {
     ErrorResponse.message = "Something went wrong while creating maufactured product.";
     ErrorResponse.error = new AppError(["Stock must be positive number."], StatusCodes.BAD_REQUEST);
@@ -294,7 +310,7 @@ function validateMfcData(req, res, next) {
     ErrorResponse.error = new AppError(["Description Missing."], StatusCodes.BAD_REQUEST);
     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
   }
-  if(!req.body.description.length <=4) {
+  if(!req.body.description.trim().length <=4) {
     ErrorResponse.message = "Something went wrong while creating manufactured product.";
     ErrorResponse.error = new AppError(["Description must be atleast 5 letters long."], StatusCodes.BAD_REQUEST);
   }
@@ -308,6 +324,11 @@ function validateMfcData(req, res, next) {
 }
 
 function updateImage(req, res, next){
+  if(!req.body.product_id) {
+    ErrorResponse.message = "Something went wrong while updating image"; 
+    ErrorResponse.error = new AppError(["Product Id Missing."], StatusCodes.BAD_REQUEST); 
+    return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse); 
+  }
   if(isNaN(req.body.product_id) || parseInt(req.body.product_id) <= 0) { 
     ErrorResponse.message = "Something went wrong while updating image"; 
     ErrorResponse.error = new AppError(["Product Id must be a positive number."], StatusCodes.BAD_REQUEST); 

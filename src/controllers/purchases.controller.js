@@ -374,7 +374,7 @@ async function getUnPaidPurchases(req, res){
         SuccessResponse.message = "Unpaid/Partially Paid data retrieved successfully.";
         SuccessResponse.data = {
             purchases: withNames,
-            unpaidTotalAmount,
+            unpaidTotalAmount: unpaidTotalAmount ?? 0.00,
             totalCount: count,
             totalPages: Math.ceil(count / limit),
             currentPage: page,

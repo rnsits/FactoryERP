@@ -43,7 +43,7 @@ async function addExpense(req, res) {
                 
                 // Ensure due amount is less than total cost
                 if (due_amount >= total_cost) {
-                    throw new AppError(['Partial payment amount must be less than total cost'], StatusCodes.BAD_REQUEST);
+                    throw new AppError(['Due Amount must be less than total cost'], StatusCodes.BAD_REQUEST);
                 }
                 
                 finalDueAmount = due_amount;
@@ -177,8 +177,6 @@ async function getTodayExpenses(req, res){
             currentPage: page,
             pageSize: limit
         }; 
-        // SuccessResponse.message = "Successfully completed the request";
-        // SuccessResponse.data = expenses;
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)

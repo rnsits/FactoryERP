@@ -62,60 +62,6 @@ async function getExpense(data) {
     }
 }
 
-// async function getAllExpenses(limit, offset, search, fields, filter) {
-//     try {
-//         const where = {};
-        
-//         if (search && fields.length > 0) {
-//             where[Op.or] = fields.map(field => ({
-//                 [field]: { [Op.like]: `%${search}%` }
-//             }));
-//         }
-
-//         // Handle filtering
-//         if (filter && typeof filter === 'string') {
-//           const [key, value] = filter.split(':');
-//           if (key && value) {
-//               where[key] = {[Op.like]: `%${value}%`};
-//           }
-//         }
-
-//     const { count, rows } = await Expenses.findAndCountAll({
-//       where,
-//       attributes: fields.length > 0 ? fields : undefined,
-//       limit,
-//       offset,
-//       order: [['createdAt', 'DESC']],
-//     });
-//   return { count, rows };
-//     } catch(error) {
-//         console.log(error);
-//         if(
-//             error.name == "SequelizeValidationError" ||
-//             error.name == "SequelizeUniqueConstraintError"
-//         ) {
-//           let explanation = [];
-//           error.errors.forEach((err) => {
-//             explanation.push(err.message);
-//           });
-//           throw new AppError(explanation, StatusCodes.BAD_REQUEST);
-//         } else if (
-//           error.name === "SequelizeDatabaseError" &&
-//           error.original &&
-//           error.original.routine === "enum_in"
-//         ) {
-//           throw new AppError(
-//             "Invalid value for associate_with field.",
-//             StatusCodes.BAD_REQUEST
-//           );
-//         }
-//         throw new AppError(
-//           "Cannot get Expenses ",
-//           StatusCodes.INTERNAL_SERVER_ERROR
-//         );
-//     }
-// }
-
 async function getAllExpenses(limit, offset, search, fields, filter) {
     try {
         // Base query options
@@ -280,12 +226,6 @@ async function getExpensesByDate(date, limit, offset, search, fields) {
         date.getMonth(), 
         date.getDate() + 1
       ));
-
-      // Add the date filter to `where` clause
-      // where.createdAt = {
-      //   [Op.gte]: startOfDay,
-      //   [Op.lt]: endOfDay,
-      // };
 
       where[Op.or] = [
         {

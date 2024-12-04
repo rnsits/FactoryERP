@@ -6,17 +6,17 @@ const { validateDateFormat } = require('../utils/common/datevalidator');
 function validateGetRequest(req,res,next){
 
     const invoice_id = req.params.invoiceId;
-    if (isNaN(invoice_id) || parseInt(invoice_id) <= 0) {
-        ErrorResponse.message = "Something went wrong while getting customers.";
-        ErrorResponse.error = new AppError(["Invoice ID. Must be a positive number."], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
     if(!invoice_id){
-        ErrorResponse.message = "Something went wrong while getting customers.";
+        ErrorResponse.message = "Something went wrong while getting Invoice.";
         ErrorResponse.error = new AppError(["Invoice Id not found on the incoming request"],StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
+    }
+    if (isNaN(invoice_id) || parseInt(invoice_id) <= 0) {
+        ErrorResponse.message = "Something went wrong while getting Invoice.";
+        ErrorResponse.error = new AppError(["Invoice ID. Must be a positive number."], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();
 }
@@ -24,7 +24,7 @@ function validateGetRequest(req,res,next){
 function validateBodyRequest(req, res, next) {
     
     if(!req.body.customer_id){
-        ErrorResponse.message = "Something went wrong while creating customers.";
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Customer Id missing in the incoming request"],StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
@@ -38,29 +38,29 @@ function validateBodyRequest(req, res, next) {
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
     }
-    if(req.body.due_amount && req.body.due_amount < 1){
-        ErrorResponse.message = "Something went wrong while creating customers.";
-        ErrorResponse.error = new AppError(["Due Amount cannot be less than one."],StatusCodes.BAD_REQUEST);
+    if(req.body.due_amount && parseInt(req.body.due_amount) <=0 ){
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
+        ErrorResponse.error = new AppError(["Due Amount cannot be negative."],StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
     }
     if(!req.body.address){
-        ErrorResponse.message = "Something went wrong while creating customers.";
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Address not found on the incoming request"],StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse);
     }
     if(!req.body.pincode){
-        ErrorResponse.message = "Something went wrong while creating customers.";
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Pincode missing in the incoming request."], StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse);
     }
     if(req.body.pincode.length < 6 || req.body.pincode.length > 6){
-        ErrorResponse.message = "Something went wrong while creating customers.";
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Pincode length must be 6"], StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
@@ -74,16 +74,30 @@ function validateBodyRequest(req, res, next) {
                .json(ErrorResponse);
     }
     if(req.body.mobile.length < 10 || req.body.pincode.length > 10){
-        ErrorResponse.message = "Something went wrong while creating customers.";
-        ErrorResponse.error = new AppError(["Mobile length must be 6"], StatusCodes.BAD_REQUEST);
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
+        ErrorResponse.error = new AppError(["Mobile length must be 10"], StatusCodes.BAD_REQUEST);
         return res 
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse);
     }
     const validStatusTypes = ["paid", "unpaid", "partial-payment"];
     if(!req.body.payment_status || !validStatusTypes.includes(req.body.payment_status)){
-        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Payment Status should be 'paid','unpaid','partial-payment'."],StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
+    if(req.body.payment_status != "paid" && !req.body.due_amount) {
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
+        ErrorResponse.error = new AppError(["Due Amount is missing."],StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse)
+    }
+    if(req.body.payment_status != "paid" && !req.body.due_date) {
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
+        ErrorResponse.error = new AppError(["Due Amount is missing."],StatusCodes.BAD_REQUEST);
         return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
@@ -95,7 +109,7 @@ function validateBodyRequest(req, res, next) {
     dueDate.setHours(0, 0, 0, 0);
 
     if(dueDate < today) {
-        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Due Date cannot be less than today."],StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
@@ -129,6 +143,11 @@ function validatePaidBody(req, res, next){
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
     }
+    if(isNaN(req.body.id) || parseInt(req.body.id) <= 0) {
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
+        ErrorResponse.error = new AppError(['Invoice Id(id) must be a positive number.'], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
     if(!req.body.amount){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Amount Missing."], StatusCodes.BAD_REQUEST);
@@ -136,9 +155,24 @@ function validatePaidBody(req, res, next){
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
     }
-    if(isNaN(req.body.amount) || (parseInt(req.body.amount < 1))) {
-        ErrorResponse.message = "Something went wrong while marking Invoice paid/partial-paid.";
+    if(isNaN(req.body.amount) || parseInt(req.body.amount) <= 0) {
+        ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(['Amount must be a positive number.'], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(req.body.payment_status != 'paid' && !req.body.due_date) {
+        ErrorResponse.message = "Something went wrong while creating Invoice";
+        ErrorResponse.error = new AppError(['Due Date Missing.'], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(req.body.payment_status != 'paid' && !req.body.due_amount) {
+        ErrorResponse.message = "Something went wrong while creating Invoice";
+        ErrorResponse.error = new AppError(['Due Amount Missing.'], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(isNaN(req.body.due_amount) && parseInt(req.body.due_amount) <= 0) {
+        ErrorResponse.message = "Something went wrong while creating Invoice";
+        ErrorResponse.error = new AppError(['Due Amount must be positve number.'], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();
@@ -150,9 +184,9 @@ function updateImage(req, res, next){
       ErrorResponse.error = new AppError(["Id missing."], StatusCodes.BAD_REQUEST);
       return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-    if(isNaN(parseInt(req.body.id))) {
+    if(isNaN(req.body.id) || parseInt(req.body.id) <=0) {
       ErrorResponse.message = "Something went wrong while updating image";
-      ErrorResponse.error = new AppError(["Invalid Id"], StatusCodes.BAD_REQUEST);
+      ErrorResponse.error = new AppError(["ID must be a positive number."], StatusCodes.BAD_REQUEST);
       return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     if(!req.file) {

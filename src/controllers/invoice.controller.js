@@ -99,6 +99,7 @@ async function addInvoice(req, res) {
             })
         );
 
+        const tt = totalAmount + totalTax;
         // Create invoice with items included
         const invoice = await InvoiceService.createInvoice({
             customer_id, 
@@ -109,26 +110,19 @@ async function addInvoice(req, res) {
             pincode, 
             address, 
             mobile,
-            total_amount: totalAmount+totalTax,
+            total_amount: tt,
             total_tax: totalTax, 
             payment_image,
             items: items,
             item_count: items.length 
         }, { transaction });
 
-        const createPayment = await Customer_PaymentService.createCustomer_Payment({
-                customer_id: invoice.customer_id,
-                invoice_id: invoice.id, 
-                payment_date: new Date(), 
-                amount: invoice.total_amount, 
-                payment_method: invoice.payment_method, 
-                payment_status: invoice.payment_status,
-            }, {transaction});
-
+            let createPayment;
             let newBalance;
             let userBalance, balanceTransaction;
             if(invoice.payment_status == "paid" || invoice.payment_status =="partial paid") {
                 newBalance = Number(invoice.total_amount) + Number(user.current_balance);
+                
                 balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
                     user_id: user.id,
                     transaction_type: "income",
@@ -142,14 +136,30 @@ async function addInvoice(req, res) {
                     user.id,
                     newBalance, {transaction}
                 );
+                createPayment = await Customer_PaymentService.createCustomer_Payment({
+                    customer_id: invoice.customer_id,
+                    invoice_id: invoice.id, 
+                    payment_date: new Date(), 
+                    amount: tt, 
+                    payment_method: invoice.payment_method, 
+                    payment_status: invoice.payment_status,
+                }, {transaction});
             } else {
                 balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
                     user_id: user.id,
                     transaction_type: "income",
-                    amount: 0,
+                    amount: due_amount,
                     source: "invoice",
                     previous_balance: user.current_balance,
                     new_balance: user.current_balance
+                }, {transaction});
+                createPayment = await Customer_PaymentService.createCustomer_Payment({
+                    customer_id: invoice.customer_id,
+                    invoice_id: invoice.id, 
+                    payment_date: due_date, 
+                    amount: due_amount, 
+                    payment_method: invoice.payment_method, 
+                    payment_status: invoice.payment_status,
                 }, {transaction});
                 // No need to update balance since no payment done
             }
@@ -268,9 +278,6 @@ async function getTodayInvoices(req, res){
             currentPage: page,
             pageSize: limit
         };
-        // const invoices = await InvoiceService.getTodayInvoices(); 
-        // SuccessResponse.message = "Successfully completed the request";
-        // SuccessResponse.data = invoices;
         return res
             .status(StatusCodes.OK)
             .json(SuccessResponse)

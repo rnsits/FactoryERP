@@ -3,7 +3,13 @@ const {ErrorResponse} = require('../utils/common');
 const AppError = require('../utils/errors/app.error');
 
 function validateGetRequest(req,res,next){
-
+    if(!expenseId){
+        ErrorResponse.message = "Something went wrong while getting expense.";
+        ErrorResponse.error = new AppError(["Expense Id not found on the incoming request."],StatusCodes.BAD_REQUEST);
+        return res 
+               .status(StatusCodes.BAD_REQUEST)
+               .json(ErrorResponse)
+    }
     // Validate if productId is a valid integer
     const expenseId = req.params.expenseId;
     if (isNaN(expenseId) || parseInt(expenseId) <= 0) {
@@ -12,13 +18,6 @@ function validateGetRequest(req,res,next){
         StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-    if(!expenseId){
-        ErrorResponse.message = "Something went wrong while getting expense.";
-        ErrorResponse.error = new AppError(["Expense Id not found on the incoming request."],StatusCodes.BAD_REQUEST);
-        return res 
-               .status(StatusCodes.BAD_REQUEST)
-               .json(ErrorResponse)
-    }
     next();
 }
 
@@ -26,6 +25,11 @@ function validateBodyRequest(req, res, next){
     if(!req.body.total_cost) {
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["total cost not found in the request"],StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(isNaN(req.body.total_cost) || parseInt(req.body.total_cost) <= 0) {
+        ErrorResponse.message = "Something is wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Total Cost must be a positive number."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     if(!req.body.description_type){
@@ -79,14 +83,35 @@ function validateBodyRequest(req, res, next){
 };
 
 function validatePaidBody(req, res, next){
-    if(!req.body.expense_id || isNaN(parseInt(req.body.expense_id))){
+    if(!req.body.expense_id){
         ErrorResponse.message = "Something went wrong while creating expense.";
-        ErrorResponse.error = new AppError(["Expense Id is missing in the request."], StatusCodes.BAD_REQUEST);
+        ErrorResponse.error = new AppError(["Expense id Missing."], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(isNaN(req.body.expense_id) || parseInt(req.body.expense_id) <= 0) {
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Expense Id must be a positive number."], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     if(!req.body.amount){
         ErrorResponse.message = "Something went wrong while creating expense.";
         ErrorResponse.error = new AppError(["Amount is missing in the request."], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(isNaN(req.body.amount) || parseInt(req.body.amount) <= 0) {
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Amount must be a positive number."], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    const dueDate = new Date(req.body.due_date);
+    const today = new Date();
+    // Set the time to 00:00:00 to compare only the date part
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+
+    if(dueDate < today) {
+        ErrorResponse.message = "Something went wrong while creating expense.";
+        ErrorResponse.error = new AppError(["Due Date cannot be less than today."],StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     next();
