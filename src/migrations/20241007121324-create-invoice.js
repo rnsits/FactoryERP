@@ -28,8 +28,8 @@ module.exports = {
       },
       due_amount: {
         allowNull: true,
-        type: Sequelize.DECIMAL(10, 2),
-        defaultValue: true
+        type: Sequelize.DECIMAL(20, 2),
+        defaultValue: 0.00
       },
       payment_status: {
         allowNull: false,
@@ -40,8 +40,9 @@ module.exports = {
         type: Sequelize.ENUM("cash", "digital-payment")
       },
       total_amount: {
-        allowNull: false,
-        type: Sequelize.INTEGER
+        type: Sequelize.DECIMAL(20,2),
+        allowNull: true,
+        defaultValue: 0.00  // Allow null values
       },
       pincode: {
         allowNull: false,
@@ -80,8 +81,8 @@ module.exports = {
       },
       total_tax: {
         allowNull: false,
-        type: Sequelize.FLOAT,
-        defaultValue: 0,
+        type: Sequelize.DECIMAL(20,2),
+        defaultValue: 0.00,
       },
       item_count: {
         allowNull: false,

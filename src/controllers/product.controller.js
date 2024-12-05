@@ -17,13 +17,16 @@ async function addProduct(req, res) {
             product_cost, 
             // product_image, 
             isManufactured,
+            hsncode,
             tax
         } = req.body;
 
         let product_image = req.file ? `/uploads/images/${req.file.filename}`: null;
-        
+         // Parse numeric values
+        const parsedStock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
+        const parsedProductCost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
         const existingProduct = await ProductService.getProductByName(name, {transaction});
-        const currentTime = new Date().toLocaleString();
+        // const currentTime = new Date().toLocaleString();
         let product, updatedInventory;
         const cgst_rate = parseFloat(tax/2);
         const sgst_rate = parseFloat(tax/2);
@@ -31,17 +34,14 @@ async function addProduct(req, res) {
         
 
         if (isManufactured == true) {
-            // Parse numeric values
-            const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
-            const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
             if (existingProduct) {
-                const newStock = existingProduct.stock + stock;
+                const newStock = existingProduct.stock + parsedStock;
                 product = await ProductService.updateProduct(existingProduct.id, newStock);
                 
                 updatedInventory = await InventoryTransactionService.createInventoryTransaction({
                     product_id: existingProduct.id,
                     transaction_type: 'in',
-                    quantity: stock,
+                    quantity: parsedStock,
                     quantity_type: existingProduct.quantity_type,
                     description: `${existingProduct.name}`,
                     description_type: 'text',
@@ -50,25 +50,28 @@ async function addProduct(req, res) {
             } else {
                 // Create new manufactured product
                 // Parse numeric values
-                const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
-                const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
+                // const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
+                // const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
+                console.log("hhhhhhhhhh", hsncode);
+                
                 product = await ProductService.createProduct({
                     name,
                     description,
                     description_type,
                     quantity_type,
-                    stock,
-                    product_cost,
-                    cgst_rate,
-                    sgst_rate,
-                    igst_rate,
+                    stock: parsedStock,
+                    product_cost: parsedProductCost,
+                    // cgst_rate,
+                    // sgst_rate,
+                    // igst_rate,
+                    hsn_code: hsncode,
                     isManufactured: true
                 },{transaction});
 
                 updatedInventory = await InventoryTransactionService.createInventoryTransaction({
                     product_id: product.id,
                     transaction_type: 'in',
-                    quantity: stock,
+                    quantity: parsedStock,
                     quantity_type: product.quantity_type,
                     description: `${product.name}`,
                     description_type: 'text',
@@ -77,32 +80,29 @@ async function addProduct(req, res) {
             }
         } 
         else {
-            // Parse numeric values
-            const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
-            const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
-
+            
             if (existingProduct) {
                 throw new AppError(["Product with this name already exists."], StatusCodes.CONFLICT);
             }
-
             product = await ProductService.createProduct({
                 name,
                 description,
                 description_type,
                 quantity_type,
-                stock,
-                product_cost,
+                stock: parsedStock,
+                product_cost: parsedProductCost,
                 product_image,
-                cgst_rate,
-                igst_rate,
-                sgst_rate,
+                // cgst_rate,
+                // igst_rate,
+                // sgst_rate,
+                hsn_code: hsncode,
                 isManufactured: true
             }, {transaction});
 
             updatedInventory = await InventoryTransactionService.createInventoryTransaction({
                 product_id: product.id,
                 transaction_type: 'in',
-                quantity: stock,
+                quantity: parsedStock,
                 quantity_type: product.quantity_type,
                 description: `${product.name}`,
                 description_type: 'text',
@@ -212,7 +212,7 @@ async function updateProductByQuantity(req, res) {
 
         // Perform product update and retrieve the updated product in one step
         const product = await ProductService.getProduct(productId);
-        if (!product || quantity === 0) {
+        if (!product || quantity == 0) {
             ErrorResponse.message = "Product not found or Quantity cannot be 0";
             return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
         }
@@ -312,7 +312,7 @@ async function damagedProducts(req, res){
             transaction_type: 'out',
             quantity,
             quantity_type: product.quantity_type,
-            description,
+            description: `${product.name}`,
             description_type,
             isDamaged: true,
             audio_path, // Attach audio file path or base64 string
@@ -380,7 +380,7 @@ async function createManufacturedProduct(req, res) {
 
             if (product.stock < quantity) {
                 throw new AppError(
-                    [`Insufficient stock for product_id: ${product_id}. Available: ${product.stock}, Required: ${quantity}.`],
+                    [`Insufficient stock for ${product.name}. Available: ${product.stock}, Required: ${quantity}.`],
                     StatusCodes.BAD_REQUEST
                 );
             }
@@ -392,9 +392,7 @@ async function createManufacturedProduct(req, res) {
             // Update existing product's stock
             const newStock = manufacturedProduct.stock + stock;
             const mfcId = manufacturedProduct.id;
-            // console.log("newStock===========", newStock);
-            
-
+         
             manufacturedProduct = await ProductService.updateProduct(
                 mfcId,
                 newStock,

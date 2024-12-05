@@ -10,8 +10,9 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       total_cost: {
-        type: Sequelize.DECIMAL,
-        allowNull: false
+        type: Sequelize.DECIMAL(20,2),
+        allowNull: false,
+        defaultValue: 0.00
       },
       description: {
         type: Sequelize.TEXT,
@@ -40,7 +41,7 @@ module.exports = {
         allowNull: false
       },
       due_amount: {
-        type: Sequelize.DECIMAL(10,2),
+        type: Sequelize.DECIMAL(20,2),
         allowNull: true,
         defaultValue: 0.00
       },

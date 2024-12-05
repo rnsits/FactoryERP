@@ -48,8 +48,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     total_cost: {
-      type: DataTypes.DECIMAL,
-      allowNull: false
+      type: DataTypes.DECIMAL(20,2),
+      allowNull: false,
+      defaultValue: 0.00
     },
     payment_date: {
       type: DataTypes.DATE,
@@ -76,7 +77,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     },
     due_amount: {
-      type: DataTypes.DECIMAL(10,2),
+      type: DataTypes.DECIMAL(20,2),
       allowNull: true,
       defaultValue: 0.00
     }

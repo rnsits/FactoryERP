@@ -50,8 +50,9 @@ module.exports = {
         allowNull: true
       },
       product_cost: {
-        type: Sequelize.DECIMAL,
-        allowNull: false
+        type: Sequelize.DECIMAL(20,2),
+        allowNull: false,
+        defaultValue: 0.00,
       },
       product_image: {
         type: Sequelize.TEXT('long'),
@@ -61,6 +62,13 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+      },
+      hsn_code: {
+        type: Sequelize.STRING(8),
+        allowNull: false,
+        validate: {
+          is: /^\d{8}$/
+        }
       },
       createdAt: {
         allowNull: false,

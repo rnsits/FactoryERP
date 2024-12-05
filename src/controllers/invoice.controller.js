@@ -19,11 +19,12 @@ async function addInvoice(req, res) {
         address,
         mobile,
         products,
+        tax
     } = req.body;
 
     const user = await UserService.getUser(user_id, {transaction});
     let payment_image = req.file ? `/uploads/images/${req.file.filename}`: null;
-    
+
     const state = findStateByPincode(pincode);
     if(!state) {
         throw new AppError([`Invalid Pincode provided ${pincode}.`], StatusCodes.BAD_REQUEST);
@@ -36,7 +37,7 @@ async function addInvoice(req, res) {
         // Prepare items array with full product details
         const items = await Promise.all(
             products.map(async (item) => {
-                const product = await ProductService.getProduct(item.product_id);
+                const product = await ProductService.getProduct(item.product_id, {transaction});
                 if (!product) {
                     throw new AppError([`Product with ID ${item.product_id} not found.`], StatusCodes.BAD_REQUEST);
                 }
@@ -45,19 +46,23 @@ async function addInvoice(req, res) {
                 }
 
                 if (item.quantity > product.stock) {
-                    throw new AppError([`Requested quantity (${item.quantity}) exceeds available quantity (${product.stock}) for product ID ${item.product_id}.`], StatusCodes.BAD_REQUEST);
+                    throw new AppError([`Requested quantity (${item.quantity}) exceeds available quantity (${product.stock}) for product ${product.name}.`], StatusCodes.BAD_REQUEST);
                 }   
 
                 const itemTotal = item.price * item.quantity;
-                let taxAmount = 0;
-                let cgst = 0;
-                let sgst = 0;
-                let igst = 0;
+                let taxAmount,cgst,sgst,igst;
 
                 // Tax calculation logic (same as in your original code)
-                const cgstRate = product.cgst_rate;
-                const sgstRate = product.sgst_rate;
-                const igstRate = product.igst_rate;
+                let cgstRate,sgstRate,igstRate;
+                if(req.body.tax) {
+                    cgstRate = req.body.tax/2;
+                    sgstRate = req.body.tax/2;
+                    igstRate = req.body.tax;
+                } else {
+                    cgstRate = product.cgst_rate;
+                    sgstRate = product.sgst_rate;
+                    igstRate = product.igst_rate;
+                }
 
                 if (payment_method.toLowerCase() !== 'cash') {
                     if (state.toLowerCase() === 'rajasthan') {
@@ -69,6 +74,21 @@ async function addInvoice(req, res) {
                         taxAmount = igst;
                     }
                 }
+
+                const inventoryTransaction = await InventoryTransactionService.createInventoryTransaction({
+                    product_id: product.id,
+                    transaction_type: 'out',
+                    quantity: item.quantity,
+                    quantity_type: product.quantity_type,
+                    description: `${product.name}`,
+                    description_type: 'text',
+                    isDamaged: false,
+                    isManufactured: product.isManufactured,
+                }, { transaction });
+        
+                // need to update this it is making it zero here
+                const newStock = Number(product.stock) - Number(item.quantity);
+                const updatedProduct = await ProductService.reduceProductByQuantity(product.id, newStock, { transaction });
 
                 totalAmount += itemTotal;
                 totalTax += taxAmount;
@@ -121,14 +141,14 @@ async function addInvoice(req, res) {
             let newBalance;
             let userBalance, balanceTransaction;
             if(invoice.payment_status == "paid" || invoice.payment_status =="partial paid") {
-                newBalance = Number(invoice.total_amount) + Number(user.current_balance);
+                newBalance = Number(user.current_balance) + Number(tt);
                 
                 balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
                     user_id: user.id,
                     transaction_type: "income",
                     amount: newBalance,
                     source: "invoice",
-                    previous_balance: user.currentBalance,
+                    previous_balance: user.current_balance,
                     new_balance: newBalance
                 }, {transaction});
             
@@ -144,11 +164,11 @@ async function addInvoice(req, res) {
                     payment_method: invoice.payment_method, 
                     payment_status: invoice.payment_status,
                 }, {transaction});
-            } else {
+            } else if(invoice.payment_status == "unpaid"){
                 balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
                     user_id: user.id,
                     transaction_type: "income",
-                    amount: due_amount,
+                    amount: tt,
                     source: "invoice",
                     previous_balance: user.current_balance,
                     new_balance: user.current_balance
@@ -157,7 +177,7 @@ async function addInvoice(req, res) {
                     customer_id: invoice.customer_id,
                     invoice_id: invoice.id, 
                     payment_date: due_date, 
-                    amount: due_amount, 
+                    amount: tt, 
                     payment_method: invoice.payment_method, 
                     payment_status: invoice.payment_status,
                 }, {transaction});
@@ -319,6 +339,91 @@ async function getInvoicesByDate(req, res) {
     }    
 }
 
+// async function markInvoicePaid(req, res) {
+//     const transaction = await sequelize.transaction();
+
+//     try {
+//         const user = req.user;
+//         const { id, amount } = req.body;
+//         const invoice = await InvoiceService.getInvoice(id, {transaction});
+//         if(!invoice) {
+//             throw new AppError(["Invoice not found."],StatusCodes.NOT_FOUND);
+//         }
+//         if(invoice.payment_status == "paid") {
+//             throw new AppError(["Invoice already marked paid"], StatusCodes.BAD_REQUEST);
+//         }
+//         if(amount > invoice.total_amount && amount > invoice.due_amount) {
+//             throw new AppError(["Amount paid is greater than the total cost or due amount of invoice."], StatusCodes.BAD_REQUEST);
+//         }
+
+//         let finalStatus;
+//         let finalDueAmount;
+//         let payment_method = invoice.payment_method;
+//         const newAmount = invoice.due_amount - Number(amount);
+//         finalStatus = newAmount == 0 ? "paid" : "partial paid";
+//         finalDueAmount = newAmount == 0 ? 0 : newAmount;
+
+//         const updateInvoice = await InvoiceService.markInvoicePaid(invoice.id, finalStatus, finalDueAmount, { transaction });
+
+//         const customer = await CustomerService.getCustomer(invoice.customer_id, { transaction });
+        
+//         let createPayment ;
+//         console.log("fial",finalStatus);
+//         if(finalStatus != "paid"){
+//             createPayment = await Customer_PaymentService.createCustomer_Payment({
+//                 customer_id: customer.id,
+//                 invoice_id: invoice.id, 
+//                 payment_date: new Date(), 
+//                 amount: amount, 
+//                 payment_method: payment_method, 
+//                 payment_status: finalStatus,
+//             }, {transaction});
+//         } else if(finalStatus == "paid") {
+//             createPayment = await Customer_PaymentService.createCustomer_Payment({
+//                 customer_id: customer.id,
+//                 invoice_id: invoice.id,
+//                 payment_date: new Date(),
+//                 amount: amount,
+//                 payment_method,
+//                 payment_status: "paid"
+//             }, {transaction});
+//         }
+        
+
+//         const newBalance = user.current_balance + amount;
+//         const balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
+//             user_id: user.id,
+//             transaction_type: "income",
+//             amount: amount,
+//             source: "invoice",
+//             previous_balance: user.currentBalance,
+//             new_balance: newBalance
+//         }, {transaction});
+
+       
+//         const userBalance = await UserService.updateUserBalance(
+//             user.id,
+//             newBalance, {transaction}
+//         );
+        
+//         await transaction.commit();
+
+//         SuccessResponse.message = 'Invoice marked paid/partial-paid successfully.';
+//         SuccessResponse.data = {
+//             updateInvoice,
+//             userBalance,
+//             balanceTransaction,createPayment
+//         }
+//         return res.status(StatusCodes.OK).json(SuccessResponse);
+//     } catch (error) {
+//         console.log(error);
+//         await transaction.rollback();
+//         ErrorResponse.message ="Something went wrong while marking the Invoice.";
+//         ErrorResponse.error = error;
+//         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+//     }
+// }
+
 async function markInvoicePaid(req, res) {
     const transaction = await sequelize.transaction();
 
@@ -336,40 +441,36 @@ async function markInvoicePaid(req, res) {
             throw new AppError(["Amount paid is greater than the total cost or due amount of invoice."], StatusCodes.BAD_REQUEST);
         }
 
-        let status = invoice.payment_status;
+        let finalStatus;
         let finalDueAmount;
         let payment_method = invoice.payment_method;
         const newAmount = invoice.due_amount - Number(amount);
-        status = newAmount == 0 ? "paid" : "partial paid";
-        finalDueAmount = newAmount == 0 ? 0 : newAmount;
+        
+        // Determine final status
+        if (newAmount == 0) {
+            finalStatus = "paid";
+        } else if (newAmount > 0) {
+            finalStatus = "partial paid";
+        } else {
+            finalStatus = "unpaid";
+        }
+        
+        finalDueAmount = newAmount;
 
-        const updateInvoice = await InvoiceService.markInvoicePaid(invoice.id, status, finalDueAmount, { transaction });
+        const updateInvoice = await InvoiceService.markInvoicePaid(invoice.id, finalStatus, finalDueAmount, { transaction });
 
         const customer = await CustomerService.getCustomer(invoice.customer_id, { transaction });
         
-        let createPayment ;
-        if(status == "partial paid"){
-            const status = "partial-paid";
-            createPayment = await Customer_PaymentService.createCustomer_Payment({
-                customer_id: customer.id,
-                invoice_id: invoice.id, 
-                payment_date: new Date(), 
-                amount: amount, 
-                payment_method: payment_method, 
-                payment_status: status,
-            }, {transaction});
-        } else if(status == "paid") {
-            const status = "paid";
-            createPayment = await Customer_PaymentService.createCustomer_Payment({
-                customer_id: customer.id,
-                invoice_id: invoice.id,
-                payment_date: new Date(),
-                amount: amount,
-                payment_method,
-                payment_status: status
-            }, {transaction});
-        }
-        
+        let createPayment;
+        // Handle payment creation for all statuses
+        createPayment = await Customer_PaymentService.createCustomer_Payment({
+            customer_id: customer.id,
+            invoice_id: invoice.id, 
+            payment_date: new Date(), 
+            amount: amount, 
+            payment_method: payment_method, 
+            payment_status: finalStatus == "partial paid" ? "partial-paid" : finalStatus, // Use the determined status
+        }, {transaction});
 
         const newBalance = user.current_balance + amount;
         const balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
@@ -381,7 +482,6 @@ async function markInvoicePaid(req, res) {
             new_balance: newBalance
         }, {transaction});
 
-       
         const userBalance = await UserService.updateUserBalance(
             user.id,
             newBalance, {transaction}
@@ -389,11 +489,12 @@ async function markInvoicePaid(req, res) {
         
         await transaction.commit();
 
-        SuccessResponse.message = 'Invoice marked paid/partial-paid successfully.';
+        SuccessResponse.message = 'Invoice marked paid/partial-paid/unpaid successfully.';
         SuccessResponse.data = {
             updateInvoice,
             userBalance,
-            balanceTransaction,createPayment
+            balanceTransaction,
+            createPayment
         }
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {

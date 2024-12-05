@@ -31,7 +31,8 @@ module.exports = {
       },
       amount: {
         allowNull: false,
-        type: Sequelize.INTEGER
+        type: Sequelize.DECIMAL(20,2),
+        defaultValue: 0.00
       },
       payment_method: {
         allowNull: false,

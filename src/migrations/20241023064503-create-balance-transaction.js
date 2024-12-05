@@ -22,23 +22,23 @@ module.exports = {
         allowNull: false,
       },
       amount: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(20, 2),
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 0.00
       },
       source: {
         type: Sequelize.ENUM("purchase","invoice", "expense"),
         allowNull: false,
       },
       previous_balance: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(20, 2),
         allowNull: false,
-        defaultValue: 0,
+        defaultValue: 0.00,
       },
       new_balance: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(20, 2),
         allowNull: false,
-        defaultValue: 0,
+        defaultValue: 0.00,
       },
       createdAt: {
         allowNull: false,

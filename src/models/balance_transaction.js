@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     amount: {
-      type: DataTypes.DECIMAL(10,2),
+      type: DataTypes.DECIMAL(20,2),
       allowNull: false,
       defaultValue: 0.00,
     },
@@ -36,12 +36,12 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     previous_balance: {
-      type: DataTypes.DECIMAL(10,2),
+      type: DataTypes.DECIMAL(20,2),
       allowNull: false,
       defaultValue: 0.00,
     },
     new_balance: {
-      type: DataTypes.DECIMAL(10,2), 
+      type: DataTypes.DECIMAL(20,2), 
       allowNull: false,
       defaultValue: 0.00,
     },

@@ -86,7 +86,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     current_balance: {
       allowNull: false,
-      type: DataTypes.DECIMAL(10,2),
+      type: DataTypes.DECIMAL(20,2),
       defaultValue: 0.00
     },
   }, {

@@ -495,6 +495,23 @@ async function updateImage(product_id, product_image, options){
   }
 }
 
+async function getProductByHSN(hsn_code) {
+  try {
+    const product = await Product.findOne({
+      where: {
+        hsn_code
+      }
+    })
+    return product || null;
+  } catch (error) {
+    console.error('Error in HSN check :', error);
+    throw new AppError(
+      error.message || "Failed to fetch product.",
+      error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
 module.exports = {
     createProduct,
     getProduct,
@@ -505,5 +522,6 @@ module.exports = {
     getProductCount,
     validateAndUpdateProducts,
     getProductsByIds,
-    updateImage
+    updateImage,
+    getProductByHSN
 }

@@ -52,7 +52,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     amount: {
       allowNull: false,
-      type: DataTypes.INTEGER
+      type: DataTypes.DECIMAL(20,2),
+      defaultValue: 0.00
     },
     payment_method: {
       allowNull: false,

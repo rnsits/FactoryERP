@@ -65,8 +65,8 @@ module.exports = {
       },
       current_balance: {
         allowNull: false,
-        type: Sequelize.DECIMAL(10, 2),
-        defaultValue: 0
+        type: Sequelize.DECIMAL(20, 2),
+        defaultValue: 0.00
       },
       refreshToken: {
         type: Sequelize.STRING,

@@ -80,8 +80,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     },
     product_cost: {
-      type: DataTypes.DECIMAL,
-      allowNull: false
+      type: DataTypes.DECIMAL(20,2),
+      allowNull: false,
+      defaultValue: 0.00
     },
     cgst_rate: {
       type: DataTypes.FLOAT,
@@ -106,6 +107,13 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    hsn_code: {
+      type: DataTypes.STRING(8),
+      allowNull: false,
+      validate: {
+        is: /^\d{8}$/
+      }
     }
   }, {
     sequelize,
@@ -116,6 +124,10 @@ module.exports = (sequelize, DataTypes) => {
         unique: false,
         fields: ['name']
       },
+      {
+        unique: false,
+        fields: ['hsn_code']
+      }
     ]
   });
   return Product;

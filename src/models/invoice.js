@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     due_amount: {
       allowNull: true,
-      type: DataTypes.DECIMAL,
+      type: DataTypes.DECIMAL(20,2),
       defaultValue: 0.00
     },
     payment_status: {
@@ -62,7 +62,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     total_amount: {
       allowNull: true,
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(20,2),
       defaultValue: 0.00
     },
     pincode: {
@@ -101,7 +101,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: true
     },
     total_tax: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(20,2),
       allowNull: false,  // Final total including tax
       defaultValue: 0.00
     },
