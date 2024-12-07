@@ -1,6 +1,7 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { UserRepository } = require("../repositories");
+const { User } = require("../models");
 
 const userRepository = new UserRepository();
 
@@ -124,9 +125,57 @@ async function updateUserBalance(userId, amount){
   }
 }
 
+async function updateUser(id, updateData) {
+  try{
+    const user = await User.findByPk(id);
+    return await user.update(updateData);
+  }catch(error){
+    console.log(error);
+    if (
+      error.name == "SequelizeValidationError" ||
+      error.name == "SequelizeUniqueConstraintError"
+    ) {
+      let explanation = [];
+      error.errors.forEach((err) => {
+        explanation.push(err.message);
+      });
+      throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+    }
+    throw new AppError(
+      "Cannot update user",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+}
+}
+
+async function updateLogo(id, logo) {
+  try {
+    const response = await userRepository.update(id, {logo});
+    return response;
+  } catch (error) {
+    console.log(error);
+    if (
+      error.name == "SequelizeValidationError" ||
+      error.name == "SequelizeUniqueConstraintError"
+    ) {
+      let explanation = [];
+      error.errors.forEach((err) => {
+        explanation.push(err.message);
+      });
+      throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+    }
+    throw new AppError(
+      "Cannot update user logo.",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
 module.exports = {
     createUser,
     getUser,
     getAllUser,
-    updateUserBalance
+    updateUserBalance,
+    updateUser,
+    updateLogo
 }

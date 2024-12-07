@@ -78,6 +78,20 @@ module.exports = (sequelize, DataTypes) => {
         }
       }
     },
+    customer_type: {
+      type: DataTypes.ENUM("Individual", "Company"),
+      allowNull: false
+    },
+    gstin: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        len: {
+          args: [15,15],
+          msg: "GSTIN must be 15 characters long."
+        } 
+      }
+    },
   }, {
     sequelize,
     modelName: 'Customers',

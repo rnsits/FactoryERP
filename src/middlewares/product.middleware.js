@@ -278,7 +278,11 @@ function validateFormData(req, res, next) {
   if (!req.body.isManufactured) {
     return sendErrorResponse("Validation error", ["Is Manufactured is required."]);
   }
-
+  
+  //Validate manufactured or not
+  if (req.body.hsncode && req.body.hsncode.trim().length != 8) {
+    return sendErrorResponse("Validation error", ["HSN Code must be 8 digits long."]);
+  }
   // Proceed if validation passes
   next();
 }

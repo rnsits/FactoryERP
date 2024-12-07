@@ -59,6 +59,20 @@ module.exports = {
         },
         allowNull: true
       },
+      customer_type: {
+        type: Sequelize.ENUM("Individual", "Company"),
+        allowNull: false
+      },
+      gstin: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        validate: {
+          len: {
+            args: [15,15],
+            msg: "GSTIN should be 15 charcters long."
+          }
+        }
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

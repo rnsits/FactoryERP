@@ -65,60 +65,6 @@ async function getProduct(data) {
     }
 }
 
-// async function getAllProducts(limit, offset, search, fields, filter) {
-//   try {
-
-//     const where = {};
-        
-//         if (search && fields.length > 0) {
-//             where[Op.or] = fields.map(field => ({
-//                 [field]: { [Op.like]: `%${search}%` }
-//             }));
-//         }
-
-//         // Handle filtering
-//         if (filter && typeof filter === 'string') {
-//           const [key, value] = filter.split(':');
-//           if (key && value) {
-//               where[key] = {[Op.like]: `%${value}%`};
-//           }
-//         }
-
-//     const { count, rows } = await Product.findAndCountAll({
-//       where,
-//       attributes: fields.length > 0 ? fields : undefined,
-//       limit,
-//       offset,
-//       order: [['createdAt', 'DESC']],
-//     });
-//   return { count, rows };
-//   } catch (error) {
-//     console.log(error);
-//             if(
-//                 error.name == "SequelizeValidationError" ||
-//                 error.name == "SequelizeUniqueConstraintError"
-//             ) {
-//               let explanation = [];
-//               error.errors.forEach((err) => {
-//                 explanation.push(err.message);
-//               });
-//               throw new AppError(explanation, StatusCodes.BAD_REQUEST);
-//             } else if (
-//               error.name === "SequelizeDatabaseError" &&
-//               error.original &&
-//               error.original.routine === "enum_in"
-//             ) {
-//               throw new AppError(
-//                 "Invalid value for associate_with field.",
-//                 StatusCodes.BAD_REQUEST
-//               );
-//             }
-//             throw new AppError(
-//               "Cannot get Product ",
-//               StatusCodes.INTERNAL_SERVER_ERROR
-//             );
-//   }
-// }
 
 async function getAllProducts(limit, offset, search, fields, filter) {
   try {
@@ -512,6 +458,39 @@ async function getProductByHSN(hsn_code) {
   }
 }
 
+async function updProduct(id, updateData) {
+  try {
+    const product = await Product.findByPk(id);
+    return await product.update(updateData);
+  } catch (error) {
+    console.log(error);
+    if(
+        error.name == "SequelizeValidationError" ||
+        error.name == "SequelizeUniqueConstraintError"
+    ) {
+      let explanation = [];
+      error.errors.forEach((err) => {
+        explanation.push(err.message);
+      });
+      throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+    } else if (
+      error.name === "SequelizeDatabaseError" &&
+      error.original &&
+      error.original.routine === "enum_in"
+    ) {
+      throw new AppError(
+        "Invalid value for associate_with field.",
+        StatusCodes.BAD_REQUEST
+      );
+    }
+    throw new AppError(
+      "Failed to retrieve product.",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+
+  }
+}
+
 module.exports = {
     createProduct,
     getProduct,
@@ -523,5 +502,6 @@ module.exports = {
     validateAndUpdateProducts,
     getProductsByIds,
     updateImage,
-    getProductByHSN
+    getProductByHSN,
+    updProduct
 }

@@ -21,7 +21,7 @@ async function addInvoice(req, res) {
         products,
         tax
     } = req.body;
-
+    
     const user = await UserService.getUser(user_id, {transaction});
     let payment_image = req.file ? `/uploads/images/${req.file.filename}`: null;
 
@@ -120,11 +120,32 @@ async function addInvoice(req, res) {
         );
 
         const tt = totalAmount + totalTax;
+
+
+        // Determine due_amount based on payment_status
+        let calculatedDueAmount;
+        if (payment_status == "unpaid") {
+            calculatedDueAmount = tt; // Full amount due
+        } else if (payment_status == "partial paid") {
+            if (!due_amount || due_amount <= 0 || due_amount > tt) {
+                await transaction.rollback();
+                throw new AppError(
+                    ["Invalid due amount for partial payment. Must be between 1 and the total amount."],
+                    StatusCodes.BAD_REQUEST
+                );
+            }
+            calculatedDueAmount = due_amount;
+        } else if (payment_status == "paid") {
+            calculatedDueAmount = 0; // Fully paid
+        } else {
+            await transaction.rollback();
+            throw new AppError(["Invalid payment status provided."], StatusCodes.BAD_REQUEST);
+        }
         // Create invoice with items included
         const invoice = await InvoiceService.createInvoice({
             customer_id, 
             due_date, 
-            due_amount, 
+            due_amount: calculatedDueAmount, 
             payment_status, 
             payment_method, 
             pincode, 
@@ -140,8 +161,9 @@ async function addInvoice(req, res) {
             let createPayment;
             let newBalance;
             let userBalance, balanceTransaction;
+            const mappedPaymentStatus = invoice.payment_status === "partial paid" ? "partial-paid" : invoice.payment_status;
             if(invoice.payment_status == "paid" || invoice.payment_status =="partial paid") {
-                newBalance = Number(user.current_balance) + Number(tt);
+                newBalance = Number(user.current_balance) + (Number(tt)-calculatedDueAmount);
                 
                 balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
                     user_id: user.id,
@@ -160,9 +182,9 @@ async function addInvoice(req, res) {
                     customer_id: invoice.customer_id,
                     invoice_id: invoice.id, 
                     payment_date: new Date(), 
-                    amount: tt, 
+                    amount: tt-calculatedDueAmount, 
                     payment_method: invoice.payment_method, 
-                    payment_status: invoice.payment_status,
+                    payment_status: mappedPaymentStatus    
                 }, {transaction});
             } else if(invoice.payment_status == "unpaid"){
                 balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
@@ -173,13 +195,15 @@ async function addInvoice(req, res) {
                     previous_balance: user.current_balance,
                     new_balance: user.current_balance
                 }, {transaction});
+                console.log("due date", req.body.due_date);
+                
                 createPayment = await Customer_PaymentService.createCustomer_Payment({
                     customer_id: invoice.customer_id,
                     invoice_id: invoice.id, 
                     payment_date: due_date, 
-                    amount: tt, 
+                    amount: tt-calculatedDueAmount, 
                     payment_method: invoice.payment_method, 
-                    payment_status: invoice.payment_status,
+                    payment_status: invoice.payment_status
                 }, {transaction});
                 // No need to update balance since no payment done
             }
@@ -432,12 +456,15 @@ async function markInvoicePaid(req, res) {
         const { id, amount } = req.body;
         const invoice = await InvoiceService.getInvoice(id, {transaction});
         if(!invoice) {
+            await transaction.rollback();
             throw new AppError(["Invoice not found."],StatusCodes.NOT_FOUND);
         }
         if(invoice.payment_status == "paid") {
+            await transaction.rollback();
             throw new AppError(["Invoice already marked paid"], StatusCodes.BAD_REQUEST);
         }
-        if(amount > invoice.total_amount && amount > invoice.due_amount) {
+        if(amount > invoice.total_amount || amount > invoice.due_amount) {
+            await transaction.rollback();
             throw new AppError(["Amount paid is greater than the total cost or due amount of invoice."], StatusCodes.BAD_REQUEST);
         }
 

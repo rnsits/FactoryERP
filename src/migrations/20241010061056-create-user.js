@@ -76,6 +76,26 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      gstin: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      company_name: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+        address: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      logo: {
+        type: Sequelize.TEXT('long'),
+        allowNull: true
+      },
+      pincode: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

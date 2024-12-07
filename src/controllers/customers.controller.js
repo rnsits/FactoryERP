@@ -2,19 +2,21 @@ const { StatusCodes } = require("http-status-codes");
 const { CustomerService } = require("../services");
 const { ErrorResponse, SuccessResponse } = require("../utils/common");
 const AppError = require("../utils/errors/app.error");
+const { sequelize } = require("../models");
 
 
 async function addCustomers(req, res) {
     try {
-        const { name, address, mobile, pincode, email  } = req.body;
+        const { name, address, mobile, pincode, email, customer_type, gstin  } = req.body;
        
         const customer = await CustomerService.createCustomer({
-            name, address, mobile, pincode, email
+            name, customer_type, address, mobile, pincode, email, gstin
         });
         SuccessResponse.message = "Customer added successfully";
         SuccessResponse.data = customer;
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
+        console.log(error);
         ErrorResponse.message = "Failed to add customer.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -31,6 +33,7 @@ async function getCustomer(req,res){
             .status(StatusCodes.OK)
             .json(SuccessResponse) 
     } catch (error) {
+        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Customer";
         ErrorResponse.error = error;
         return res
@@ -62,6 +65,7 @@ async function getAllCustomers(req, res){
             .status(StatusCodes.OK)
             .json(SuccessResponse)
     }catch(error) {
+        console.log(error);
         ErrorResponse.message = "Something went wrong while getting Customers";
         ErrorResponse.error = error;
         return res
@@ -70,9 +74,50 @@ async function getAllCustomers(req, res){
     }
 }
 
+async function customerSettings(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+        const { name, address, mobile, pincode, email, customer_type, gstin } = req.body;
+        
+        const { id } = req.params; // Extract `id` from route parameter
+        
+        const check = await CustomerService.getCustomer(id, {transaction});
+        if(!check) {
+            throw new AppError(["Customer not found."], StatusCodes.NOT_FOUND)
+        }
+        // Build the update object dynamically
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (address) updateData.address = address;
+        if (mobile) updateData.mobile = mobile;
+        if (pincode) updateData.pincode = pincode;
+        if (email) updateData.email = email;
+        if (customer_type) updateData.customer_type = customer_type;
+        if (gstin) updateData.gstin = gstin;
+
+        if (Object.keys(updateData).length == 0) {
+            throw new AppError(["At least one field is required to update the customer."], StatusCodes.CONFLICT);
+        }
+
+        const customer = await CustomerService.updateCustomer(id, updateData, {transaction});
+        await transaction.commit();
+        SuccessResponse.message = "Customer updated successfully.";
+        SuccessResponse.data = customer;
+        return res.status(StatusCodes.OK).json(SuccessResponse);
+    } catch (error) {
+        await transaction.rollback();
+        console.error(error);
+        ErrorResponse.message = "Something went wrong while updating the customer.";
+        ErrorResponse.error = error.message;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
+
 
 module.exports = {
    addCustomers,
    getCustomer,
-   getAllCustomers
+   getAllCustomers,
+   customerSettings
 }

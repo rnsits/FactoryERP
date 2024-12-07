@@ -23,6 +23,11 @@ function validateGetRequest(req,res,next){
 }
 
 function validateBodyRequest(req, res, next){
+    if(!req.body.username) {
+        ErrorResponse.message = "Something went wrong while creating User.";
+        ErrorResponse.error = new AppError(["Password required"], StatusCodes.BAD_REQUEST);
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
     const auth_method = req.body.auth_method;
     // Validate the auth method
     if (auth_method == 'username_password') {
@@ -49,8 +54,27 @@ function validateBodyRequest(req, res, next){
             ErrorResponse.error = new AppError(["Pin must be 6 character long"], StatusCodes.BAD_REQUEST);
             return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
-
     }   
+    if(!req.body.address) {
+        ErrorResponse.message = "Something went wrong while creating User.";
+        ErrorResponse.error = new AppError(["Address Missing"], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(!request.body.pincode || isNaN(parseInt(req.body.pincode))) {
+        ErrorResponse.message = "Something went wrong while updating User";
+        ErrorResponse.error = new AppError(["Pincode Missing."], StatusCodes.BAD_REQUEST)
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(req.body.pincode && req.body.trim().length != 6) {
+        ErrorResponse.message = "Something went wrong while updating User";
+        ErrorResponse.error = new AppError(["Pincode must be 6 digit long"], StatusCodes.BAD_REQUEST)
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
+    if(req.body.gstin && req.body.gstin.trim().length != 15){
+        ErrorResponse.message = "Something went wrong while creating User.";
+        ErrorResponse.error = new AppError(["GST must be 15 character long"], StatusCodes.BAD_REQUEST);
+        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    }
     next();
 };
 

@@ -4,6 +4,7 @@ const { ErrorResponse, SuccessResponse } = require("../utils/common");
 const { Product } = require("../models");
 const { sequelize } = require("../models");
 const AppError = require("../utils/errors/app.error");
+const { text } = require("body-parser");
 
 async function addProduct(req, res) {
     const transaction = await sequelize.transaction();
@@ -36,7 +37,7 @@ async function addProduct(req, res) {
         if (isManufactured == true) {
             if (existingProduct) {
                 const newStock = existingProduct.stock + parsedStock;
-                product = await ProductService.updateProduct(existingProduct.id, newStock);
+                product = await ProductService.updateProduct(existingProduct.id, newStock, {transaction});
                 
                 updatedInventory = await InventoryTransactionService.createInventoryTransaction({
                     product_id: existingProduct.id,
@@ -52,7 +53,6 @@ async function addProduct(req, res) {
                 // Parse numeric values
                 // const stock = Number(req.body.stock) || 0; // Default to 0 if parsing fails
                 // const product_cost = parseFloat(req.body.product_cost) || 0; // Handle decimal numbers
-                console.log("hhhhhhhhhh", hsncode);
                 
                 product = await ProductService.createProduct({
                     name,
@@ -61,9 +61,9 @@ async function addProduct(req, res) {
                     quantity_type,
                     stock: parsedStock,
                     product_cost: parsedProductCost,
-                    // cgst_rate,
-                    // sgst_rate,
-                    // igst_rate,
+                    cgst_rate,
+                    sgst_rate,
+                    igst_rate,
                     hsn_code: hsncode,
                     isManufactured: true
                 },{transaction});
@@ -92,9 +92,9 @@ async function addProduct(req, res) {
                 stock: parsedStock,
                 product_cost: parsedProductCost,
                 product_image,
-                // cgst_rate,
-                // igst_rate,
-                // sgst_rate,
+                cgst_rate,
+                igst_rate,
+                sgst_rate,
                 hsn_code: hsncode,
                 isManufactured: true
             }, {transaction});
@@ -133,6 +133,7 @@ async function getProduct(req, res) {
         SuccessResponse.data = product;
         return res.status(StatusCodes.OK).json(SuccessResponse);
     }catch(error){
+        console.log(error);
         ErrorResponse.message = "Failed to fetch product.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -160,6 +161,7 @@ async function getProducts(req, res) {
         };
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
+        console.log(error);
         ErrorResponse.message = "Failed to fetch products.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -167,10 +169,11 @@ async function getProducts(req, res) {
 }
 
 async function reduceProduct(req, res) {
+    const transaction = await sequelize.transaction();
     try {
         const productId = req.params.productId;
         const quantity = req.body.quantity;
-        const product = await ProductService.getProduct(productId);
+        const product = await ProductService.getProduct(productId, {transaction});
         
         if(!product) {
             ErrorResponse.message = "Product not found";
@@ -183,7 +186,7 @@ async function reduceProduct(req, res) {
             ErrorResponse.message = "Quantity provided would result in negative stock";
             return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
-        const updatedProduct = await ProductService.reduceProductByQuantity(productId, changeStock);
+        const updatedProduct = await ProductService.reduceProductByQuantity(productId, changeStock, {transaction});
         const currentTime = new Date().toLocaleString(); 
         const inventoryData = {
             product_id: productId,
@@ -193,12 +196,15 @@ async function reduceProduct(req, res) {
             description: `${product.name}`,
             description_type: 'text',
         };
-        const logData = await InventoryTransactionService.createInventoryTransaction(inventoryData);
+        const logData = await InventoryTransactionService.createInventoryTransaction(inventoryData,{transaction});
+        await transaction.commit();
         
         SuccessResponse.message = "Product reduced successfully.";
         SuccessResponse.data = {updatedProduct, logData};
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
+        console.log(error);
+        await transaction.rollback();
         ErrorResponse.message = "Failed to remove products.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -206,14 +212,16 @@ async function reduceProduct(req, res) {
 }
 
 async function updateProductByQuantity(req, res) {
+    const transaction = await sequelize.transaction();
     try {
         const { quantity, transaction_type } = req.body; 
         const { productId } = req.params;
 
         // Perform product update and retrieve the updated product in one step
-        const product = await ProductService.getProduct(productId);
+        const product = await ProductService.getProduct(productId, {transaction});
         if (!product || quantity == 0) {
             ErrorResponse.message = "Product not found or Quantity cannot be 0";
+            await transaction.rollback();
             return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
         }
 
@@ -222,34 +230,47 @@ async function updateProductByQuantity(req, res) {
 
         if (newStock < 0) {
             ErrorResponse.message = "Quantity provided would result in negative stock";
+            await transaction.rollback();
             return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
         
-        const currentTime = new Date().toLocaleString(); 
-        // const description = (transaction_type === 'in')
-        //     ? `Stock increased by ${quantity}, stock now is ${newStock} on date: ${currentTime}`
-        //     : `Stock decreased by ${quantity}, stock now is ${newStock} on date: ${currentTime}`;
+        // const currentTime = new Date().toLocaleString(); 
         const description = (transaction_type === 'in') ? `${product.name}` : `${product.name}`;
 
         // Perform product stock update and inventory log within a transaction
-        const [updatedProduct, updatedInventory] = await Promise.all([
-            ProductService.updateProduct(productId, newStock),
-            InventoryTransactionService.createInventoryTransaction({
-                product_id: productId,
-                transaction_type,
-                quantity,
-                quantity_type: product.quantity_type,
-                description,
-                description_type: 'text'
-            })
-        ]);
+        // const [updatedProduct, updatedInventory] = await Promise.all([
+        //     ProductService.updateProduct(productId, newStock),
+        //     InventoryTransactionService.createInventoryTransaction({
+        //         product_id: productId,
+        //         transaction_type,
+        //         quantity,
+        //         quantity_type: product.quantity_type,
+        //         description,
+        //         description_type: 'text'
+        //     })
+        // ]);
+        const updatedProduct = await ProductService.updProduct(productId, newStock, {transaction});
+        const updatedInventory = await InventoryTransactionService.createInventoryTransaction({
+            product_id: productId,
+            transaction_type,
+            quantity,
+            quantity_type: product.quantity_type,
+            description,
+            description_type: 'text'
+        }, {transaction});
+
+        await transaction.commit();
 
         SuccessResponse.message = "Product updated successfully.";
         SuccessResponse.data = { updatedProduct, updatedInventory };
         return res.status(StatusCodes.OK).json(SuccessResponse);
 
     } catch (error) {
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update product', error });
+        console.log(error);
+        await transaction.rollback();
+        ErrorResponse.message = "Failed to update products.";
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
     }
 }
 
@@ -261,6 +282,7 @@ async function validateAndUpdateProducts(req, res){
         SuccessResponse.data = validatedProducts;
         return res.status(StatusCodes.OK).json(SuccessResponse);
     }catch(error){
+        console.log(error);
         ErrorResponse.message = "Failed to update products.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -274,6 +296,7 @@ async function getProductCount(req, res){
         SuccessResponse.data = {productCount};
         return res.status(StatusCodes.OK).json(SuccessResponse);
     } catch (error) {
+        console.log(error);
         ErrorResponse.message = "Failed to fetch product count.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
@@ -291,16 +314,19 @@ async function damagedProducts(req, res){
         const product = await Product.findByPk(product_id, { transaction: t });
         if (!product) {
             ErrorResponse.message = `Product with ID ${product_id} does not exist`;
+            await t.rollback();
             return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
         }
 
         // Validate quantity
         if (quantity <= 0) {
             ErrorResponse.message = `Quantity must be greater than 0 for product ${product.name}`;
+            await t.rollback();
             return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
         if (quantity > product.stock) {
             ErrorResponse.message = `Insufficient stock for product ${product.name}. Available: ${product.stock}`;
+            await t.rollback();
             return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
 
@@ -355,10 +381,6 @@ async function createManufacturedProduct(req, res) {
         const stock = Number(req.body.stock);
         const product_cost = Number(req.body.product_cost);
         
-        // let product_image = null;
-        // if (req.file) {
-        //     product_image = req.file.buffer.toString('base64');
-        // }
         let product_image = req.file ? `/uploads/images/${req.file.filename}`: null;
 
         // Validate existing products and their stock
@@ -499,11 +521,12 @@ async function updateImage(req, res) {
         const product = await ProductService.getProduct(product_id, {transaction});
         if(!product) {
             ErrorResponse.message = "Product does not exists.";
+            await transaction.rollback();
             return res.status(StatusCodes.NOT_FOUND).json(ErrorResponse);
         }
         const updatedProduct = await ProductService.updateImage(product_id, product_image, {transaction});
 
-        transaction.commit();
+        await transaction.commit();
         SuccessResponse.message = "Product Image updated Successfully.";
         SuccessResponse.data = updatedProduct;
         return res.status(StatusCodes.ACCEPTED).json(SuccessResponse);
@@ -513,6 +536,54 @@ async function updateImage(req, res) {
         ErrorResponse.message = "Failed to update product image.";
         ErrorResponse.error = error;
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+    }
+}
+
+async function productSettings(req, res) {
+    const transaction = await sequelize.transaction();
+    try {
+        const { name, description, quantity_type, product_cost, tax, isManufactured, hsn_code   } = req.body;
+        
+        const { id } = req.params; // Extract `id` from route parameter
+        
+        const check = await ProductService.getProduct(id, {transaction});
+        if(!check) {
+            await transaction.rollback();
+            throw new AppError(["Product not found."], StatusCodes.NOT_FOUND)
+        }
+        // Build the update object dynamically
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (description) updateData.description = description;
+        if (quantity_type) updateData.quantity_type = quantity_type;
+        if (product_cost) updateData.product_cost = product_cost;
+        if (isManufactured) updateData.isManufactured = isManufactured;
+        if(hsn_code) updateData.hsn_code = hsn_code;
+        if (tax){
+            const parsedtax = parseFloat(tax);
+            updateData.igst_rate = parsedtax;
+            updateData.cgst_rate = parsedtax/2;
+            updateData.sgst_rate = parsedtax/2;
+        } 
+
+        if (Object.keys(updateData).length == 0) {
+            await transaction.rollback();
+            throw new AppError(["At least one field is required to update the product."], StatusCodes.CONFLICT);
+        }
+
+        const product = await ProductService.updProduct(id, updateData, {transaction});
+        await transaction.commit();
+        SuccessResponse.message = "Product updated successfully.";
+        SuccessResponse.data = product;
+        return res.status(StatusCodes.OK).json(SuccessResponse);
+    } catch (error) {
+        await transaction.rollback();
+        console.log(error);
+        ErrorResponse.message = "Something went wrong while setting product.";
+        ErrorResponse.error = error;
+        return res
+                .status(StatusCodes.INTERNAL_SERVER_ERROR)
+                .json(ErrorResponse)
     }
 }
 
@@ -528,7 +599,8 @@ module.exports = {
     validateAndUpdateProducts,
     damagedProducts,
     createManufacturedProduct,
-    updateImage
+    updateImage,
+    productSettings
 }
 
 

@@ -10,6 +10,11 @@ const CustomerRoutes = express.Router();
 CustomerRoutes.post('/', authenticateToken, CustomerMiddleware.validateBodyRequest, CustomerController.addCustomers);
 
 /**
+ * /api/v1/auth/Customer  Patch
+ */
+CustomerRoutes.patch('/custset/:id', authenticateToken, CustomerController.customerSettings)
+
+/**
  * /api/v1/auth/Customer/:CustomerId   GET
  */
 CustomerRoutes.get('/:customerId', authenticateToken, CustomerMiddleware.validateGetRequest, CustomerController.getCustomer);

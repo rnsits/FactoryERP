@@ -89,6 +89,32 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(20,2),
       defaultValue: 0.00
     },
+    gstin: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    company_name: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+      address: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    logo: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true
+    },
+    pincode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: {
+          args: [6,6],
+          msg: "Pincode length must be atleast 6."
+        }
+      }
+    }
   }, {
     sequelize,
     modelName: 'User',

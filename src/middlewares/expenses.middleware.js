@@ -68,17 +68,24 @@ function validateBodyRequest(req, res, next){
                 .json(ErrorResponse);
     }
 
-    if(req.body.payment_status != "paid" && !req.body.due_amount) {
-        ErrorResponse.message = "Something went wrong while marking expense.";
-        ErrorResponse.error = new AppError(["Add Due Amount"], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    if(req.body.payment_status != "paid") {
+        if(!req.body.due_amount) {
+            ErrorResponse.message = "Something went wrong while marking expense.";
+            ErrorResponse.error = new AppError(["Add Due Amount"], StatusCodes.BAD_REQUEST);
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+        if(!req.body.due_date) {
+            ErrorResponse.message = "Something went wrong while marking expense.";
+            ErrorResponse.error = new AppError(["Add Due Date"], StatusCodes.BAD_REQUEST);
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
+        if(req.body.due_amount > req.body.total_cost) {
+            ErrorResponse.message = "Something went wrong while marking expense.";
+            ErrorResponse.error = new AppError(["Due Amount cannot be greater than total cost."], StatusCodes.BAD_REQUEST);
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
     }
-    
-    if(req.body.payment_status != "paid" && !req.body.due_date) {
-        ErrorResponse.message = "Something went wrong while marking expense.";
-        ErrorResponse.error = new AppError(["Add Due Date"], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
+
     next();
 };
 

@@ -9,15 +9,12 @@ const {imageUpload, audioUpload, multerMiddleware} = require("../../config/multe
 /**
  * /api/v1/auth/purchases   POST
  */
-// PurchaseRouter.post('/', authenticateToken,
-    // imageUpload.single('invoice_Bill'),PurchasesMiddleware.validateFormRequest, PurchaseController.addPurchase);
-
 PurchaseRouter.post('/', authenticateToken, multerMiddleware(imageUpload('invoice_Bill')), PurchasesMiddleware.validateBodyRequest, PurchaseController.addPurchase);
 
 /**
  * /api/v1/auth/purchases   PUT
  */
-PurchaseRouter.put('/mrkpur', authenticateToken, PurchasesMiddleware.validateMrkPaidExpense, PurchaseController.markPurchasePaid);
+PurchaseRouter.put('/mrkpur', authenticateToken, PurchasesMiddleware.validateMrkPaidPurchase, PurchaseController.markPurchasePaid);
 
 /**
  * /api/v1/auth/purchases

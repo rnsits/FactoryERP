@@ -21,13 +21,10 @@ async function addPurchase(req, res) {
             // invoice_Bill 
         } = req.body;
 
-        console.log("Status", payment_status);
-        
-
         let invoiceBill = req.file ? `/uploads/images/${req.file.filename}`: null;
         // console.log("invoiceBill", invoiceBill);
         let finalDueAmount, finalStatus;
-        if(products.length > 1 && due_amount != 0){
+        if(products.length >= 1 && due_amount != 0){
             finalDueAmount = due_amount/products.length;
             finalStatus = "unpaid";
         } else if(due_amount == 0){
@@ -402,12 +399,15 @@ async function markPurchasePaid(req, res) {
         
         const purchase = await PurchaseService.getPurchase(purchase_id, {transaction});
         if(!purchase) {
+            await transaction.rollback();
             throw new AppError([`Product with ID ${purchase_id} not found`], StatusCodes.NOT_FOUND);
         };
         if(purchase.payment_status == "paid" || purchase.due_amount == 0) {
+            await transaction.rollback();
             throw new AppError([`Purchase is already marked as paid`], StatusCodes.BAD_REQUEST);
         };
         if(amount > purchase.total_cost && amount > purchase.due_amount) {
+            await transaction.rollback();
             throw new AppError([`Amount is greater than the total cost or due amount of the purchase`], StatusCodes.BAD_REQUEST);
         };
         

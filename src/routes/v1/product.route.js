@@ -30,6 +30,8 @@ ProductRouter.patch('/:productId/update', authenticateToken, ProductMiddleware.v
 
 ProductRouter.patch('/upProImg', authenticateToken, multerMiddleware(imageUpload('product_image')), ProductMiddleware.updateImage, ProductController.updateImage);
 
+ProductRouter.patch('/proSet/:id', authenticateToken, ProductController.productSettings);
+
 ProductRouter.put('/valupdate', authenticateToken, ProductMiddleware.validatePutBodyRequest, ProductController.validateAndUpdateProducts);
 
 

@@ -31,7 +31,7 @@ function validateBodyRequest(req, res, next) {
                .json(ErrorResponse)
     }
    
-    if(req.body.payment_status != 'paid' && !req.body.due_amount){
+    if(req.body.payment_status !== 'paid' && !req.body.due_amount){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Due Amount Missing."]);
         return res
@@ -80,24 +80,10 @@ function validateBodyRequest(req, res, next) {
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse);
     }
-    const validStatusTypes = ["paid", "unpaid", "partial-payment"];
+    const validStatusTypes = ["paid", "unpaid", "partial paid"];
     if(!req.body.payment_status || !validStatusTypes.includes(req.body.payment_status)){
         ErrorResponse.message = "Something went wrong while creating Invoice.";
         ErrorResponse.error = new AppError(["Payment Status should be 'paid','unpaid','partial-payment'."],StatusCodes.BAD_REQUEST);
-        return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse)
-    }
-    if(req.body.payment_status != "paid" && !req.body.due_amount) {
-        ErrorResponse.message = "Something went wrong while creating Invoice.";
-        ErrorResponse.error = new AppError(["Due Amount is missing."],StatusCodes.BAD_REQUEST);
-        return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse)
-    }
-    if(req.body.payment_status != "paid" && !req.body.due_date) {
-        ErrorResponse.message = "Something went wrong while creating Invoice.";
-        ErrorResponse.error = new AppError(["Due Amount is missing."],StatusCodes.BAD_REQUEST);
         return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse)
@@ -160,21 +146,21 @@ function validatePaidBody(req, res, next){
         ErrorResponse.error = new AppError(['Amount must be a positive number.'], StatusCodes.BAD_REQUEST);
         return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
-    if(req.body.payment_status != 'paid' && !req.body.due_date) {
-        ErrorResponse.message = "Something went wrong while creating Invoice";
-        ErrorResponse.error = new AppError(['Due Date Missing.'], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
-    if(req.body.payment_status != 'paid' && !req.body.due_amount) {
-        ErrorResponse.message = "Something went wrong while creating Invoice";
-        ErrorResponse.error = new AppError(['Due Amount Missing.'], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
-    if(isNaN(req.body.due_amount) && parseInt(req.body.due_amount) <= 0) {
-        ErrorResponse.message = "Something went wrong while creating Invoice";
-        ErrorResponse.error = new AppError(['Due Amount must be positve number.'], StatusCodes.BAD_REQUEST);
-        return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
-    }
+    // if(req.body.payment_status != 'paid' && !req.body.due_date) {
+    //     ErrorResponse.message = "Something went wrong while creating Invoice";
+    //     ErrorResponse.error = new AppError(['Due Date Missing.'], StatusCodes.BAD_REQUEST);
+    //     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    // }
+    // if(req.body.payment_status != 'paid' && !req.body.due_amount) {
+    //     ErrorResponse.message = "Something went wrong while creating Invoice";
+    //     ErrorResponse.error = new AppError(['Due Amount Missing.'], StatusCodes.BAD_REQUEST);
+    //     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    // }
+    // if(isNaN(req.body.due_amount) && parseInt(req.body.due_amount) <= 0) {
+    //     ErrorResponse.message = "Something went wrong while creating Invoice";
+    //     ErrorResponse.error = new AppError(['Due Amount must be positve number.'], StatusCodes.BAD_REQUEST);
+    //     return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+    // }
     next();
 }
 
