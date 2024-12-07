@@ -114,7 +114,7 @@ async function addInvoice(req, res) {
                         sgst_amount: sgst,
                         igst_amount: igst,
                         total_tax_amount: taxAmount
-                    }
+                    },
                 };
             })
         );
@@ -155,7 +155,8 @@ async function addInvoice(req, res) {
             total_tax: totalTax, 
             payment_image,
             items: items,
-            item_count: items.length 
+            item_count: items.length,
+            user_id: user_id
         }, { transaction });
 
             let createPayment;

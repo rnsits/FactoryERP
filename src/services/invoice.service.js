@@ -1,7 +1,7 @@
 const AppError = require("../utils/errors/app.error");
 const { StatusCodes } = require("http-status-codes");
 const { InvoiceRepository } = require("../repositories");
-const { Invoice, Customers } = require("../models");
+const { Invoice, Customers, User } = require("../models");
 const { Op, where } = require("sequelize");
 
 const invoiceRepository = new InvoiceRepository();
@@ -39,6 +39,11 @@ async function getInvoice(data) {
               model: Customers,
               as: 'customer',
               attributes: ['name'],
+            },
+            {
+              model: User,
+              as: 'user',
+              attributes: ['username', 'phone', 'gstin', 'company_name', 'address', 'logo', 'pincode'],
             }
           ]
         });

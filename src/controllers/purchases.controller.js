@@ -22,16 +22,17 @@ async function addPurchase(req, res) {
         } = req.body;
 
         let invoiceBill = req.file ? `/uploads/images/${req.file.filename}`: null;
-        // console.log("invoiceBill", invoiceBill);
         let finalDueAmount, finalStatus;
-        if(products.length >= 1 && due_amount != 0){
-            finalDueAmount = due_amount/products.length;
+        if (payment_status === "paid") {
+            finalStatus = "paid";
+        } else if (products.length >= 1 && due_amount !== 0) {
+            finalDueAmount = due_amount / products.length;
             finalStatus = "unpaid";
-        } else if(due_amount == 0){
+        } else if (due_amount === 0) {
             finalDueAmount = due_amount;
             finalStatus = "paid";
         } else {
-            finalStatus = payment_status;
+            finalStatus = payment_status; 
         }
 
         const currentTime = new Date().toLocaleString();
