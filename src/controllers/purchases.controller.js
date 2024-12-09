@@ -18,12 +18,11 @@ async function addPurchase(req, res) {
             payment_due_date, 
             vendor_id,  
             due_amount
-            // invoice_Bill 
         } = req.body;
 
         let invoiceBill = req.file ? `/uploads/images/${req.file.filename}`: null;
 
-        const currentTime = new Date().toLocaleString();
+        // const currentTime = new Date().toLocaleString();
         // Validate input
         if (!Array.isArray(products) || products.length === 0) {
             throw new AppError(["Products array is required"], StatusCodes.BAD_REQUEST);
@@ -44,6 +43,8 @@ async function addPurchase(req, res) {
 
         // Calculate total cost and validate products
         let totalCost = 0;
+        let finalDueAmount;
+        let finalStatus;
         const updates = [];
         const inventoryTransactions = [];
         const purchaseRecords = [];
@@ -53,19 +54,6 @@ async function addPurchase(req, res) {
             const quantity = Number(product.quantity);
             const price = Number(product.price);
             const existingProduct = productMap.get(productId);
-            let finalStatus, finalDueAmount;
-            if(payment_status == "paid") {
-                finalDueAmount = 0;
-                finalStatus = "paid";
-            } else if(payment_status == "partial-payment") {
-                if(due_amount > product)
-                finalDueAmount = due_amount;
-                finalStatus = "partial-payment";
-            } else if(partial_status == "unpaid") {
-                finalDueAmount = productCost;
-                finalStatus = "unpaid";
-            }
-            
             if (!existingProduct) {
                 throw new AppError([`Product with ID ${productId} not found`], StatusCodes.NOT_FOUND);
             }
@@ -92,27 +80,51 @@ async function addPurchase(req, res) {
                 description_type: 'text',
                 isManufactured: false
             });
-
-            // Prepare purchase records
-            purchaseRecords.push({
-                product_id: productId,
-                quantity: quantity,
-                quantity_type: existingProduct.quantity_type,
-                total_cost: productCost,
-                payment_date,
-                payment_status: finalStatus,
-                payment_due_date,
-                due_amount,
-                vendor_id,
-                invoice_Bill: invoiceBill
-            });
         }
+
+        if (due_amount > totalCost) {
+            throw new AppError(["Due Amount cannot be greater than the total cost of purchases"], StatusCodes.BAD_REQUEST);
+        }
+
+         // Handle payment status logic
+         switch (payment_status) {
+            case 'paid':
+              finalDueAmount = 0.00;
+              finalStatus = "paid";
+              break;
+            
+            case 'unpaid':
+              finalDueAmount = totalCost;
+              finalStatus = "unpaid";
+              break;
+            
+            case 'partial-payment':
+              finalDueAmount = req.body.due_amount;
+              finalStatus = "partial-payment"
+              break;
+            
+            default:
+                throw new AppError(["Invalid Payment Status"], StatusCodes.BAD_REQUEST)
+          }
+
+        // Prepare purchase records
+        purchaseRecords.push({
+            total_cost: totalCost,
+            payment_date,
+            payment_status: finalStatus,
+            payment_due_date,
+            due_amount: finalDueAmount,
+            vendor_id,
+            items: products,
+            item_count: products.length,
+            invoice_Bill:invoiceBill
+        });
 
         // Calculate new balance
         const currentBalance = Number(user.current_balance);
         let newBalance; 
         if(due_amount){
-            newBalance = currentBalance - (totalCost - due_amount);
+            newBalance = currentBalance - (totalCost - finalDueAmount);
         } else {
             newBalance = currentBalance - totalCost;
         }

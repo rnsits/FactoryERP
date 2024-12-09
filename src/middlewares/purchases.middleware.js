@@ -118,13 +118,6 @@ function validateBodyRequest(req, res, next){
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse);
         }
-        if (!req.body.due_amount) {
-            ErrorResponse.message = "Something went wrong while creating purchase.";
-            ErrorResponse.error = new AppError(['Missing due amount']);
-            return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse);
-        }
         // Check if due_amount is a positive number
         if (isNaN(req.body.due_amount) || parseInt(req.body.due_amount) <= 0) {
             ErrorResponse.message = "Something went wrong while creating purchase.";
@@ -149,6 +142,13 @@ function validateBodyRequest(req, res, next){
         return res
                .status(StatusCodes.BAD_REQUEST)
                .json(ErrorResponse)
+    }
+    if (req.body.payment_status == "partial-payment" && !req.body.due_amount) {
+        ErrorResponse.message = "Something went wrong while creating purchase.";
+        ErrorResponse.error = new AppError(['Missing due amount']);
+        return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json(ErrorResponse);
     }
 
     next();
