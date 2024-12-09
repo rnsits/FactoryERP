@@ -15,10 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'vendor_id',
         as: 'vendor', // This will be used to fetch the vendor of the purchase
       });
-      Purchases.belongsTo(models.Product,{
-        foreignKey: 'product_id',
-        as: 'product',
-      })
+      // Purchases.belongsTo(models.Product,{
+      //   foreignKey: 'product_id',
+      //   as: 'product',
+      // })
     }
   }
   Purchases.init({
@@ -28,14 +28,14 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
-    product_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Products',
-        key: 'id'
-      }
-    },
+    // product_id: {
+    //   type: DataTypes.INTEGER,
+    //   allowNull: false,
+    //   references: {
+    //     model: 'Products',
+    //     key: 'id'
+    //   }
+    // },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false
@@ -80,7 +80,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(20,2),
       allowNull: true,
       defaultValue: 0.00
-    }
+    },
+    item_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    items: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: []
+    },
   }, {
     sequelize,
     modelName: 'Purchases',

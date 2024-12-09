@@ -44,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
       validate:{
         len: {
           args: [3,30],
-          msg: 'Name must be between 3 and 30 characters long.'
+          msg: ['Name must be between 3 and 30 characters long.']
         }
       }
     },
@@ -54,7 +54,7 @@ module.exports = (sequelize, DataTypes) => {
       validate :{
        len: {
         args: [4, 500],
-        msg: 'Description must be between 4 to 500 characters long.'
+        msg: ['Description must be between 4 to 500 characters long.']
        }
       }
     },

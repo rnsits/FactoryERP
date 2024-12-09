@@ -84,7 +84,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [6 ,6],
-          msg: "pincode must be 6 characters long."
+          msg: ["pincode must be 6 characters long."]
         }
       }
     },
@@ -94,7 +94,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [10, 255],
-          msg: "address must be 10-255 characters long."
+          msg: ["address must be 10-255 characters long."]
         }
       }
     },
@@ -104,7 +104,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [10,10],
-          msg: "mobile must be 10 characters long."
+          msg: ["mobile must be 10 characters long."]
         }
       }
     },

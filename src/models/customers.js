@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [4, 20],
-          msg: "Name must be between 4 to 20 characters long."
+          msg: ["Name must be between 4 to 20 characters long."]
         }
       },
       allowNull: false
@@ -43,7 +43,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [10, 255],
-          msg: "Address must be between 10-255 characters long."
+          msg: ["Address must be between 10-255 characters long."]
         }
       },
       allowNull: false
@@ -53,7 +53,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [10,10],
-          msg: "Mobile no. must be 10 characters long."
+          msg: ["Mobile no. must be 10 characters long."]
         }
       },
       allowNull: false,
@@ -63,7 +63,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [6,6],
-          msg: "pincode must be 6 characters long."
+          msg: ["pincode must be 6 characters long."]
         }
       },
       allowNull: false
@@ -74,7 +74,7 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
       validate: {
         isEmail:{
-          msg: "Invalid Email provided."
+          msg: ["Invalid Email provided."]
         }
       }
     },
@@ -88,7 +88,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [15,15],
-          msg: "GSTIN must be 15 characters long."
+          msg: ["GSTIN must be 15 characters long."]
         } 
       }
     },

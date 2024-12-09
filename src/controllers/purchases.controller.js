@@ -16,24 +16,12 @@ async function addPurchase(req, res) {
             payment_date, 
             payment_status, 
             payment_due_date, 
-            vendor_id, 
+            vendor_id,  
             due_amount
             // invoice_Bill 
         } = req.body;
 
         let invoiceBill = req.file ? `/uploads/images/${req.file.filename}`: null;
-        let finalDueAmount, finalStatus;
-        if (payment_status === "paid") {
-            finalStatus = "paid";
-        } else if (products.length >= 1 && due_amount !== 0) {
-            finalDueAmount = due_amount / products.length;
-            finalStatus = "unpaid";
-        } else if (due_amount === 0) {
-            finalDueAmount = due_amount;
-            finalStatus = "paid";
-        } else {
-            finalStatus = payment_status; 
-        }
 
         const currentTime = new Date().toLocaleString();
         // Validate input
@@ -65,6 +53,18 @@ async function addPurchase(req, res) {
             const quantity = Number(product.quantity);
             const price = Number(product.price);
             const existingProduct = productMap.get(productId);
+            let finalStatus, finalDueAmount;
+            if(payment_status == "paid") {
+                finalDueAmount = 0;
+                finalStatus = "paid";
+            } else if(payment_status == "partial-payment") {
+                if(due_amount > product)
+                finalDueAmount = due_amount;
+                finalStatus = "partial-payment";
+            } else if(partial_status == "unpaid") {
+                finalDueAmount = productCost;
+                finalStatus = "unpaid";
+            }
             
             if (!existingProduct) {
                 throw new AppError([`Product with ID ${productId} not found`], StatusCodes.NOT_FOUND);
@@ -102,7 +102,7 @@ async function addPurchase(req, res) {
                 payment_date,
                 payment_status: finalStatus,
                 payment_due_date,
-                due_amount: finalDueAmount,
+                due_amount,
                 vendor_id,
                 invoice_Bill: invoiceBill
             });

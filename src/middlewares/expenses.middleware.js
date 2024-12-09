@@ -84,6 +84,11 @@ function validateBodyRequest(req, res, next){
             ErrorResponse.error = new AppError(["Due Amount cannot be greater than total cost."], StatusCodes.BAD_REQUEST);
             return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
         }
+        if(new Date(req.body.due_date) < Date.now()) {
+            ErrorResponse.message = "Something went wrong while marking expense.";
+            ErrorResponse.error = new AppError(["Please check due date, it cannot be before payment date."], StatusCodes.BAD_REQUEST);
+            return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
+        }
     }
 
     next();

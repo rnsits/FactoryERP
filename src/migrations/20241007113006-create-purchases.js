@@ -9,14 +9,14 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      product_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'Products',
-          key: 'id'
-        }
-      },
+      // product_id: {
+      //   type: Sequelize.INTEGER,
+      //   allowNull: false,
+      //   references: {
+      //     model: 'Products',
+      //     key: 'id'
+      //   }
+      // },
       quantity: {
         type: Sequelize.INTEGER,
         allowNull: false
@@ -61,6 +61,16 @@ module.exports = {
         type: Sequelize.DECIMAL(20,2),
         allowNull: true,
         defaultValue: 0.00
+      },
+      item_count: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      },
+      items: {
+        type: Sequelize.JSON,
+        allowNull: false,
+        defaultValue: []
       },
       createdAt: {
         allowNull: false,

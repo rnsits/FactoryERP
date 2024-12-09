@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [60,60],
-          msg: "Too Short. Please try again."
+          msg: ["Too Short. Please try again."]
         }
       } 
     },
@@ -44,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [6,6],
-          msg: "Pin length must be atleast 6."
+          msg: ["Pin length must be atleast 6."]
         }
       }
     },
@@ -62,11 +62,11 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isLength: {
           args: { min: 10, max: 15 },
-          msg: "Phone number must be between 10 and 15 characters long."
+          msg: ["Phone number must be between 10 and 15 characters long."]
         },
         is: {
           args: /^\d+$/, // Check if the phone number contains only digits
-          msg: "Phone number must contain only digits."
+          msg: ["Phone number must contain only digits."]
         }
       }
     },    
@@ -115,7 +115,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         len: {
           args: [6,6],
-          msg: "Pincode length must be atleast 6."
+          msg: ["Pincode length must be atleast 6."]
         }
       }
     }

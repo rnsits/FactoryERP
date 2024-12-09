@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isIn: {
           args: [['in', 'out']],
-          msg: 'Transaction type must be either in or out.'
+          msg: ['Transaction type must be either in or out.']
         }
       }
     },
@@ -54,7 +54,7 @@ module.exports = (sequelize, DataTypes) => {
       validate :{
         len: {
          args: [4, 500],
-         msg: 'Description must be between 4 to 50 characters long.'
+         msg: ['Description must be between 4 to 50 characters long.']
         }
        }
     },
