@@ -127,18 +127,19 @@ async function addInvoice(req, res) {
         if (payment_status == "unpaid") {
             calculatedDueAmount = tt; // Full amount due
         } else if (payment_status == "partial paid") {
-            if (!due_amount || due_amount <= 0 || due_amount > tt) {
-                await transaction.rollback();
+            if (!due_amount || due_amount <= 0 ) {
                 throw new AppError(
                     ["Invalid due amount for partial payment. Must be between 1 and the total amount."],
                     StatusCodes.BAD_REQUEST
                 );
             }
+            if(due_amount > tt) {
+                throw new AppError(["Due Amount cannot be greater than the total price."], StatusCodes.BAD_REQUEST);
+            }
             calculatedDueAmount = due_amount;
         } else if (payment_status == "paid") {
             calculatedDueAmount = 0; // Fully paid
         } else {
-            await transaction.rollback();
             throw new AppError(["Invalid payment status provided."], StatusCodes.BAD_REQUEST);
         }
         // Create invoice with items included
@@ -454,23 +455,27 @@ async function markInvoicePaid(req, res) {
 
     try {
         const user = req.user;
-        const { id, amount } = req.body;
+        const { id, amount, due_date } = req.body;
         const invoice = await InvoiceService.getInvoice(id, {transaction});
         if(!invoice) {
-            await transaction.rollback();
             throw new AppError(["Invoice not found."],StatusCodes.NOT_FOUND);
         }
         if(invoice.payment_status == "paid") {
-            await transaction.rollback();
             throw new AppError(["Invoice already marked paid"], StatusCodes.BAD_REQUEST);
         }
         if(amount > invoice.total_amount || amount > invoice.due_amount) {
-            await transaction.rollback();
-            throw new AppError(["Amount paid is greater than the total cost or due amount of invoice."], StatusCodes.BAD_REQUEST);
+            throw new AppError(["Amount cannot be greater than the total cost or due amount of invoice."], StatusCodes.BAD_REQUEST);
+        }
+        if(amount < invoice.due_amount && !due_date) {
+            throw new AppError(["Amount is less than due amount please add due date."],StatusCodes.BAD_REQUEST);
+        }
+        if(new Date(due_date) < new Date(invoice.due_date)) {
+            throw new AppError([`Due Date cannot be less than invoice Due date ${invoice.due_date}.`], StatusCodes.BAD_REQUEST);
         }
 
         let finalStatus;
         let finalDueAmount;
+        let finalDueDate;
         let payment_method = invoice.payment_method;
         const newAmount = invoice.due_amount - Number(amount);
         
@@ -479,8 +484,10 @@ async function markInvoicePaid(req, res) {
             finalStatus = "paid";
         } else if (newAmount > 0) {
             finalStatus = "partial paid";
+            finalDueDate = new Date(due_date);
         } else {
             finalStatus = "unpaid";
+            finalDueDate = new Date(due_date);
         }
         
         finalDueAmount = newAmount;
@@ -500,13 +507,15 @@ async function markInvoicePaid(req, res) {
             payment_status: finalStatus == "partial paid" ? "partial-paid" : finalStatus, // Use the determined status
         }, {transaction});
 
-        const newBalance = user.current_balance + amount;
+        const userdata = await UserService.getUser(user.id, {transaction});
+        
+        const newBalance = Number(userdata.current_balance) + Number(amount);
         const balanceTransaction = await BalanceTransactionService.createBalanceTransactions({
             user_id: user.id,
             transaction_type: "income",
             amount: amount,
             source: "invoice",
-            previous_balance: user.currentBalance,
+            previous_balance: userdata.current_balance,
             new_balance: newBalance
         }, {transaction});
 
