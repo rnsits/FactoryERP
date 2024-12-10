@@ -353,30 +353,77 @@ async function getPurchasesByDate(req, res){
     }
 }
 
+// async function getUnPaidPurchases(req, res){
+//     try {
+//         const page = parseInt(req.query.page) || 1; 
+//         const limit = parseInt(req.query.limit) || 10;
+//         const offset = (page - 1) * limit; 
+//         const search = req.query.search || '';
+//         const fields = req.query.fields ? req.query.fields.split(',') : [];    
+//         const { count, rows, unpaidTotalAmount } = await PurchaseService.getUnPaidPurchases(limit, offset, search, fields); 
+
+//         const withNames = await Promise.all(
+//             rows.map(async (row) => {
+//                 // Fetch the product name based on product_id
+//                 // const product = await Product.findByPk(row.product_id, {
+//                 //     attributes: ['name'], // Only fetch the `name` field
+//                 // });
+
+//                 const vendor = await Vendors.findByPk(row.vendor_id, {
+//                     attributes: ['name'], // Only fetch the `name` field
+//                 })
+
+//                 return {
+//                     ...row.toJSON(),
+//                     // product_name: product ? product.name : null, // Include product name if found
+//                     vendor_name: vendor ? vendor.name : null, // Include product name if found
+//                 };
+//             })
+//         );
+
+//         SuccessResponse.message = "Unpaid/Partially Paid data retrieved successfully.";
+//         SuccessResponse.data = {
+//             purchases: withNames,
+//             unpaidTotalAmount: unpaidTotalAmount ?? 0.00,
+//             totalCount: count,
+//             totalPages: Math.ceil(count / limit),
+//             currentPage: page,
+//             pageSize: limit
+//           }
+//         return res
+//             .status(StatusCodes.OK)
+//             .json(SuccessResponse)
+//     } catch (error) {
+//         console.log(error);
+//         ErrorResponse.message = "Something went wrong while getting Unpaid/partial paid purchases.";
+//         ErrorResponse.error = error;
+//         return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
+//         .json(ErrorResponse)
+//     }
+// }
 async function getUnPaidPurchases(req, res){
     try {
         const page = parseInt(req.query.page) || 1; 
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit; 
         const search = req.query.search || '';
-        const fields = req.query.fields ? req.query.fields.split(',') : [];    
+        
+        // Validate and filter fields
+        const allowedFields = ['vendor_id', 'invoice_Bill', 'payment_status'];
+        const fields = (req.query.fields ? req.query.fields.split(',') : [])
+            .filter(field => allowedFields.includes(field));
+
         const { count, rows, unpaidTotalAmount } = await PurchaseService.getUnPaidPurchases(limit, offset, search, fields); 
 
         const withNames = await Promise.all(
             rows.map(async (row) => {
-                // Fetch the product name based on product_id
-                const product = await Product.findByPk(row.product_id, {
-                    attributes: ['name'], // Only fetch the `name` field
-                });
-
                 const vendor = await Vendors.findByPk(row.vendor_id, {
-                    attributes: ['name'], // Only fetch the `name` field
-                })
+                    attributes: ['name'],
+                });
 
                 return {
                     ...row.toJSON(),
-                    product_name: product ? product.name : null, // Include product name if found
-                    vendor_name: vendor ? vendor.name : null, // Include product name if found
+                    vendor_name: vendor ? vendor.name : null,
                 };
             })
         );
@@ -389,16 +436,13 @@ async function getUnPaidPurchases(req, res){
             totalPages: Math.ceil(count / limit),
             currentPage: page,
             pageSize: limit
-          }
-        return res
-            .status(StatusCodes.OK)
-            .json(SuccessResponse)
+        }
+        return res.status(StatusCodes.OK).json(SuccessResponse)
     } catch (error) {
         console.log(error);
         ErrorResponse.message = "Something went wrong while getting Unpaid/partial paid purchases.";
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json(ErrorResponse)
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse)
     }
 }
 
@@ -412,15 +456,12 @@ async function markPurchasePaid(req, res) {
         
         const purchase = await PurchaseService.getPurchase(purchase_id, {transaction});
         if(!purchase) {
-            await transaction.rollback();
             throw new AppError([`Product with ID ${purchase_id} not found`], StatusCodes.NOT_FOUND);
         };
         if(purchase.payment_status == "paid" || purchase.due_amount == 0) {
-            await transaction.rollback();
             throw new AppError([`Purchase is already marked as paid`], StatusCodes.BAD_REQUEST);
         };
         if(amount > purchase.total_cost && amount > purchase.due_amount) {
-            await transaction.rollback();
             throw new AppError([`Amount is greater than the total cost or due amount of the purchase`], StatusCodes.BAD_REQUEST);
         };
         

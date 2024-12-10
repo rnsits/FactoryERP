@@ -19,7 +19,7 @@ UserRouter.patch('/:userId/bal', authenticateToken, UserMiddleware.validatePatch
 
 UserRouter.patch('/userset/:id', authenticateToken, UserController.userSettings);
 
-UserRouter.patch('/uslogo', authenticateToken, multerMiddleware(imageUpload('logo')), UserController.updateLogo);
+UserRouter.patch('/uslogo/:id', authenticateToken, multerMiddleware(imageUpload('logo')), UserController.updateLogo);
 
 /**
  * /api/v1/auth/Users/  GET

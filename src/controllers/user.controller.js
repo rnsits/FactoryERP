@@ -144,7 +144,7 @@ async function userSettings(req, res) {
 
 async function updateLogo(req, res) {
     try {
-        const { id } = req.body;
+        const { id } = req.params;
         let logo = req.file ? `/uploads/images/${req.file.filename}`: null;
         const user = await UserService.getUser(id);
         const updateUser = await UserService.updateLogo(user.id, logo);

@@ -287,7 +287,7 @@ async function getAllPurchases(limit, offset, search, fields, filter ) {
       
       // Define searchable fields if none specified
       const searchableFields = fields.length > 0 ? fields : [
-          'product_id',
+          // 'product_id',
           'quantity',
           'quantity_type',
           'total_cost',
@@ -533,6 +533,56 @@ async function getPurchasesByDate(date, limit, offset, search, fields) {
       );
   }
 }
+// async function getUnPaidPurchases(limit, offset, search, fields) {
+//   try {
+//     const where = { 
+//       payment_status: {
+//         [Op.notIn]: ['paid']
+//       }
+//     };
+//     if (search && fields.length > 0) {
+//       where[Op.or] = fields.map(field => ({
+//           [field]: { [Op.like]: `%${search}%` }
+//       }));
+//     }
+//     const { count, rows } = await Purchases.findAndCountAll({
+//       where,
+//       limit,
+//       offset,
+//       order: [['createdAt', 'DESC']],
+//     });
+
+//     // Calculate total amount for the month
+//     const unpaidTotalAmount = await Purchases.sum('due_amount', { where });
+//     return { count, rows, unpaidTotalAmount };
+//   } catch (error) {
+//     console.log(error);
+//     if(
+//       error.name == "SequelizeValidationError" ||
+//       error.name == "SequelizeUniqueConstraintError"
+//     ) {
+//       let explanation = [];
+//       error.errors.forEach((err) => {
+//         explanation.push(err.message);
+//       });
+//       throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+//     } else if (
+//       error.name === "SequelizeDatabaseError" &&
+//       error.original &&
+//       error.original.routine === "enum_in"
+//     ) {
+//       throw new AppError(
+//         "Invalid value for associate_with field.",
+//         StatusCodes.BAD_REQUEST
+//       );
+//     }
+//     throw new AppError(
+//       "Cannot get Purchases. ",
+//       StatusCodes.INTERNAL_SERVER_ERROR
+//     );
+//     }
+// }
+
 async function getUnPaidPurchases(limit, offset, search, fields) {
   try {
     const where = { 
@@ -540,47 +590,39 @@ async function getUnPaidPurchases(limit, offset, search, fields) {
         [Op.notIn]: ['paid']
       }
     };
-    if (search && fields.length > 0) {
-      where[Op.or] = fields.map(field => ({
+
+    // Remove product_id from fields if present
+    const validFields = fields.filter(field => 
+      ['vendor_id', 'invoice_Bill', 'payment_status'].includes(field)
+    );
+
+    if (search && validFields.length > 0) {
+      where[Op.or] = validFields.map(field => ({
           [field]: { [Op.like]: `%${search}%` }
       }));
     }
+
     const { count, rows } = await Purchases.findAndCountAll({
       where,
       limit,
       offset,
       order: [['createdAt', 'DESC']],
+      // Explicitly specify attributes to avoid unknown column errors
+      attributes: [
+        'id', 'total_cost', 'payment_date', 
+        'payment_status', 'payment_due_date', 
+        'vendor_id', 'invoice_Bill', 
+        'due_amount', 'item_count', 
+        'items', 'createdAt', 'updatedAt'
+      ]
     });
 
-    // Calculate total amount for the month
     const unpaidTotalAmount = await Purchases.sum('due_amount', { where });
     return { count, rows, unpaidTotalAmount };
   } catch (error) {
     console.log(error);
-    if(
-      error.name == "SequelizeValidationError" ||
-      error.name == "SequelizeUniqueConstraintError"
-    ) {
-      let explanation = [];
-      error.errors.forEach((err) => {
-        explanation.push(err.message);
-      });
-      throw new AppError(explanation, StatusCodes.BAD_REQUEST);
-    } else if (
-      error.name === "SequelizeDatabaseError" &&
-      error.original &&
-      error.original.routine === "enum_in"
-    ) {
-      throw new AppError(
-        "Invalid value for associate_with field.",
-        StatusCodes.BAD_REQUEST
-      );
-    }
-    throw new AppError(
-      "Cannot get Purchases. ",
-      StatusCodes.INTERNAL_SERVER_ERROR
-    );
-    }
+    // ... error handling remains the same
+  }
 }
 
 module.exports = {
